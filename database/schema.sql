@@ -27,6 +27,11 @@ CREATE TABLE usuarios (
     nombre VARCHAR(100) NOT NULL,
     mail VARCHAR(150) NOT NULL UNIQUE, -- la cuenta estará asociada al mail pero no será la ID obviamente!
     telefono VARCHAR(30),
+    -- documento es varchar porque puede ser un pasaporte. 
+    -- Ejemplos: Tipo DNI, Numero 35123456 
+    -- Tipo Pasaporte, Numero AAB123456
+    tipo_documento ENUM('DNI', 'Pasaporte') NULL,
+    documento VARCHAR(30) NULL,
     pass VARCHAR(255) NOT NULL,
     verificado BOOLEAN DEFAULT FALSE,
     admin BOOLEAN DEFAULT FALSE,
