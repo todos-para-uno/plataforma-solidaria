@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/modelo_registro_db.php';
-class Categoria extends Registro_db
+require_once __DIR__ . '/RegistroDb.php';
+class Categoria extends RegistroDb
 {
     private ?string $nombre = null;
 

@@ -1,5 +1,5 @@
 <?php
-class Registro_db
+class RegistroDb
 {
     private ?int $id = null;
 
