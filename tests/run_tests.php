@@ -1,12 +1,13 @@
 <?php
 function run_tests(){
-    require_once __DIR__ . '/modelos/test_modelo_registro_db.php';
-    require_once __DIR__ . '/modelos/test_modelo_categoria.php';
+    require_once __DIR__ . '/modelos/CategoriaTest.php';
+    require_once __DIR__ . '/modelos/DonacionTest.php';
+    require_once __DIR__ . '/modelos/RegistroDbTest.php';
+    require_once __DIR__ . '/modelos/SubCategoriaInsumosTest.php';
     
-    test_modelo_registro_db();
-    test_modelo_categoria();
+    categoriaTest();
+    donacionTest();
+    registroDbTest();
+    subCategoriaInsumosTest();
 }
-
-run_tests()
-?>
-
+run_tests();
