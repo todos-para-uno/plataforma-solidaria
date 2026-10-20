@@ -2,57 +2,48 @@
 require_once __DIR__ . "/RegistroDb.php";
 class Donacion extends RegistroDb
 {
-    var $id_usuario;
-    var $id_camp;
-    var $id_categoria_insumos;
-    var $id_sub_categoria_insumos;
-    var $cantidad;
-    var $fecha_hora;
+    private int $id_usuario;
+    private int $id_camp;
+    private ?int $id_categoria_insumos;
+    private ?int $id_sub_categoria_insumos;
+    private float $cantidad;
+    private ?string $fecha_hora;
 
-    function __construct($id_usuario, $id_camp, $cantidad, $id_categoria_insumos = null, $id_sub_categoria_insumos = null, $fecha_hora = null) {
+    public function __construct(
+        int $id_usuario,
+        int $id_camp,
+        float $cantidad,
+        ?int $id_categoria_insumos = null,
+        ?int $id_sub_categoria_insumos = null,
+        ?string $fecha_hora = null
+    ) {
         $this->id_usuario = $id_usuario;
         $this->id_camp = $id_camp;
-        $this->cantidad = $cantidad;
         $this->id_categoria_insumos = $id_categoria_insumos;
         $this->id_sub_categoria_insumos = $id_sub_categoria_insumos;
+        if ($cantidad <= 0) {
+            throw new InvalidArgumentException('La cantidad debe ser mayor a cero.');
+        }
+        $this->cantidad = $cantidad;
         $this->fecha_hora = $fecha_hora;
     }
-    
-    function setIdUsuario($id_usuario) {
-        $this->id_usuario = $id_usuario;
-    }
-    function getIdUsuario() {
+
+    public function getIdUsuario(): int {
         return $this->id_usuario;
     }
-    function setIdCamp($id_camp) {
-        $this->id_camp = $id_camp;
-    }
-    function getIdCamp()
-    {
+    public function getIdCamp(): int {
         return $this->id_camp;
     }
-    function setIdCategoriaInsumos($id_categoria_insumos) {
-        $this->id_categoria_insumos = $id_categoria_insumos;
-    }
-    function getIdCategoriaInsumos() {
+    public function getIdCategoriaInsumos(): ?int {
         return $this->id_categoria_insumos;
     }
-    function setIdSubCategoriaInsumos($id_sub_categoria_insumos) {
-        $this->id_sub_categoria_insumos = $id_sub_categoria_insumos;
-    }
-    function getIdSubCategoriaInsumos() {
+    public function getIdSubCategoriaInsumos(): ?int {
         return $this->id_sub_categoria_insumos;
     }
-    function setCantidad($cantidad) {
-        $this->cantidad = $cantidad;
-    }
-    function getCantidad() {
+    public function getCantidad(): float {
         return $this->cantidad;
     }
-    function setFechaHora($fecha_hora) {
-        $this->fecha_hora = $fecha_hora;
-    }
-    function getFechaHora() {
+    public function getFechaHora(): ?string {
         return $this->fecha_hora;
     }
 }
