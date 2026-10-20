@@ -9,8 +9,8 @@ $subCategoriaInsumos->setId(4);
 echo "Probando getters: <br>";
 echo $subCategoriaInsumos->getId_categoria();
 
-echo "tiene nombre? :" . $categoria->tieneNombre() . "<br>";
-echo "nombre :" . $categoria->getNombre() . "<br>";
+echo "tiene nombre? :" . $subCategoriaInsumos->tieneNombre() . "<br>";
+echo "nombre :" . $subCategoriaInsumos->getNombre() . "<br>";
 echo "<hr>";
 }
 ?>
