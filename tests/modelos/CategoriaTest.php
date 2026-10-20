@@ -1,7 +1,8 @@
 <?php
-function test_modelo_categoria (){
-require_once __DIR__ . '/../../app/modelos/modelo_categoria.php';
-echo "INICIANDO TEST: app/modelos/modelo_categoria.php" . "<br>";
+function categoriaTest (){
+require_once __DIR__ . '/../../app/modelos/Categoria.php';
+
+echo "INICIANDO TEST: app/modelos/Categoria.php" . "<br>";
 echo "Instanciando Categoria..." . "<br>";
 $categoria = new Categoria("Libreria");
 
@@ -14,5 +15,6 @@ echo "mostrar id:" . $categoria->getId() . "<br>";
 echo "test de Categoria:<br>";
 echo "tiene nombre? :" . $categoria->tieneNombre() . "<br>";
 echo "nombre :" . $categoria->getNombre() . "<br>";
+echo "<hr>";
 }
 ?>

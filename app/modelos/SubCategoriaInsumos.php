@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/modelo_categoria.php';
-class Sub_categoria_insumos extends Categoria
+require_once __DIR__ . '/Categoria.php';
+class SubCategoriaInsumos extends Categoria
 {
     private ?int $id_categoria = null;
 

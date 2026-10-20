@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/modelos/registro_db.php';
-class Objetivos extends Registro_db
+require_once __DIR__ . '/RegistroDb.php';
+class Objetivos extends RegistroDb
 {
     private int $id_camp;
     private int $id_categoria_insumos;
