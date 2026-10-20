@@ -1,11 +1,11 @@
 <?php
+require_once __DIR__ . "/RegistroDb.php";
 enum TipoDocumento: string {
     case DNI = 'DNI';
     case Pasaporte = 'Pasaporte';
 }
-class Usuarios
+class Usuarios extends RegistroDb
 {
-    private ?int $id = null;
     private string $nombre;
     private string $mail;
     private string $pass;
@@ -36,15 +36,7 @@ class Usuarios
             $this->agregarDocumento($miTipoDoc, $miDocumento);
         }
     }
-
-    function setId($id)
-    {
-        $this->id = $id;
-    }
-    function getId()
-    {
-        return $this->id;
-    }
+    
     function setNombre($nombre)
     {
         $this->nombre = $nombre;

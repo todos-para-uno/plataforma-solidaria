@@ -1,6 +1,7 @@
 <?php
-class Donacion {
-    var $id;
+require_once __DIR__ . "/RegistroDb.php";
+class Donacion extends RegistroDb
+{
     var $id_usuario;
     var $id_camp;
     var $id_categoria_insumos;
@@ -16,13 +17,7 @@ class Donacion {
         $this->id_sub_categoria_insumos = $id_sub_categoria_insumos;
         $this->fecha_hora = $fecha_hora;
     }
-
-    function setId($id) {
-        $this->id = $id;
-    }
-    function getId() {
-        return $this->id;
-    }
+    
     function setIdUsuario($id_usuario) {
         $this->id_usuario = $id_usuario;
     }

@@ -1,6 +1,7 @@
 <?php
-class Mensajes {
-    private ?int $id = null;
+require_once __DIR__ . "/RegistroDb.php";
+class Mensajes extends RegistroDb
+    {
     private int $id_emisor;
     private int $id_receptor;
     private string $contenido;
@@ -12,12 +13,6 @@ class Mensajes {
         $this->setContenido($contenido);
         $this->fecha_hora = $fecha_hora;
         $this->leido = false;
-    }
-    function setId($id): void {
-        $this->id = $id;
-    }
-    function getId() {
-        return $this->id;
     }
     function setIdEmisor($id_emisor): void {
         $this->id_emisor = $id_emisor;
