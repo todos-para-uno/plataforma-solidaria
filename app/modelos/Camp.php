@@ -19,23 +19,32 @@ class Camp extends RegistroDb
     private EstadoCamp $estado;
     private ?int $id_ubicacion;
 
-    public function __construct(int $owner_id, string $nombre, bool $monetaria, int $categoria, ?string $descripcion = null, ?string $cbu = null, ?int $id_ubicacion = null)
-    {   
-        if ($owner_id <= 0) {
-            throw new InvalidArgumentException('El ID del propietario debe ser mayor a cero.');
-        }
-        if ($categoria <= 0) {
-            throw new InvalidArgumentException('La categoría debe ser mayor a cero.');
-        }
-        $this->owner_id = $owner_id;
+    public function __construct(
+        int $owner_id,
+        string $nombre,
+        bool $monetaria,
+        int $categoria,
+        ?string $descripcion = null,
+        ?string $cbu = null,
+        ?int $id_ubicacion = null
+    ) {
+        $this->setOwnerId($owner_id);
         $this->setNombre($nombre);
-        $this->monetaria = $monetaria;
-        $this->categoria = $categoria;
+        $this->setMonetaria($monetaria);
+        $this->setCategoria($categoria);
         $this->logrado = 0;
         $this->descripcion = $descripcion;
         $this->setCbu($cbu);
         $this->estado = EstadoCamp::Activa;
-        $this->id_ubicacion = $id_ubicacion;
+        $this->setIdUbicacion($id_ubicacion);
+    }
+
+    public function setOwnerId(int $owner_id): void
+    {
+        if ($owner_id <= 0) {
+            throw new InvalidArgumentException('El ID del propietario debe ser mayor a cero.');
+        }
+        $this->owner_id = $owner_id;
     }
 
     public function getOwnerId(): int
@@ -56,9 +65,31 @@ class Camp extends RegistroDb
         return $this->nombre;
     }
 
+    public function setMonetaria(bool $monetaria): void
+    {
+        // En el constructor, el CBU y la ubicación se validan después con sus setters.
+        if (isset($this->monetaria)) {
+            if ($monetaria && $this->cbu === null) {
+                throw new InvalidArgumentException('Las campañas monetarias deben tener un CBU.');
+            }
+            if (!$monetaria && $this->id_ubicacion === null) {
+                throw new InvalidArgumentException('Las campañas de insumos deben tener una ubicación.');
+            }
+        }
+        $this->monetaria = $monetaria;
+    }
+
     public function getMonetaria(): bool
     {
         return $this->monetaria;
+    }
+
+    public function setCategoria(int $categoria): void
+    {
+        if ($categoria <= 0) {
+            throw new InvalidArgumentException('La categoría debe ser mayor a cero.');
+        }
+        $this->categoria = $categoria;
     }
 
     public function getCategoria(): int
@@ -102,6 +133,17 @@ class Camp extends RegistroDb
     public function getEstado(): EstadoCamp
     {
         return $this->estado;
+    }
+
+    public function setIdUbicacion(?int $id_ubicacion): void
+    {
+        if (!$this->monetaria && $id_ubicacion === null) {
+            throw new InvalidArgumentException('Las campañas de insumos deben tener una ubicación.');
+        }
+        if ($id_ubicacion !== null && $id_ubicacion <= 0) {
+            throw new InvalidArgumentException('La ubicación debe ser un ID positivo.');
+        }
+        $this->id_ubicacion = $id_ubicacion;
     }
 
     public function getIdUbicacion(): ?int
