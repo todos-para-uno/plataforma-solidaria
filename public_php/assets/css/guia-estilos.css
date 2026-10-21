@@ -1,0 +1,36 @@
+/* Layout de la página de guía de estilos (herramienta del equipo). */
+.guia-seccion { padding-block: var(--e-8); border-bottom: 1px solid var(--linea); }
+.guia-seccion:last-child { border-bottom: 0; }
+
+.guia-muestras {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--e-6);
+    padding: 0;
+    list-style: none;
+}
+.guia-color {
+    display: block;
+    height: 64px;
+    margin-bottom: var(--e-2);
+    border: 1px solid var(--grafito);
+    border-radius: var(--radio-control);
+}
+.guia-color-azul { background: var(--azul); }
+.guia-color-corazon { background: var(--corazon); }
+.guia-color-sol { background: var(--sol); }
+.guia-color-hueso { background: var(--hueso); }
+.guia-color-papel { background: var(--papel); }
+.guia-color-grafito { background: var(--grafito); }
+
+.guia-fila { display: flex; flex-wrap: wrap; gap: var(--e-3); align-items: center; margin-bottom: var(--e-4); }
+.guia-dos { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e-12); align-items: start; }
+
+.guia-h1, .guia-h2, .guia-h3 { font-family: var(--fuente-titulos); line-height: 1.15; }
+.guia-h1 { font-size: var(--t-h1); }
+.guia-h2 { font-size: var(--t-h2); }
+.guia-h3 { font-size: var(--t-h3); }
+
+@media (max-width: 760px) {
+    .guia-dos { grid-template-columns: 1fr; }
+}
