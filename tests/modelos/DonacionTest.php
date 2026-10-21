@@ -12,9 +12,6 @@ echo "Cantidad: " . $donacion->getCantidad() . "\n";
 echo "Categoría: " . $donacion->getIdCategoriaInsumos() . "\n";
 echo "Subcategoría: " . $donacion->getIdSubCategoriaInsumos() . "\n";
 
-$donacion->setCantidad(15);
-$donacion->setIdCategoriaInsumos(5);
-$donacion->setIdSubCategoriaInsumos(6);
 echo "<hr>";
 }
 ?>
