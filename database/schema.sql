@@ -60,7 +60,24 @@ CREATE TABLE sub_categoria_insumos (
     FOREIGN KEY (id_categoria) REFERENCES categoria_insumos(id), UNIQUE (id_categoria, nombre), UNIQUE (id, id_categoria)
 );
 
--- campañas
+
+-- REGLAS DE PROGRAMACION
+-- Si la campaña tiene id_ubicacion NULL -> se buscará por "virtual"
+-- Una campaña monetaria no necesariamente recibe una zona
+-- Para las campañas de insumos, PHP debe exigir una ubicacion y por lo tanto no será virtual
+-- Al crear una campaña de insumos, PHP guarda primero la ubicación y luego utiliza su ID para guardar la campaña.
+-- Conviene realizar ambas operaciones dentro de una transacción: si alguna falla, se deshacen ambas.
+
+-- campañas - y sus ubicaciones si tiene campo de ubicacion
+CREATE TABLE ubicaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    provincia VARCHAR(100) NOT NULL,
+    localidad VARCHAR(100) NOT NULL,
+    latitud DECIMAL(9,6) NOT NULL,
+    longitud DECIMAL(9,6) NOT NULL,
+    referencia VARCHAR(150) NULL
+);
+
 CREATE TABLE camp (
     id INT AUTO_INCREMENT PRIMARY KEY,
     owner_id INT NOT NULL,
@@ -71,8 +88,10 @@ CREATE TABLE camp (
     descripcion TEXT,
     cbu VARCHAR(22),
     estado ENUM('activa', 'finalizada', 'suspendida') NOT NULL DEFAULT 'activa',
+    id_ubicacion INT NULL UNIQUE,
     FOREIGN KEY (owner_id) REFERENCES usuarios(id),
-    FOREIGN KEY (categoria) REFERENCES cat_camp(id)
+    FOREIGN KEY (categoria) REFERENCES cat_camp(id),
+    FOREIGN KEY (id_ubicacion) REFERENCES ubicaciones(id)
 );
 
 -- objetivos
