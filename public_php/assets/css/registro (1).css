@@ -1,0 +1,11 @@
+/* Layout de la pantalla de registro. Solo acomoda; colores y componentes vienen de base.css. */
+.registro-interior {
+    max-width: 480px;
+    margin-inline: auto;
+}
+.registro-interior .seccion-encabezado {
+    margin-bottom: var(--e-8);
+}
+.registro-ingresar {
+    margin-top: var(--e-6);
+}

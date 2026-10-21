@@ -1,0 +1,15 @@
+.portada{
+    background-image: linear-gradient(rgba(247, 245, 240, 0.95), rgba(247, 245, 240, 0.90)), url('../imagenes/fondo3.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.portada-interior p{
+    margin: 0 0 0;
+}
+.seccion-encabezado{
+    max-width: 70ch;
+}
+h1{
+    margin: 0 0 0;
+}
