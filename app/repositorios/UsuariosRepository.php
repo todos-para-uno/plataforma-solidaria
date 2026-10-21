@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/CrudRepository.php';
 final class UsuariosRepository extends CrudRepository
 {
     public function __construct(PDO $pdo)

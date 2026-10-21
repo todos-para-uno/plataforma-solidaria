@@ -16,8 +16,11 @@ function run_modelos_tests(){
 }
 function run_repositorios_tests(){
     require_once __DIR__ . '/repositorios/UsuariosRepository.php';
+    require_once __DIR__ . '/repositorios/ValidacionesRepository.php';
 
+    validacionesRepositoryTest();
     usuariosRepositoryTest();
+    
 }
 
 //run_modelos_tests();

@@ -1,8 +1,8 @@
 <?php
-class UserController
+class UsuariosController
 {
     public function __construct(
-        private UserRepository $users
+        private UsuariosRepository $usuarios
     ) {}
 
     public function buscarPorNombre(string $nombre): void
@@ -15,7 +15,7 @@ class UserController
             return;
         }
 
-        $usuarios = $this->users->findByNombre($nombre);
+        $usuarios = $this->usuarios->findByNombre($nombre);
 
         // Aquí normalmente llamarías a una vista,
         // o devolverías JSON si es una API.
