@@ -1,5 +1,5 @@
 <?php
-function run_tests(){
+function run_modelos_tests(){
     require_once __DIR__ . '/modelos/CategoriaTest.php';
     require_once __DIR__ . '/modelos/DonacionTest.php';
     require_once __DIR__ . '/modelos/RegistroDbTest.php';
@@ -14,4 +14,14 @@ function run_tests(){
     mensajesTest();
     validacionesTest();
 }
-run_tests();
+function run_repositorios_tests(){
+    require_once __DIR__ . '/repositorios/UsuariosRepository.php';
+    require_once __DIR__ . '/repositorios/ValidacionesRepository.php';
+
+    validacionesRepositoryTest();
+    usuariosRepositoryTest();
+    
+}
+
+//run_modelos_tests();
+run_repositorios_tests();
