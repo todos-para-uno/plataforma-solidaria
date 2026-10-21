@@ -7,6 +7,7 @@ function run_modelos_tests(){
     require_once __DIR__ . '/modelos/MensajesTest.php';
     require_once __DIR__ . '/modelos/ValidacionesTest.php';
     require_once __DIR__ . '/modelos/UsuariosTest.php';
+    require_once __DIR__ . '/modelos/CampTest.php';
     
     categoriaTest();
     donacionTest();
@@ -15,6 +16,7 @@ function run_modelos_tests(){
     mensajesTest();
     validacionesTest();
     usuariosTest();
+    campTest();
 }
 function run_repositorios_tests(){
     require_once __DIR__ . '/repositorios/UsuariosRepository.php';
