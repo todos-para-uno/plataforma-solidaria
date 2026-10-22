@@ -8,7 +8,7 @@ final class UsuariosRepository extends CrudRepository
             $pdo,
             table: 'usuarios',
             primaryKey: 'id',
-            fields: ['nombre', 'mail', 'telefono', 'pass', 'verificado', 'admin', 'validacion']
+            fields: ['nombre', 'mail', 'telefono', 'tipo_documento', 'documento', 'pass', 'verificado', 'admin', 'validacion']
         );
     }
 
@@ -31,5 +31,10 @@ final class UsuariosRepository extends CrudRepository
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // protected function hidratar(array $fila): Usuarios
+    // {
+    //     return Usuarios::desdePersistencia($fila);
+    // }
 
 }

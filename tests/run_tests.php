@@ -6,6 +6,7 @@ function run_modelos_tests(){
     require_once __DIR__ . '/modelos/SubCategoriaInsumosTest.php';
     require_once __DIR__ . '/modelos/MensajesTest.php';
     require_once __DIR__ . '/modelos/ValidacionesTest.php';
+    require_once __DIR__ . '/modelos/UsuariosTest.php';
     
     categoriaTest();
     donacionTest();
@@ -13,6 +14,8 @@ function run_modelos_tests(){
     subCategoriaInsumosTest();
     mensajesTest();
     validacionesTest();
+    usuariosTest();
+
 }
 function run_repositorios_tests(){
     require_once __DIR__ . '/repositorios/UsuariosRepository.php';
@@ -23,5 +26,5 @@ function run_repositorios_tests(){
     
 }
 
-//run_modelos_tests();
+run_modelos_tests();
 run_repositorios_tests();

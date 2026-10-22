@@ -17,25 +17,83 @@ class Usuarios extends RegistroDb
     private bool $admin;
     private int $validacion;
 
-    function __construct(string $miNombre, string $miMail, string $miPass, ?string $miTelefono = null, ?TipoDocumento $miTipoDoc = null, ?string $miDocumento = null)
-    {
+    function __construct(
+        string $miNombre, 
+        string $miMail, 
+        string $hashPassword, 
+        ?string $miTelefono = null, 
+    ){
         $this->nombre = $miNombre;
         $this->mail = $miMail;
-        $this->pass = password_hash($miPass, PASSWORD_DEFAULT);
+  
+        $this->pass = $hashPassword; // $this->pass = password_hash($miPass, PASSWORD_DEFAULT);
         $this->telefono = $miTelefono;
+
         $this->tipo_documento = null;
         $this->documento = null;
+
         $this->verificado = false;
         $this->admin = false;
         $this->validacion = 1;
-
-        if ($miTipoDoc !== null || $miDocumento !== null) {
-            if ($miTipoDoc === null || $miDocumento === null) {
-                throw new InvalidArgumentException("Debés indicar el tipo y número de documento.");
-            }
-            $this->agregarDocumento($miTipoDoc, $miDocumento);
-        }
     }
+    public static function crear (
+        string $nombre,
+        string $mail,
+        string $password,
+        ?string $telefono = null,
+        ?TipoDocumento $tipoDocumento = null,
+        ?string $documento = null
+    ): self 
+    {
+            $usuario = new self(
+            $nombre,
+            $mail,
+            password_hash($password, PASSWORD_DEFAULT),
+            $telefono
+            );
+            if ($tipoDocumento !== null || $documento !== null) {
+                if ($tipoDocumento === null || $documento === null) {
+                    throw new InvalidArgumentException(
+                        'Debés indicar el tipo y número de documento.'
+                    );
+                }
+
+                $usuario->agregarDocumento(
+                    $tipoDocumento,
+                    $documento
+                );
+            }
+        return $usuario;            
+    }
+
+    public static function desdePersistencia(array $filaUsuario): self
+    {
+        $usuario = new self(
+            $filaUsuario['nombre'],
+            $filaUsuario['mail'],
+            $filaUsuario['pass'],
+            $filaUsuario['telefono'] ?? null
+        );
+
+        $usuario->setId((int) $filaUsuario['id']);
+        
+        $usuario->verificado = (bool) $filaUsuario['verificado'];
+        $usuario->admin = (bool) $filaUsuario['admin'];
+        $usuario->validacion = (int) $filaUsuario['validacion'];
+
+        if (
+            !empty($filaUsuario['tipo_documento']) &&
+            !empty($filaUsuario['documento'])
+        ) {
+            $usuario->agregarDocumento(
+                TipoDocumento::from($filaUsuario['tipo_documento']),
+                $filaUsuario['documento']
+            );
+        }
+
+        return $usuario;
+    }
+
     
     function setNombre($nombre)
     {
@@ -91,6 +149,11 @@ class Usuarios extends RegistroDb
         return $this->validacion;
     }
 
+    public function verificarPassword(string $password): bool
+    {
+        return password_verify($password, $this->pass);
+    }
+
     public function agregarDocumento(TipoDocumento $tipo, string $numero): void
     {
         if (trim($numero) === '') {
@@ -99,7 +162,9 @@ class Usuarios extends RegistroDb
             );
         }
         $this->tipo_documento = $tipo;
-        $this->documento = trim($numero); //por si el usuario copypastea su dni y se generan espacios antes
+        $this->documento = trim($numero); 
     }
+
+
 }
 ?>

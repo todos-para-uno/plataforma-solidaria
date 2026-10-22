@@ -15,7 +15,7 @@ final class ValidacionesRepository extends CrudRepository
     public function findByNombre(string $nombre): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT * FROM `usuarios` WHERE `nombre` = :nombre' 
+            'SELECT * FROM `validaciones` WHERE `nombre` = :nombre' 
         );
         $stmt->execute(['nombre' => $nombre]);
 

@@ -29,8 +29,9 @@ abstract class CrudRepository
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row === false ? null : $row;
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $fila === false ? null : $fila;
     }
 
     /**
@@ -92,4 +93,6 @@ abstract class CrudRepository
 
         return $stmt->rowCount() > 0;
     }
+
+    //abstract protected function hidratar(array $fila): object;
 }
