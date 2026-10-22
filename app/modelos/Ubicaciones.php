@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/RegistroDb.php';
+require_once __DIR__ . '/CatalogoGeografico.php';
 
 // Lugar elegido por el usuario para recibir donaciones de insumos.
 class Ubicaciones extends RegistroDb
@@ -18,8 +19,7 @@ class Ubicaciones extends RegistroDb
         float $longitud,
         ?string $referencia = null
     ) {
-        $this->setProvincia($provincia);
-        $this->setLocalidad($localidad);
+        $this->setProvinciaLocalidad($provincia, $localidad);
         $this->setLatitud($latitud);
         $this->setLongitud($longitud);
         $this->setReferencia($referencia);
@@ -27,11 +27,26 @@ class Ubicaciones extends RegistroDb
 
     public function setProvincia(string $provincia): void
     {
+        $this->setProvinciaLocalidad($provincia, $this->localidad);
+    }
+
+    // Valida ambos datos antes de modificarlos para conservar una pareja válida.
+    public function setProvinciaLocalidad(string $provincia, string $localidad): void
+    {
         $provincia = trim($provincia);
-        if ($provincia === '' || mb_strlen($provincia, 'UTF-8') > 100) {
-            throw new InvalidArgumentException('La provincia debe tener entre 1 y 100 caracteres.');
+        $localidad = trim($localidad);
+        $localidadesPorProvincia = CatalogoGeografico::getLocalidadesPorProvincia();
+
+        if (!array_key_exists($provincia, $localidadesPorProvincia)) {
+            throw new InvalidArgumentException('La provincia no existe en el catálogo de Argentina.');
         }
+
+        if (!in_array($localidad, $localidadesPorProvincia[$provincia], true)) {
+            throw new InvalidArgumentException('La localidad no pertenece a la provincia seleccionada.');
+        }
+
         $this->provincia = $provincia;
+        $this->localidad = $localidad;
     }
 
     public function getProvincia(): string
@@ -41,11 +56,7 @@ class Ubicaciones extends RegistroDb
 
     public function setLocalidad(string $localidad): void
     {
-        $localidad = trim($localidad);
-        if ($localidad === '' || mb_strlen($localidad, 'UTF-8') > 100) {
-            throw new InvalidArgumentException('La localidad debe tener entre 1 y 100 caracteres.');
-        }
-        $this->localidad = $localidad;
+        $this->setProvinciaLocalidad($this->provincia, $localidad);
     }
 
     public function getLocalidad(): string
