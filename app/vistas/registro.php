@@ -7,15 +7,15 @@
  *     Si no existe o está vacío, no se muestra ningún mensaje.
  *   - $nombre y $mail: lo que escribió la persona, para no hacerle tipear de nuevo
  *     si hubo errores. Las contraseñas nunca se vuelven a mostrar.
- *   - La ruta real de 'registro' en rutas.php. Mientras sea '#', el formulario
- *     todavía no tiene a dónde enviarse.
+ * La ruta de 'registro' ya recibe el POST y muestra una confirmación de prueba.
+ * La validación y el guardado siguen pendientes.
  */
 $tituloPagina = 'Crear cuenta';
 $paginaActual = 'registro';
 $usuarioActual = null;
 $estilosPagina = ['registro.css'];
 
-// Valores por defecto para que la vista funcione sola, antes de que exista el controlador.
+// Valores iniciales; el controlador podrá conservarlos cuando se integre la validación.
 $errores = $errores ?? [];
 $nombre = $nombre ?? '';
 $mail = $mail ?? '';
