@@ -1,0 +1,5 @@
+.resultado-desc {
+    margin: var(--e-2) 0 0;
+    font-size: var(--t-chico);
+    color: var(--texto-secundario);
+}

@@ -1,0 +1,20 @@
+.seccion-encabezado {
+  max-width: 70ch;
+}
+/* Layout específico para alinear la lupa dentro del campo de búsqueda */
+.buscador-contenedor-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.buscador-contenedor-input input {
+    padding-left: 2.75rem; /* Espacio para que el texto no se superponga con la lupa */
+}
+
+.buscador-icono {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--texto-secundario);
+    pointer-events: none; /* Permite hacer clic a través del SVG hacia el input */
+}
