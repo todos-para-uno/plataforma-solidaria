@@ -1,21 +1,22 @@
 <?php
 /*
- * Vista de registro de usuarios: solo la presentación del formulario.
+ * Formulario de registro. Recibe datos para mostrar; su envío va al controlador.
  *
- * Integración pendiente (la hace el controlador, no esta vista):
- *   - $errores: arreglo de textos con los errores de validación del servidor.
- *     Si no existe o está vacío, no se muestra ningún mensaje.
- *   - $nombre y $mail: lo que escribió la persona, para no hacerle tipear de nuevo
- *     si hubo errores. Las contraseñas nunca se vuelven a mostrar.
- * La ruta de 'registro' ya recibe el POST y muestra una confirmación de prueba.
- * La validación y el guardado siguen pendientes.
+ * Al integrar la validación, el controlador podrá pasarle:
+ *   $errores  string[]  Mensajes de validación. Con un arreglo vacío, no se muestran errores.
+ *   $nombre   string    Nombre ingresado, para conservarlo si hay que corregir el formulario.
+ *   $mail     string    Correo ingresado, con el mismo propósito.
+ * Las contraseñas no se vuelven a mostrar en los campos.
+ *
+ * Hoy el POST muestra una confirmación de prueba. Falta validar los datos y guardar
+ * el usuario desde RegistroController; este formulario todavía no crea una cuenta.
  */
 $tituloPagina = 'Crear cuenta';
 $paginaActual = 'registro';
 $usuarioActual = null;
 $estilosPagina = ['registro.css'];
 
-// Valores iniciales; el controlador podrá conservarlos cuando se integre la validación.
+// Con estos valores el formulario también puede abrirse antes de recibir datos del controlador.
 $errores = $errores ?? [];
 $nombre = $nombre ?? '';
 $mail = $mail ?? '';
@@ -41,8 +42,9 @@ require __DIR__ . '/parciales/cabecera.php';
                 </div>
             <?php endif; ?>
 
-            <!-- Las validaciones HTML5 (required, type, minlength) solo ayudan al navegador.
-                 El servidor tiene que validar todo de nuevo, incluso que las dos contraseñas coincidan. -->
+            <!-- required, type y minlength ayudan a completar el formulario en el navegador.
+                 Al integrar el registro, validá también en el servidor: se puede enviar un POST
+                 sin pasar por esta pantalla. Comprobá además que las contraseñas coincidan. -->
             <form class="tarjeta" action="<?= escapar($rutas['registro']) ?>" method="post">
                 <div class="campo">
                     <label for="registro-nombre">Nombre</label>

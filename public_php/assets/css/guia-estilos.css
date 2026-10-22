@@ -1,4 +1,4 @@
-/* Layout de la página de guía de estilos (herramienta del equipo). */
+/* Distribución de las muestras de la guía. Los componentes que se muestran vienen de base.css. */
 .guia-seccion { padding-block: var(--e-8); border-bottom: 1px solid var(--linea); }
 .guia-seccion:last-child { border-bottom: 0; }
 

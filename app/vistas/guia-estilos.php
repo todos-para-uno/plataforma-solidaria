@@ -1,11 +1,12 @@
 <?php
 /*
- * Guía de estilos viva: muestra cada componente de base.css tal como se usa.
- * Vista previa local (desde la raíz del proyecto):
- *   php -S 127.0.0.1:8000 -t .
- *   http://127.0.0.1:8000/app/vistas/guia-estilos.php
- * Para ver la cabecera con sesión iniciada: ?sesion=1  (como administrador: ?sesion=admin)
- * Es solo una herramienta del equipo: no se enlaza desde la aplicación.
+ * Ejemplos de los componentes compartidos de base.css para consultar al armar una pantalla.
+ * Para verlos, ejecutá desde la raíz del proyecto:
+ *   php -S localhost:8001 -t .
+ * Después abrí http://localhost:8001/app/vistas/guia-estilos.php.
+ * Agregá ?sesion=1 para simular el menú de usuario o ?sesion=admin para el de administrador.
+ * Estos parámetros cambian la presentación; no inician sesión ni otorgan permisos.
+ * Es una herramienta local del equipo. Al agregar un componente compartido, sumá su ejemplo acá.
  */
 $tituloPagina = 'Guía de estilos';
 $paginaActual = 'explorar';

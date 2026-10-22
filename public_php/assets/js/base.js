@@ -1,5 +1,5 @@
-// todospara.uno — comportamiento compartido (lo carga la cabecera).
-// Sin JavaScript el menú se muestra siempre abierto, así que nada queda inaccesible.
+// Comportamiento del menú compartido. cabecera.php carga este archivo en las vistas.
+// El botón se habilita al encontrar el menú. Sin JavaScript, los enlaces quedan visibles.
 document.documentElement.classList.add('js');
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
         menu.classList.toggle('abierto', !abierto);
     });
 
-    // Cierra el desplegable del usuario al hacer clic afuera.
+    // Un clic fuera del menú de usuario cierra su desplegable <details>.
     document.addEventListener('click', function (evento) {
         document.querySelectorAll('.menu-usuario[open]').forEach(function (desplegable) {
             if (!desplegable.contains(evento.target)) {

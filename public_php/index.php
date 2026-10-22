@@ -1,5 +1,6 @@
 <?php
-// Punto de entrada HTTP. Las URLs usan ?ruta=... para no necesitar reglas de Apache.
+// Las peticiones de la aplicación entran por este archivo.
+// El parámetro ?ruta=... elige la pantalla o acción, sin configurar reglas de Apache.
 $ruta = $_GET['ruta'] ?? 'inicio';
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $esLectura = in_array($metodo, ['GET', 'HEAD'], true);

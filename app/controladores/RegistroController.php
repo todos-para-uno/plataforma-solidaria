@@ -8,8 +8,9 @@ class RegistroController
 
     public function procesarRegistro(string $rutaBase, string $rutaAssets): void
     {
-        // Demostración del recorrido HTTP. La validación, el guardado y la sesión
-        // se integrarán después; por ahora no se leen ni conservan contraseñas.
+        // Por ahora comprobamos que el envío del formulario llegue a esta pantalla.
+        // Falta validar los datos, guardar el usuario e iniciar la sesión desde acá.
+        // En esta demostración no leemos ni conservamos las contraseñas enviadas.
         require __DIR__ . '/../vistas/registro-confirmacion.php';
     }
 }

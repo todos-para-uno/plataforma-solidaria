@@ -1,4 +1,4 @@
-/* Layout de la página de inicio. Solo acomoda; colores y componentes vienen de base.css. */
+/* Distribución de la página de inicio. Reutiliza los colores y componentes de base.css. */
 .portada-interior {
     display: grid;
     grid-template-columns: 1.3fr 1fr;

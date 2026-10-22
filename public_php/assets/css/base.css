@@ -1,18 +1,19 @@
 /* ==========================================================================
    todospara.uno — hoja de estilos compartida
-   Todas las pantallas cargan este archivo primero. Ver DESIGN.md.
-   Si necesitás un color, tamaño o componente que no está acá, proponelo
-   en un pull request que actualice este archivo y DESIGN.md. No lo
-   inventes en la hoja de tu pantalla.
+   La cabecera carga este archivo antes que las hojas de cada pantalla.
+   Reutilizá sus variables y componentes para mantener los estilos en común.
+   Si agregás uno compartido, sumá un ejemplo en app/vistas/guia-estilos.php.
+   Las decisiones de diseño se documentan en DESIGN.md, la referencia interna
+   que usamos el equipo y los modelos de IA.
    ========================================================================== */
 
-/* 1. Variables (tokens)
+/* 1. Variables compartidas: colores, fuentes, tamaños y espacios
    ------------------------------------------------------------------------ */
 :root {
-    /* Color de marca (sacados del logo) */
+    /* Colores de la marca, tomados del logo */
     --azul: #153a6b;          /* marca, texto principal, botón primario */
     --azul-hover: #24508a;
-    --corazon: #b8472b;       /* SOLO acciones de donar */
+    --corazon: #b8472b;       /* reservado para las acciones de donar */
     --corazon-hover: #9c3a21;
     --sol: #f4b223;           /* resaltados, barra de progreso */
     --sol-suave: #ecd89f;     /* sombra de las tarjetas */
@@ -39,7 +40,7 @@
     --fuente-titulos: Georgia, "Times New Roman", serif;
     --fuente-texto: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-    /* Escala de tamaños (no usar otros) */
+    /* Tamaños compartidos para mantener la misma jerarquía entre pantallas */
     --t-chico: 0.8125rem;   /* 13px: ayudas, notas */
     --t-base: 1rem;         /* 16px: texto */
     --t-medio: 1.125rem;    /* 18px: bajadas */
@@ -223,7 +224,7 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .menu-usuario ul a { display: flex; width: 100%; }
 
-/* Página actual: subrayado sol, el mismo gesto del título del registro */
+/* aria-current marca la página activa; la resaltamos con un subrayado amarillo. */
 .menu a[aria-current="page"] {
     text-decoration: underline;
     text-decoration-color: var(--sol);
@@ -316,7 +317,7 @@ img { display: block; max-width: 100%; height: auto; }
     .pie-marca { grid-column: 1 / -1; }
 }
 
-/* 4b. Secciones de página: aire generoso y fondos alternados
+/* 4b. Secciones de página: separación vertical y fondos alternados
    ------------------------------------------------------------------------ */
 .seccion { padding-block: var(--e-16) calc(var(--e-16) + var(--e-4)); }
 .seccion-papel {

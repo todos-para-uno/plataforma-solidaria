@@ -1,12 +1,13 @@
 <?php
 /**
- * Vista de la página principal (Home) de todospara.uno
+ * Página de inicio que carga public_php/index.php.
+ * Las campañas de este arreglo son ficticias; todavía no se consultan en la base.
  */
 
 $tituloPagina  = 'Todospara.uno — Campañas solidarias';
 $paginaActual  = 'inicio';
-$usuarioActual = null; // Podés cambiar esto para pruebas según corresponda
-$estilosPagina = ['inicio.css', 'index.css']; // Opcional, si requiere layout específico
+$usuarioActual = null; // Muestra el menú de visitante mientras falta integrar la sesión.
+$estilosPagina = ['inicio.css', 'index.css']; // Se cargan en este orden, después de base.css.
 
 $campanas = [
     ['titulo' => 'Una mesa para compartir', 'categoria' => 'Alimentos', 'autor' => 'Ana Pérez', 'nivel' => 'azul',
