@@ -1,4 +1,4 @@
-/* Layout de la pantalla de registro. Solo acomoda; colores y componentes vienen de base.css. */
+/* Layout del formulario y la confirmación de registro. */
 .registro-interior {
     max-width: 480px;
     margin-inline: auto;

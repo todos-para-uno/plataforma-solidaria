@@ -84,7 +84,47 @@ GitHub Desktop gestiona el repositorio; PHP y MariaDB se ejecutan con el entorno
 
 Ayuda: [clonar un repositorio con GitHub Desktop](https://docs.github.com/en/desktop/adding-and-cloning-repositories/cloning-and-forking-repositories-from-github-desktop).
 
-La configuración de conexión y las rutas de la aplicación se documentarán al completar su integración.
+## Probar las rutas de registro
+
+Desde la raíz del proyecto, iniciá el servidor local:
+
+```bash
+php -S localhost:8000 -t public_php
+```
+
+Abrí `http://localhost:8000/` y elegí **Crear cuenta**. Las rutas disponibles son:
+
+| Método | URL | Resultado |
+| --- | --- | --- |
+| GET | `/index.php` | Página de inicio. |
+| GET | `/index.php?ruta=registro` | Formulario de registro. |
+| POST | `/index.php?ruta=registro` | Cartel de prueba: «acá iría iniciar la sesión». |
+
+Las rutas se resuelven desde `public_php/index.php`, sin reglas de reescritura.
+Con Apache o XAMPP, usá `public_php/` como directorio público, o entrá a
+`/plataforma-solidaria/public_php/index.php` si clonaste el proyecto en el directorio web.
+
+Este recorrido todavía no valida los datos en el servidor, no guarda usuarios ni
+inicia una sesión. La confirmación aclara que la cuenta todavía no fue creada.
+No requiere MariaDB para probarlo. Las contraseñas enviadas no se muestran ni se conservan.
+
+## Prueba futura con MariaDB
+
+Cuando se integre el guardado, la prueba completa será:
+
+1. Preparar una instancia de MariaDB de prueba e importar `database/schema.sql`.
+2. Configurar `config/conexion.php` con un usuario y contraseña que tengan acceso
+   a esa base. La configuración actual usa `root` sin contraseña y puede no
+   coincidir con la instalación local.
+3. Enviar el formulario con datos ficticios y un correo que todavía no exista.
+4. Consultar `usuarios` desde phpMyAdmin o el cliente de MariaDB y comprobar que
+   se creó una sola fila, con los datos esperados y los permisos iniciales.
+5. Verificar con `password_verify()` que la contraseña coincide con el hash
+   almacenado; la contraseña original nunca debe guardarse como texto.
+
+La instancia debe ser exclusiva para pruebas: el script crea la base `todosparauno`
+y las pruebas de repositorios actuales escriben datos. `php tests/run_tests.php`
+ejecuta únicamente las pruebas de modelos.
 
 ## Trabajo en equipo
 
