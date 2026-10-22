@@ -1,6 +1,6 @@
 <?php
-// Pie compartido. Cierra lo que abrió cabecera.php.
-// $rutas y $rutaAssets ya los definió cabecera.php.
+// Incluí este archivo al final de cada pantalla, después de su contenido.
+// Cierra la estructura que abrió cabecera.php y reutiliza sus $rutas y $rutaAssets.
 ?>
 </main>
 

@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../../app/modelos/Usuarios.php';
 require_once __DIR__ . '/../../utilidades/TestUtils.php';
 require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
@@ -7,7 +6,7 @@ require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
 
 
 function usuariosTest(){
-    $usuarioNuevo = Usuarios::crear(
+    $usuarioNuevo = Usuario::crear(
         'Ana',
         'ana@example.com',
         'MiPasswordSegura123'
@@ -25,7 +24,7 @@ function usuariosTest(){
         'validacion' => 3
     ];
 
-    $usuarioRecuperado = Usuarios::desdePersistencia($filaUsuario);
+    $usuarioRecuperado = Usuario::desdePersistencia($filaUsuario);
     TestUtils::comprobar(
         $usuarioRecuperado->getId() === 5,
         'Se recuperó correctamente el ID' . eol()
@@ -42,4 +41,11 @@ function usuariosTest(){
     );
 
     echo "Prueba para /../../app/modelos/Usuarios.php completada correctamente." . eol();
+    echo '<hr>';
 }
+
+// Permite ejecutar este test solo y también incluirlo desde un ejecutor de pruebas.
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    usuariosTest();
+}
+

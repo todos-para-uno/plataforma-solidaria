@@ -1,10 +1,11 @@
 <?php
 require_once __DIR__ . "/RegistroDb.php";
-enum TipoDocumento: string {
+enum TipoDocumento: string
+{
     case DNI = 'DNI';
     case Pasaporte = 'Pasaporte';
 }
-class Usuarios extends RegistroDb
+class Usuario extends RegistroDb
 {
     private string $nombre;
     private string $mail;
@@ -16,18 +17,18 @@ class Usuarios extends RegistroDb
     private bool $verificado;
     private bool $admin;
     private int $validacion;
-
+    
     function __construct(
         string $miNombre, 
         string $miMail, 
         string $hashPassword, 
         ?string $miTelefono = null, 
     ){
-        $this->nombre = $miNombre;
-        $this->mail = $miMail;
+        $this->setNombre($miNombre);
+        $this->setEmail($miMail);
   
-        $this->pass = $hashPassword; // $this->pass = password_hash($miPass, PASSWORD_DEFAULT);
-        $this->telefono = $miTelefono;
+        $this->setPassword($hashPassword); // $this->pass = password_hash($miPass, PASSWORD_DEFAULT);
+        $this->setTelefono($miTelefono);
 
         $this->tipo_documento = null;
         $this->documento = null;
@@ -36,6 +37,7 @@ class Usuarios extends RegistroDb
         $this->admin = false;
         $this->validacion = 1;
     }
+
     public static function crear (
         string $nombre,
         string $mail,
@@ -65,7 +67,10 @@ class Usuarios extends RegistroDb
             }
         return $usuario;            
     }
-
+    /**
+     * 
+     * @param array<int,mixed> $filaUsuario
+     */
     public static function desdePersistencia(array $filaUsuario): self
     {
         $usuario = new self(
@@ -95,56 +100,79 @@ class Usuarios extends RegistroDb
     }
 
     
-    function setNombre($nombre)
+    public function setNombre(string $nombre): void
     {
+        $nombre = trim($nombre);
+        if ($nombre === '' || mb_strlen($nombre, 'UTF-8') > 100) {
+            throw new InvalidArgumentException('El nombre debe tener entre 1 y 100 caracteres.');
+        }
         $this->nombre = $nombre;
     }
-    function getNombre()
+    public function getNombre(): string
     {
         return $this->nombre;
     }
     
-    function setEmail($email)
+    public function setEmail(string $email): void
     {
+        $email = trim($email);
+        if (mb_strlen($email, 'UTF-8') > 150) {
+            throw new InvalidArgumentException('El correo no puede superar los 150 caracteres.');
+        }
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            throw new InvalidArgumentException('Ingresá un correo válido, como nombre@ejemplo.com.');
+        }
         $this->mail = $email;
     }
-    function getEmail()
+    public function getEmail(): string
     {
         return $this->mail;
     }
-    function setPassword($password)
+    public function setPassword(string $password): void
     {
-        $this->pass = password_hash($password, PASSWORD_DEFAULT);
+        if (trim($password) === '') {
+            throw new InvalidArgumentException('La contraseña no puede estar vacía.');
+        }
+        if (mb_strlen($password, 'UTF-8') < 8) {
+            throw new InvalidArgumentException('La contraseña debe tener al menos 8 caracteres.');
+        }
+        // Bcrypt solo utiliza los primeros 72 bytes y no admite bytes nulos.
+        if (strlen($password) > 72 || strpos($password, "\0") !== false) {
+            throw new InvalidArgumentException(
+                'La contraseña debe ocupar como máximo 72 bytes y no contener bytes nulos.'
+            );
+        }
+        $this->pass = $password;// password_hash($password, PASSWORD_DEFAULT);
     }
-    function getPassword()
+    public function getPassword(): string
     {
         return $this->pass;
     }
-    function setTelefono($telefono)
+    public function setTelefono(?string $telefono): void
     {
         $this->telefono = $telefono;
     }
-    function getTelefono()
+    public function getTelefono(): ?string
     {
         return $this->telefono;
     }
-    function getTipoDocumento()
+    public function getTipoDocumento(): ?TipoDocumento
     {
         return $this->tipo_documento;
     }
-    function getDocumento()
+    public function getDocumento(): ?string
     {
         return $this->documento;
     }
-    function getVerificado()
+    public function getVerificado(): bool
     {
         return $this->verificado;
     }
-    function getAdmin()
+    public function getAdmin(): bool
     {
         return $this->admin;
     }
-    function getValidacion()
+    public function getValidacion(): int
     {
         return $this->validacion;
     }

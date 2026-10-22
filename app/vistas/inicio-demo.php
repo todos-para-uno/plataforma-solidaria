@@ -1,7 +1,8 @@
 <?php
 /*
- * Página de inicio de prueba, para ver la guía con contenido real.
- * Textos tomados de la maqueta "pruebas_todosparauno". Datos ficticios.
+ * Maqueta inicial para probar los componentes compartidos con campañas ficticias.
+ * Conserva textos de "pruebas_todosparauno". La aplicación usa vistas/index.php como inicio.
+ * Para abrir esta vista directamente, seguí los pasos de vista previa del README.
  */
 $tituloPagina = null;
 $paginaActual = 'inicio';

@@ -35,4 +35,5 @@ function usuariosRepositoryTest (){
         echo "Se intento agregar usuario con mail " . $mail . " pero ya existe y es ";
         echo $usuarios[0]['nombre'] . " con id " . $usuarios[0]['id'];
     }
+    echo '<hr>';
 }

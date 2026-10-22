@@ -1,0 +1,11 @@
+/* Distribución del formulario y su confirmación de prueba. Los estilos compartidos están en base.css. */
+.registro-interior {
+    max-width: 480px;
+    margin-inline: auto;
+}
+.registro-interior .seccion-encabezado {
+    margin-bottom: var(--e-8);
+}
+.registro-ingresar {
+    margin-top: var(--e-6);
+}

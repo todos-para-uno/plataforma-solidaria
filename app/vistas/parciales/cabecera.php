@@ -1,16 +1,22 @@
 <?php
 /*
- * Cabecera compartida. Abre <html>, <head>, <body> y <main>; pie.php los cierra.
+ * Estructura inicial de las pantallas: título, estilos y menú compartido.
+ * Abre <html>, <head>, <body> y <main>. Completá la pantalla incluyendo pie.php al final.
  *
- * Variables que puede definir la vista ANTES de incluir este archivo (todas opcionales):
- *   $tituloPagina   string   Título de la pestaña. Ej: 'Crear campaña'.
- *   $paginaActual   string   Clave de rutas.php del ítem del menú activo. Ej: 'explorar'.
- *   $usuarioActual  ?array   null si no hay sesión; si no:
+ * La vista puede definir estas variables antes de incluir la cabecera:
+ *   $tituloPagina   ?string  Título de la pestaña. Con null, se muestra solo la marca.
+ *   $paginaActual   ?string  Clave de rutas.php para marcar el enlace activo. Ej.: 'explorar'.
+ *   $usuarioActual  ?array   null para el menú de visitante. Para el menú de usuario:
  *                            ['nombre' => string, 'admin' => bool, 'mensajesSinLeer' => int]
- *   $rutaAssets     string   URL base de public_php/assets, sin barra final.
- *   $estilosPagina  string[] Hojas propias de la pantalla, dentro de assets/css. Ej: ['registro.css'].
+ *   $rutaBase       string   URL donde está index.php, sin barra final. rutas.php la usa.
+ *   $rutaAssets     string   URL de la carpeta assets, sin barra final.
+ *   $estilosPagina  string[] Hojas adicionales dentro de assets/css. Ej.: ['registro.css'].
  *
- * Uso:
+ * Todas son opcionales. El punto de entrada público define $rutaBase y $rutaAssets;
+ * los valores por defecto permiten abrir las vistas directamente en la vista previa local.
+ * $usuarioActual solo decide qué mostrar: la autorización debe comprobarse en el servidor.
+ *
+ * Ejemplo desde un archivo en app/vistas/:
  *   <?php $tituloPagina = 'Explorar campañas'; $paginaActual = 'explorar';
  *         require __DIR__ . '/parciales/cabecera.php'; ?>
  *   ... contenido de la pantalla ...
@@ -71,7 +77,7 @@ $estilosPagina = $estilosPagina ?? [];
                         </a>
                     </li>
                     <li>
-                        <!-- <details> abre y cierra sin JavaScript -->
+                        <!-- El navegador permite abrir este menú con <details>, incluso sin JavaScript. -->
                         <details class="menu-usuario">
                             <summary><?= escapar($usuarioActual['nombre']) ?></summary>
                             <ul>
