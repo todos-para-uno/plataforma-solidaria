@@ -24,7 +24,7 @@ abstract class CrudRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function findById(int|string $id): ?array
+    public function findRowById(int|string $id): ?array
     {
         $sql = "SELECT * FROM `{$this->table}` WHERE `{$this->primaryKey}` = :id";
         $stmt = $this->pdo->prepare($sql);
@@ -34,6 +34,15 @@ abstract class CrudRepository
         
         return $fila === false ? null : $fila;
     }
+
+    public function findById(int|string $id): ?RegistroDb
+{
+    $fila = $this->findRowById($id);
+
+    return $fila === null
+        ? null
+        : $this->hidratar($fila);
+}
 
     /**
      * Inserta si no hay clave primaria; actualiza si se proporciona.
@@ -101,18 +110,4 @@ abstract class CrudRepository
      * @param array<string, mixed> $fila
      */
     abstract protected function hidratar(array $fila): RegistroDb;
-
-    /**
-     * Busca un registro por ID y devuelve su entidad.
-     */
-    public function findEntityById(int|string $id): ?RegistroDb
-    {
-        $fila = $this->findById($id);
-
-        if ($fila === null) {
-            return null;
-        }
-
-        return $this->hidratar($fila);
-    }
 }

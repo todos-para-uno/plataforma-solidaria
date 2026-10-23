@@ -39,11 +39,11 @@ function validacionesRepositoryTest(PDO $pdo): void
             'Se insertó una validación y se obtuvo su ID' . eol()
         );
 
-        $validacionEntidad = $repositorio->findEntityById($id);
+        $validacionEntidad = $repositorio->findById($id);
 
         TestUtils::comprobar(
             $validacionEntidad instanceof Validaciones,
-            'findEntityById devuelve un objeto Validaciones' . eol()
+            'findById devuelve un objeto Validaciones' . eol()
         );
 
         TestUtils::comprobar(
@@ -52,7 +52,7 @@ function validacionesRepositoryTest(PDO $pdo): void
         );        
 
         // 2. RECUPERAR POR ID
-        $filaValidacion = $repositorio->findById($id);
+        $filaValidacion = $repositorio->findRowById($id);
 
         TestUtils::comprobar(
             $filaValidacion !== null,
@@ -82,7 +82,7 @@ function validacionesRepositoryTest(PDO $pdo): void
             'nombre' => $nuevoNombre
         ]);
 
-        $filaActualizada = $repositorio->findById($id);
+        $filaActualizada = $repositorio->findRowById($id);
 
         TestUtils::comprobar(
             $filaActualizada !== null
@@ -97,7 +97,7 @@ function validacionesRepositoryTest(PDO $pdo): void
         );
 
         TestUtils::comprobar(
-            $repositorio->findById($id) === null,
+            $repositorio->findRowById($id) === null,
             'La validación eliminada ya no puede recuperarse' . eol()
         );
 

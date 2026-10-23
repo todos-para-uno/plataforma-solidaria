@@ -45,11 +45,11 @@ function usuariosRepositoryTest(PDO $pdo): void
             'Se insertó un usuario y se obtuvo su ID' . eol()
         );
 
-        $usuarioEntidad = $usuariosRepositorio->findEntityById($id);
+        $usuarioEntidad = $usuariosRepositorio->findById($id);
 
         TestUtils::comprobar(
             $usuarioEntidad instanceof Usuario,
-            'findEntityById devuelve un objeto Usuario' . eol()
+            'findById devuelve un objeto Usuario' . eol()
         );
 
         TestUtils::comprobar(
@@ -59,7 +59,7 @@ function usuariosRepositoryTest(PDO $pdo): void
 
 
         // 2. RECUPERAR POR ID
-        $filaUsuario = $usuariosRepositorio->findById($id);
+        $filaUsuario = $usuariosRepositorio->findRowById($id);
 
         TestUtils::comprobar(
             $filaUsuario !== null,
@@ -87,7 +87,7 @@ function usuariosRepositoryTest(PDO $pdo): void
             'nombre' => $nuevoNombre
         ]);
 
-        $filaActualizada = $usuariosRepositorio->findById($id);
+        $filaActualizada = $usuariosRepositorio->findRowById($id);
 
         TestUtils::comprobar(
             $filaActualizada !== null
@@ -104,9 +104,14 @@ function usuariosRepositoryTest(PDO $pdo): void
         );
 
         TestUtils::comprobar(
-            $usuariosRepositorio->findById($id) === null,
+            $usuariosRepositorio->findRowById($id) === null,
             'El usuario eliminado ya no puede recuperarse' . eol()
         );
+
+        TestUtils::comprobar(
+            $usuariosRepositorio->findById($id) === null,
+            'La búsqueda de una entidad inexistente devuelve null' . eol()
+        );        
 
         echo 'Pruebas de UsuariosRepository completadas correctamente.' . eol();
 
