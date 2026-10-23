@@ -4,7 +4,7 @@
  */
 
 $tituloPagina     = 'Buscar campañas — todospara.uno';
-$paginaActual     = 'buscador';
+$paginaActual     = 'explorar';
 $usuarioActual    = null; // Cambiar según corresponda si hay sesión iniciada
 $estilosPagina    = ['buscador.css']; // Hoja propia para el layout del buscador
 
@@ -16,7 +16,7 @@ require __DIR__ . '/parciales/cabecera.php';
 
 require_once __DIR__ . '/conexion.php';
 
-$categoriasCampanas = mysqli_query($conexion, "SELECT * FROM cat_camp");
+$categoriasCampanas = $conexion->query('SELECT * FROM cat_camp')->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 
@@ -27,7 +27,7 @@ $categoriasCampanas = mysqli_query($conexion, "SELECT * FROM cat_camp");
             <p class="bajada">Encontrá la campaña solidaria que querés apoyar con dinero o insumos.</p>
         </div>
 
-        <form class="tarjeta" action="resultados_buscar.php" method="post">
+        <form class="tarjeta" action="<?= escapar($rutas['resultados_buscar']) ?>" method="post">
             
             <!-- Campo de búsqueda con lupa integrada -->
             <div class="campo">

@@ -4,15 +4,16 @@
 // '#' indica una funcionalidad pendiente. Al agregar su URL, implementá también
 // la ruta en public_php/index.php; este arreglo por sí solo no crea la pantalla.
 
-$rutaEntrada = ($rutaBase ?? '../../app/vistas') . '/index.php';
+$rutaEntrada = ($rutaBase ?? '../../public_php') . '/index.php';
 
 return [
-    'inicio'          => 'index.php',
-    'explorar'        => 'buscador.php',
+    'inicio'          => $rutaEntrada,
+    'explorar'        => $rutaEntrada . '?ruta=buscador',
+    'resultados_buscar' => $rutaEntrada . '?ruta=resultados_buscar',
     'como_funciona'   => '#',
-    'contacto'        => 'contacto.php',
-    'ingresar'        => 'ingresar.php',
-    'registro'        => 'registro.php',
+    'contacto'        => $rutaEntrada . '?ruta=contacto',
+    'ingresar'        => $rutaEntrada . '?ruta=ingresar',
+    'registro'        => $rutaEntrada . '?ruta=registro',
     'crear_campana'   => '#',
     'mis_campanas'    => '#',
     'mis_donaciones'  => '#',
