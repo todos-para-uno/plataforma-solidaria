@@ -4,18 +4,52 @@ require_once __DIR__ . '/../../utilidades/TestUtils.php';
 require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
 
 
-
-function usuariosTest(){
-    $usuarioNuevo = Usuario::crear(
+function usuariosCambioPasswordTest(): void
+{
+    $usuario = Usuario::crear(
         'Ana',
         'ana@example.com',
-        'MiPasswordSegura123'
+        'PasswordOriginal123'
     );
+
+    $hashAnterior = $usuario->getPassword();
+
+    $usuario->setPassword('PasswordNueva456');
+
+    TestUtils::comprobar (
+        $usuario->verificarPassword('PasswordNueva456'),
+        'La contraseña nueva se verifica correctamente' . eol()
+    );
+
+    TestUtils::comprobar (
+        !$usuario->verificarPassword('PasswordOriginal123'),
+        'La contraseña anterior deja de ser válida' . eol()
+    );
+
+    TestUtils::comprobar (
+        $usuario->getPassword() !== $hashAnterior,
+        'El hash cambió al actualizar la contraseña' . eol()
+    );
+}
+
+function usuariosPersistenciaTest(): void
+{
+
+    $password = 'MiPasswordSegura123';
+
+    $usuario = Usuario::crear(
+        'Ana',
+        'ana@example.com',
+        $password
+    );
+
+    $hashOriginal = $usuario->getPassword();
+
     $filaUsuario = [
         'id' => 5,
-        'nombre' => $usuarioNuevo->getNombre(),
-        'mail' => $usuarioNuevo->getEmail(),
-        'pass' => $usuarioNuevo->getPassword(),
+        'nombre' => $usuario->getNombre(),
+        'mail' => $usuario->getEmail(),
+        'pass' => $hashOriginal,
         'telefono' => null,
         'tipo_documento' => null,
         'documento' => null,
@@ -24,23 +58,41 @@ function usuariosTest(){
         'validacion' => 3
     ];
 
-    $usuarioRecuperado = Usuario::desdePersistencia($filaUsuario);
+    $usuarioRecuperado = Usuario::desdePersistencia(
+        $filaUsuario
+    );
+
     TestUtils::comprobar(
         $usuarioRecuperado->getId() === 5,
         'Se recuperó correctamente el ID' . eol()
     );
 
     TestUtils::comprobar(
-        $usuarioRecuperado->verificarPassword('MiPasswordSegura123'),
+        $usuarioRecuperado->verificarPassword($password),
         'La contraseña se verifica correctamente' . eol()
     );
 
     TestUtils::comprobar(
-        $usuarioRecuperado->getPassword() === $usuarioNuevo->getPassword(),
+        $usuarioRecuperado->getPassword() === $hashOriginal,
         'El hash original se conservó sin modificaciones' . eol()
     );
 
-    echo "Prueba para /../../app/modelos/Usuarios.php completada correctamente." . eol();
+    TestUtils::comprobar(
+        !$usuarioRecuperado->verificarPassword('PasswordIncorrecta'),
+        'Se rechaza una contraseña incorrecta' . eol()
+    );    
+
+}
+
+function usuariosTest(): void
+{
+    echo 'INICIANDO TEST: cambio de contraseña' . eol();
+    usuariosCambioPasswordTest();
+
+    echo 'INICIANDO TEST: reconstrucción desde persistencia' . eol();
+    usuariosPersistenciaTest();
+
+    echo 'Pruebas de Usuarios.php completadas correctamente.' . eol();
     echo '<hr>';
 }
 

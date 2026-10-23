@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../app/modelos/Ubicaciones.php';
+require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
 
 function ubicacionesComprobar(bool $condicion, string $mensaje): void
 {
@@ -21,7 +22,7 @@ function ubicacionesTest(): void
             && $ubicacion->getLongitud() === -58.364675
             && $ubicacion->getReferencia() === null
             && $ubicacion->getId() === null,
-        'Se crea una ubicación con coordenadas del mapa, sin referencia ni ID asignado.'
+        'Se crea una ubicación con coordenadas del mapa, sin referencia ni ID asignado.' . eol()
     );
 
     $conReferencia = new Ubicaciones(
@@ -29,14 +30,14 @@ function ubicacionesTest(): void
     );
     ubicacionesComprobar(
         $conReferencia->getReferencia() === 'Portón azul, frente a la plaza.',
-        'La referencia es opcional y se recortan los espacios de los extremos.'
+        'La referencia es opcional y se recortan los espacios de los extremos.' . eol()
     );
 
     foreach ([null, '', '   '] as $referenciaVacia) {
         $conReferencia->setReferencia($referenciaVacia);
         ubicacionesComprobar(
             $conReferencia->getReferencia() === null,
-            'Una referencia sin completar se representa como null.'
+            'Una referencia sin completar se representa como null.' . eol()
         );
     }
 
@@ -44,7 +45,7 @@ function ubicacionesTest(): void
         $limite = new Ubicaciones('Buenos Aires', 'Avellaneda', $latitud, $longitud);
         ubicacionesComprobar(
             $limite->getLatitud() === $latitud && $limite->getLongitud() === $longitud,
-            "Se aceptan las coordenadas válidas ($latitud, $longitud), incluidos los límites y el cero."
+            "Se aceptan las coordenadas válidas ($latitud, $longitud), incluidos los límites y el cero." . eol()
         );
     }
 
@@ -55,7 +56,7 @@ function ubicacionesTest(): void
         $limitesTexto->getProvincia() === 'Córdoba'
             && $limitesTexto->getLocalidad() === 'Río Cuarto'
             && mb_strlen($limitesTexto->getReferencia(), 'UTF-8') === 150,
-        'Se aceptan nombres del catálogo con tildes y una referencia de 150 caracteres.'
+        'Se aceptan nombres del catálogo con tildes y una referencia de 150 caracteres.' . eol()
     );
 
     $casosInvalidos = [
@@ -93,7 +94,7 @@ function ubicacionesTest(): void
         } catch (InvalidArgumentException) {
             $rechazado = true;
         }
-        ubicacionesComprobar($rechazado, "El constructor rechaza un valor inválido de $campo.");
+        ubicacionesComprobar($rechazado, "El constructor rechaza un valor inválido de $campo." . eol());
 
         $setter = 'set' . ucfirst($campo);
         $getter = 'get' . ucfirst($campo);
@@ -106,7 +107,7 @@ function ubicacionesTest(): void
         }
         ubicacionesComprobar(
             $rechazado && $ubicacion->$getter() === $anterior,
-            "El setter de $campo rechaza el valor inválido y conserva el anterior."
+            "El setter de $campo rechaza el valor inválido y conserva el anterior." . eol()
         );
     }
 
@@ -118,7 +119,7 @@ function ubicacionesTest(): void
     }
     ubicacionesComprobar(
         $rechazado,
-        'Una localidad existente en otra provincia se rechaza con el mensaje de pertenencia.'
+        'Una localidad existente en otra provincia se rechaza con el mensaje de pertenencia.' . eol()
     );
 
     $rechazado = false;
@@ -129,7 +130,7 @@ function ubicacionesTest(): void
     }
     ubicacionesComprobar(
         $rechazado,
-        'Una provincia inexistente se rechaza con su propio mensaje.'
+        'Una provincia inexistente se rechaza con su propio mensaje.' . eol()
     );
 
     $rechazado = false;
@@ -142,7 +143,7 @@ function ubicacionesTest(): void
         $rechazado
             && $ubicacion->getProvincia() === 'Buenos Aires'
             && $ubicacion->getLocalidad() === 'Avellaneda',
-        'Si falla el cambio conjunto, no se modifica ni la provincia ni la localidad.'
+        'Si falla el cambio conjunto, no se modifica ni la provincia ni la localidad.' . eol()
     );
 
     $ubicacion->setProvinciaLocalidad(' Córdoba ', ' Río Cuarto ');
@@ -157,23 +158,23 @@ function ubicacionesTest(): void
             && $ubicacion->getLongitud() === -64.349344
             && $ubicacion->getReferencia() === 'Portón azul'
             && $ubicacion->getId() === 53,
-        'Se pueden actualizar los datos válidos y asignar el ID heredado de RegistroDb.'
+        'Se pueden actualizar los datos válidos y asignar el ID heredado de RegistroDb.' . eol()
     );
 
     $ubicacion->setLocalidad(' Avellaneda ');
     $ubicacion->setProvincia(' Santa Fe ');
     ubicacionesComprobar(
         $ubicacion->getProvincia() === 'Santa Fe' && $ubicacion->getLocalidad() === 'Avellaneda',
-        'Los setters individuales aceptan cambios que conservan una pareja válida.'
+        'Los setters individuales aceptan cambios que conservan una pareja válida.' . eol()
     );
 
     $caba = new Ubicaciones('Ciudad Autónoma de Buenos Aires', 'Palermo', 0, 0);
     ubicacionesComprobar(
         $caba->getProvincia() === 'Ciudad Autónoma de Buenos Aires' && $caba->getLocalidad() === 'Palermo',
-        'El catálogo también contempla CABA.'
+        'El catálogo también contempla CABA.' . eol()
     );
 
-    echo 'Todas las pruebas de Ubicaciones pasaron.' . PHP_EOL;
+    echo 'Todas las pruebas de Ubicaciones pasaron.' . eol();
     echo '<hr>';
 }
 

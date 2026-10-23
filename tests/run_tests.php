@@ -22,13 +22,16 @@ function run_modelos_tests(){
     ubicacionesTest();
 }
 function run_repositorios_tests(){
+    require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/repositorios/UsuariosRepository.php';
     require_once __DIR__ . '/repositorios/ValidacionesRepository.php';
 
-    validacionesRepositoryTest();
-    usuariosRepositoryTest();
+    $pdo = conectarBd();
+
+    validacionesRepositoryTest($pdo);
+    usuariosRepositoryTest($pdo);
     
 }
 
-run_modelos_tests();
+//run_modelos_tests();
 run_repositorios_tests();

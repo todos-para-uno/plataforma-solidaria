@@ -18,16 +18,18 @@ class Usuario extends RegistroDb
     private bool $admin;
     private int $validacion;
     
-    function __construct(
-        string $miNombre, 
-        string $miMail, 
+    private function __construct(
+        string $nombre, 
+        string $mail, 
         string $hashPassword, 
         ?string $miTelefono = null, 
     ){
-        $this->setNombre($miNombre);
-        $this->setEmail($miMail);
+        $this->setNombre($nombre);
+        $this->setEmail($mail);
   
-        $this->setPassword($hashPassword); // $this->pass = password_hash($miPass, PASSWORD_DEFAULT);
+        $this->pass = $hashPassword;
+        // $this->setPassword($hashPassword); // $this->pass = password_hash($miPass, PASSWORD_DEFAULT);
+
         $this->setTelefono($miTelefono);
 
         $this->tipo_documento = null;
@@ -50,7 +52,7 @@ class Usuario extends RegistroDb
             $usuario = new self(
             $nombre,
             $mail,
-            password_hash($password, PASSWORD_DEFAULT),
+            self::generarHashPassword($password),
             $telefono
             );
             if ($tipoDocumento !== null || $documento !== null) {
@@ -69,7 +71,7 @@ class Usuario extends RegistroDb
     }
     /**
      * 
-     * @param array<int,mixed> $filaUsuario
+     * @param array<string,mixed> $filaUsuario
      */
     public static function desdePersistencia(array $filaUsuario): self
     {
@@ -99,6 +101,22 @@ class Usuario extends RegistroDb
         return $usuario;
     }
 
+    private static function generarHashPassword(string $password): string
+    {
+        if (trim($password) === '') {
+            throw new InvalidArgumentException('La contraseña no puede estar vacía.');
+        }
+        if (mb_strlen($password, 'UTF-8') < 8) {
+            throw new InvalidArgumentException('La contraseña debe tener al menos 8 caracteres.');
+        }
+        // Bcrypt solo utiliza los primeros 72 bytes y no admite bytes nulos.
+        if (strlen($password) > 72 || strpos($password, "\0") !== false) {
+            throw new InvalidArgumentException(
+                'La contraseña debe ocupar como máximo 72 bytes y no contener bytes nulos.'
+            );
+        }
+        return password_hash($password, PASSWORD_BCRYPT);
+    }
     
     public function setNombre(string $nombre): void
     {
@@ -124,54 +142,52 @@ class Usuario extends RegistroDb
         }
         $this->mail = $email;
     }
+
     public function getEmail(): string
     {
         return $this->mail;
     }
+
     public function setPassword(string $password): void
     {
-        if (trim($password) === '') {
-            throw new InvalidArgumentException('La contraseña no puede estar vacía.');
-        }
-        if (mb_strlen($password, 'UTF-8') < 8) {
-            throw new InvalidArgumentException('La contraseña debe tener al menos 8 caracteres.');
-        }
-        // Bcrypt solo utiliza los primeros 72 bytes y no admite bytes nulos.
-        if (strlen($password) > 72 || strpos($password, "\0") !== false) {
-            throw new InvalidArgumentException(
-                'La contraseña debe ocupar como máximo 72 bytes y no contener bytes nulos.'
-            );
-        }
-        $this->pass = $password;// password_hash($password, PASSWORD_DEFAULT);
+        $this->pass = self::generarHashPassword($password);
     }
+
     public function getPassword(): string
     {
         return $this->pass;
     }
+
     public function setTelefono(?string $telefono): void
     {
         $this->telefono = $telefono;
     }
+
     public function getTelefono(): ?string
     {
         return $this->telefono;
     }
+
     public function getTipoDocumento(): ?TipoDocumento
     {
         return $this->tipo_documento;
     }
+
     public function getDocumento(): ?string
     {
         return $this->documento;
     }
+
     public function getVerificado(): bool
     {
         return $this->verificado;
     }
+
     public function getAdmin(): bool
     {
         return $this->admin;
     }
+
     public function getValidacion(): int
     {
         return $this->validacion;
@@ -192,7 +208,6 @@ class Usuario extends RegistroDb
         $this->tipo_documento = $tipo;
         $this->documento = trim($numero); 
     }
-
-
+    
 }
 ?>

@@ -1,39 +1,108 @@
 <?php
-function usuariosRepositoryTest (){
-    require_once __DIR__ . '/../../config/conexion.php';
-    $pdo = conectarBd();
-    
-    echo "PREPARANDO OBJETO VALIDACION PARA UsuariosRepository...";
+require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
+require_once __DIR__ . '/../../utilidades/TestUtils.php';
+
+function usuariosRepositoryTest(PDO $pdo): void
+{
     require_once __DIR__ . '/../../app/repositorios/ValidacionesRepository.php';
-    $validacionesRepositorio = new ValidacionesRepository($pdo);
-    $validaciones = $validacionesRepositorio->findByNivel(1);
-    if ($validaciones === []) {
-        throw new RuntimeException('No existe una validación con nivel 1.');
-    }
-    $validacionId = $validaciones[0]['id'];
-
-
-    echo "INICIANDO TEST: app/repositorios/UsuariosRepository.php" . "<br>";
-    require_once __DIR__ . '/../../app/repositorios/CrudRepository.php';
     require_once __DIR__ . '/../../app/repositorios/UsuariosRepository.php';
+
+    echo 'INICIANDO TEST: app/repositorios/UsuariosRepository.php' . eol();
+
+    $validacionesRepositorio = new ValidacionesRepository($pdo);
     $usuariosRepositorio = new UsuariosRepository($pdo);
 
-    $nombre = "pepe";
-    $mail = "pepe@pepeylola.co.uk";
-    $usuarios = $usuariosRepositorio->findByMail($mail);
-    if ($usuarios === []) {
-        $id = $usuariosRepositorio->save([
-                'nombre' => $nombre,
-                'mail' => $mail,
-                'telefono' => '0000000000',
-                'pass' => password_hash('clave-temporal', PASSWORD_DEFAULT),
-                'verificado' => 0,
-                'admin' => 0,
-                'validacion' => $validacionId, 
-            ]);
-    } else {
-        echo "Se intento agregar usuario con mail " . $mail . " pero ya existe y es ";
-        echo $usuarios[0]['nombre'] . " con id " . $usuarios[0]['id'];
+    $validaciones = $validacionesRepositorio->findByNivel(1);
+
+    if ($validaciones === []) {
+        throw new RuntimeException(
+            'No existe una validación con nivel 1.'
+        );
     }
+
+    $validacionId = (int) $validaciones[0]['id'];
+
+    // Identificador único para no depender de usuarios anteriores.
+    $mail = 'test-' . bin2hex(random_bytes(8)) . '@example.com';
+    $nombre = 'Usuario de prueba';
+
+    $pdo->beginTransaction();
+
+    try {
+        // 1. INSERTAR
+        $id = $usuariosRepositorio->save([
+            'nombre' => $nombre,
+            'mail' => $mail,
+            'telefono' => '0000000000',
+            'pass' => password_hash('PasswordPrueba123', PASSWORD_BCRYPT),
+            'verificado' => 0,
+            'admin' => 0,
+            'validacion' => $validacionId
+        ]);
+
+        TestUtils::comprobar(
+            (int) $id > 0,
+            'Se insertó un usuario y se obtuvo su ID' . eol()
+        );
+
+        // 2. RECUPERAR POR ID
+        $filaUsuario = $usuariosRepositorio->findById($id);
+
+        TestUtils::comprobar(
+            $filaUsuario !== null,
+            'Se recuperó el usuario por su ID' . eol()
+        );
+
+        TestUtils::comprobar(
+            $filaUsuario['mail'] === $mail,
+            'El correo recuperado coincide con el insertado' . eol()
+        );
+
+        // 3. RECUPERAR POR CORREO
+        $usuariosEncontrados = $usuariosRepositorio->findByMail($mail);
+
+        TestUtils::comprobar(
+            count($usuariosEncontrados) === 1,
+            'Se encontró exactamente un usuario con ese correo' . eol()
+        );
+
+        // 4. ACTUALIZAR
+        $nuevoNombre = 'Usuario actualizado';
+
+        $usuariosRepositorio->save([
+            'id' => $id,
+            'nombre' => $nuevoNombre
+        ]);
+
+        $filaActualizada = $usuariosRepositorio->findById($id);
+
+        TestUtils::comprobar(
+            $filaActualizada !== null
+                && $filaActualizada['nombre'] === $nuevoNombre,
+            'La actualización del nombre se guardó correctamente' . eol()
+        );
+
+        // 5. ELIMINAR
+        $eliminado = $usuariosRepositorio->delete($id);
+
+        TestUtils::comprobar(
+            $eliminado,
+            'El usuario se eliminó correctamente' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuariosRepositorio->findById($id) === null,
+            'El usuario eliminado ya no puede recuperarse' . eol()
+        );
+
+        echo 'Pruebas de UsuariosRepository completadas correctamente.' . eol();
+
+    } finally {
+        // Incluso si falla una comprobación, deshacemos los cambios.
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+    }
+
     echo '<hr>';
 }
