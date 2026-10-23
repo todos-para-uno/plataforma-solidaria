@@ -1,0 +1,61 @@
+/* Layout específico para la página de perfil */
+.perfil-tarjeta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--e-6);
+}
+
+.perfil-form-tarjeta {
+    margin-top: var(--e-8);
+}
+
+.perfil-form-tarjeta h3 {
+    margin-bottom: var(--e-2);
+}
+
+.perfil-form-descripcion {
+    margin-bottom: var(--e-6);
+    color: var(--texto-secundario);
+}
+
+.perfil-encabezado-linea {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--e-4);
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--linea);
+    padding-bottom: var(--e-4);
+}
+
+.perfil-encabezado-linea h1,
+.perfil-encabezado-linea h2,
+.perfil-encabezado-linea h3 {
+    margin: 0;
+}
+
+.perfil-campo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--e-1);
+}
+
+.perfil-etiqueta {
+    font-size: var(--t-chico);
+    font-weight: 700;
+    color: var(--texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.perfil-valor {
+    margin: 0;
+    font-size: var(--t-base);
+}
+
+@media (max-width: 480px) {
+    .perfil-encabezado-linea {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
