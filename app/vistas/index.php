@@ -31,7 +31,7 @@ require __DIR__ . '/parciales/cabecera.php';
             Buscamos agrupar campañas solidarias en una plataforma confiable, y facilitar su propagacion a traves de las redes sociales.
         </p>
         <div>
-            <a href="#" class="boton">Explorar campañas</a>
+            <a href="<?= escapar($rutas['explorar']) ?>" class="boton">Explorar campañas</a>
         </div>
     </div>
 </section>

@@ -1,24 +1,23 @@
 <?php
 /**
- * Vista de resultados de búsqueda de campañas utilizando conexion.php y mysqli.
+ * Vista de resultados de búsqueda de campañas utilizando la conexión PDO común.
  * Estilo de listado alternativo (diferente a la grilla de tarjetas de la home).
  */
 
 $tituloPagina  = 'Resultados de búsqueda — todospara.uno';
-$paginaActual  = 'buscador';
+$paginaActual  = 'explorar';
 $usuarioActual = null; // Cambiar según corresponda si hay sesión iniciada
-$estilosPagina = ['resultados-buscar.css']; // Hoja propia para el layout de este listado
+$estilosPagina = ['resultados_buscar.css']; // Hoja propia para el layout de este listado
 
 require __DIR__ . '/parciales/cabecera.php';
 
-// Conexión a la base de datos usando el archivo solicitado
-require_once __DIR__ . '/conexion.php'; // Ajustá la ruta relativa si tu estructura de carpetas difiere
+require_once __DIR__ . '/conexion.php';
 
-$buscar = $_POST['buscar'] ?? '';
-// Protegemos la consulta manteniendo la lógica original de mysqli
-$buscarEscapado = mysqli_real_escape_string($conexion, $buscar);
-$consulta = mysqli_query($conexion, "SELECT * FROM camp WHERE nombre LIKE '%$buscarEscapado%'");
-$nros = mysqli_num_rows($consulta);
+$buscar = is_string($_POST['buscar'] ?? null) ? $_POST['buscar'] : '';
+$consulta = $conexion->prepare('SELECT * FROM camp WHERE nombre LIKE :buscar');
+$consulta->execute(['buscar' => '%' . $buscar . '%']);
+$resultados = $consulta->fetchAll(PDO::FETCH_ASSOC);
+$nros = count($resultados);
 ?>
 
 <main>
@@ -37,11 +36,11 @@ $nros = mysqli_num_rows($consulta);
                     <p>No se encontraron campañas que coincidan con tu búsqueda. Probá buscando con otras palabras o explorá las campañas activas.</p>
                 </div>
                 <div style="margin-top: var(--e-6);">
-                    <a href="buscador.php" class="boton boton-secundario">Nueva búsqueda</a>
+                    <a href="<?= escapar($rutas['explorar']) ?>" class="boton boton-secundario">Nueva búsqueda</a>
                 </div>
             <?php else: ?>
                 <div class="grilla-campanas">
-                    <?php while ($resultado = mysqli_fetch_array($consulta)): ?>
+                    <?php foreach ($resultados as $resultado): ?>
                         <article class="tarjeta campana">
                             <div class="campana-imagen" role="img" aria-label="Foto de la campaña"></div>
                             <div class="campana-cuerpo">
@@ -54,14 +53,10 @@ $nros = mysqli_num_rows($consulta);
                                 </p>
                             </div>
                         </article>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </div>
             <?php endif; ?>
 
-            <?php
-                mysqli_free_result($consulta);
-                mysqli_close($conexion);
-            ?>
         </div>
     </section>
 </main>
