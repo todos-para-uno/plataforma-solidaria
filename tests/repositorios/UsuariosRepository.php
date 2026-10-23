@@ -25,7 +25,7 @@ function usuariosRepositoryTest(PDO $pdo): void
 
     // Identificador único para no depender de usuarios anteriores.
     $mail = 'test-' . bin2hex(random_bytes(8)) . '@example.com';
-    $nombre = 'Usuario de prueba';
+    $nombre = 'Usuario_' . bin2hex(random_bytes(8));
 
     $pdo->beginTransaction();
 
@@ -132,12 +132,18 @@ function usuariosRepositoryTest(PDO $pdo): void
         );
 
         // 3. RECUPERAR POR CORREO
-        $usuariosEncontrados = $usuariosRepositorio->findByMail($mail);
+        $usuarioPorMail = $usuariosRepositorio->findByMail($mail);
 
         TestUtils::comprobar(
-            count($usuariosEncontrados) === 1,
-            'Se encontró exactamente un usuario con ese correo' . eol()
+            $usuarioPorMail instanceof Usuario,
+            'findByMail devuelve una entidad Usuario' . eol()
         );
+
+        TestUtils::comprobar(
+            $usuarioPorMail?->getEmail() === $mail,
+            'findByMail conserva el correo buscado' . eol()
+        );
+
 
         // 4. ACTUALIZAR
         $nuevoNombre = 'Usuario actualizado';
@@ -171,12 +177,17 @@ function usuariosRepositoryTest(PDO $pdo): void
         TestUtils::comprobar(
             $usuariosRepositorio->findById($id) === null,
             'La búsqueda de una entidad inexistente devuelve null' . eol()
-        );        
+        );                
 
         // 6. BUSQUEDAS SIN COINCIDENCIAS
         TestUtils::comprobar(
             $usuariosRepositorio->findByNombre($nombre) === [],
             'findByNombre devuelve una colección vacía cuando no hay coincidencias' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuariosRepositorio->findByMail($mail) === null,
+            'findByMail devuelve null cuando el correo no existe' . eol()
         );
 
 

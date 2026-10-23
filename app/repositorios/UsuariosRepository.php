@@ -50,14 +50,34 @@ final class UsuariosRepository extends CrudRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function findByMail(string $mail): array
+     /**
+     * Busca un usuario por su correo electrónico.
+     *
+     * @return Usuario|null
+     */
+    public function findByMail(string $mail): ?Usuario
+    {
+        $fila = $this->findRowByMail($mail);
+        return $fila !== null? $this->hidratar($fila): null;
+    }
+
+    /**
+     * Recupera una fila por correo electrónico.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findRowByMail(string $mail): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT * FROM `usuarios` WHERE `mail` = :mail' 
+            'SELECT * FROM `usuarios` WHERE `mail` = :mail'
         );
+
         $stmt->execute(['mail' => $mail]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $fila === false ? null : $fila;
     }
+
 
 }
