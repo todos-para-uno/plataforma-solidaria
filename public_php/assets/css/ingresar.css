@@ -1,0 +1,11 @@
+/* Layout de la pantalla de ingreso. Solo acomoda; colores y componentes vienen de base.css. */
+.ingresar-interior {
+    max-width: 480px;
+    margin-inline: auto;
+}
+.ingresar-interior .seccion-encabezado {
+    margin-bottom: var(--e-8);
+}
+.ingresar-registro {
+    margin-top: var(--e-6);
+}

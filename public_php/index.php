@@ -5,7 +5,7 @@ $ruta = $_GET['ruta'] ?? 'inicio';
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $esLectura = in_array($metodo, ['GET', 'HEAD'], true);
 
-if (!is_string($ruta) || !in_array($ruta, ['inicio', 'registro'], true)) {
+if (!is_string($ruta) || !in_array($ruta, ['inicio', 'registro', 'ingresar', 'contacto'], true)) {
     http_response_code(404);
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Página no encontrada.';
@@ -26,6 +26,18 @@ $rutaAssets = './assets';
 
 if ($ruta === 'inicio') {
     require __DIR__ . '/../app/vistas/index.php';
+    return;
+}
+
+// Ingresar y Contacto por ahora solo muestran el formulario.
+// Cuando existan sus controladores, acá se agrega el POST como en registro.
+if ($ruta === 'ingresar') {
+    require __DIR__ . '/../app/vistas/ingresar.php';
+    return;
+}
+
+if ($ruta === 'contacto') {
+    require __DIR__ . '/../app/vistas/contacto.php';
     return;
 }
 
