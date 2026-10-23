@@ -14,6 +14,5 @@ function conectarBd(): PDO
             ]
         );
     }
-
     return $pdo;
 }

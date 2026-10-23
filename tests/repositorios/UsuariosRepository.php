@@ -46,6 +46,32 @@ function usuariosRepositoryTest(PDO $pdo): void
             'Se insertó un usuario y se obtuvo su ID' . eol()
         );
 
+        // 1.1. VERIFICAR UNICIDAD DEL CORREO
+        $correoDuplicadoRechazado = false;
+
+        try {
+            $usuariosRepositorio->save([
+                'nombre' => 'Usuario duplicado',
+                'mail' => $mail,
+                'telefono' => '0000000000',
+                'pass' => password_hash('PasswordPrueba456', PASSWORD_BCRYPT),
+                'verificado' => 0,
+                'admin' => 0,
+                'validacion' => $validacionId
+            ]);
+        }catch (PDOException $e) {
+            if (($e->errorInfo[1] ?? null) === 1062) {
+                $correoDuplicadoRechazado = true;
+            } else {
+                throw $e;
+            }
+        }
+
+        TestUtils::comprobar(
+            $correoDuplicadoRechazado,
+            'La base de datos rechaza correos electrónicos duplicados' . eol()
+        );
+
         $usuarioEntidad = $usuariosRepositorio->findById($id);
 
         $usuarios = $usuariosRepositorio->findAll();
