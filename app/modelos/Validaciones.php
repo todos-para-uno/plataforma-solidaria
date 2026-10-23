@@ -14,7 +14,7 @@ class Validaciones extends RegistroDb
         }
 
         $nombre = trim($nombre);
-        if ($nombre === '' || strlen($nombre) > 30) {
+        if ($nombre === '' || mb_strlen($nombre, 'UTF-8') > 30) {
             throw new InvalidArgumentException('El nombre debe tener entre 1 y 30 caracteres.');
         }
 
