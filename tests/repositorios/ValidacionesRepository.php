@@ -39,6 +39,49 @@ function validacionesRepositoryTest(PDO $pdo): void
             'Se insertó una validación y se obtuvo su ID' . eol()
         );
 
+        $validacionesPorNombre = $repositorio->findByNombre($nombrePrueba);
+
+        TestUtils::comprobar(
+            count($validacionesPorNombre) === 1,
+            'findByNombre encuentra una validación con ese nombre' . eol()
+        );
+
+        TestUtils::comprobar(
+            $validacionesPorNombre[0] instanceof Validaciones,
+            'findByNombre devuelve objetos Validaciones' . eol()
+        );
+
+        $validacionesPorNivel = $repositorio->findByNivel($nivelPrueba);
+
+        TestUtils::comprobar(
+            count($validacionesPorNivel) > 0,
+            'findByNivel devuelve una colección no vacía' . eol()
+        );
+
+        $todasSonValidaciones = true;
+        $encontroValidacionPrueba = false;
+
+        foreach ($validacionesPorNivel as $validacion) {
+            if (!($validacion instanceof Validaciones)) {
+                $todasSonValidaciones = false;
+                continue;
+            }
+
+            if ($validacion->getId() === (int) $id) {
+                $encontroValidacionPrueba = true;
+            }
+        }
+
+        TestUtils::comprobar(
+            $todasSonValidaciones,
+            'findByNivel devuelve únicamente objetos Validaciones' . eol()
+        );
+
+        TestUtils::comprobar(
+            $encontroValidacionPrueba,
+            'findByNivel incluye la validación insertada' . eol()
+        );
+
         $validacionEntidad = $repositorio->findById($id);
 
         $validaciones = $repositorio->findAll();
@@ -71,6 +114,7 @@ function validacionesRepositoryTest(PDO $pdo): void
             $validacionEntidad instanceof Validaciones,
             'findById devuelve un objeto Validaciones' . eol()
         );
+
 
         TestUtils::comprobar(
             $validacionEntidad->getNivel() === $nivelPrueba,

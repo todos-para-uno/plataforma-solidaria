@@ -19,22 +19,15 @@ abstract class CrudRepository
     }
 
     /**
-     * Recupera todos los registros como entidades del modelo.
+     * Recupera todos los registros como entidades.
      *
      * @return array<int, RegistroDb>
      */
     public function findAll(): array
     {
-        $filas = $this->findAllRows();
-
-        $entidades = [];
-
-        foreach ($filas as $fila) {
-            $entidades[] = $this->hidratar($fila);
-        }
-
-        return $entidades;
+        return $this->hidratarFilas($this->findAllRows());
     }
+
 
     public function findAllRows(): array
     {
@@ -120,6 +113,23 @@ abstract class CrudRepository
         $stmt->execute(['id' => $id]);
 
         return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Convierte un conjunto de filas asociativas en entidades.
+     *
+     * @param array<int, array<string, mixed>> $filas
+     * @return array<int, RegistroDb>
+     */
+    protected function hidratarFilas(array $filas): array
+    {
+        $entidades = [];
+
+        foreach ($filas as $fila) {
+            $entidades[] = $this->hidratar($fila);
+        }
+
+        return $entidades;
     }
 
     /**

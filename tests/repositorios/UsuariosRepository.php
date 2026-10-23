@@ -20,7 +20,8 @@ function usuariosRepositoryTest(PDO $pdo): void
         );
     }
 
-    $validacionId = (int) $validaciones[0]['id'];
+    
+    $validacionId = (int) $validaciones[0]->getId(); 
 
     // Identificador único para no depender de usuarios anteriores.
     $mail = 'test-' . bin2hex(random_bytes(8)) . '@example.com';

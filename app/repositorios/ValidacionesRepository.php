@@ -22,7 +22,24 @@ final class ValidacionesRepository extends CrudRepository
         return Validaciones::desdePersistencia($fila);
     }
 
+    /**
+     * Busca validaciones por nombre.
+     *
+     * @return array<int, Validaciones>
+     */
     public function findByNombre(string $nombre): array
+    {
+        return $this->hidratarFilas(
+            $this->findRowsByNombre($nombre)
+        );
+    }
+
+    /**
+     * Busca filas de validaciones por coincidencia exacta de nombre.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findRowsByNombre(string $nombre): array
     {
         $stmt = $this->pdo->prepare(
             'SELECT * FROM `validaciones` WHERE `nombre` = :nombre' 
@@ -32,15 +49,34 @@ final class ValidacionesRepository extends CrudRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Busca validaciones por nivel y devuelve entidades.
+     *
+     * @return array<int, Validaciones>
+     */
     public function findByNivel(int $nivel): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT * FROM `validaciones` WHERE `nivel` = :nivel' 
+        return $this->hidratarFilas(
+            $this->findRowsByNivel($nivel)
         );
+    }
+
+    /**
+     * Busca las filas correspondientes a un nivel.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findRowsByNivel(int $nivel): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM `validaciones` WHERE `nivel` = :nivel'
+        );
+
         $stmt->execute(['nivel' => $nivel]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
 
 
 }
