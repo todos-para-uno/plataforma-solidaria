@@ -41,6 +41,32 @@ function validacionesRepositoryTest(PDO $pdo): void
 
         $validacionEntidad = $repositorio->findById($id);
 
+        $validaciones = $repositorio->findAll();
+
+        TestUtils::comprobar(
+            count($validaciones) > 0,
+            'findAll devuelve una colección no vacía' . eol()
+        );
+
+        TestUtils::comprobar(
+            $validaciones[0] instanceof Validaciones,
+            'findAll devuelve objetos Validaciones' . eol()
+        );
+
+        $validacionEncontrada = false;
+
+        foreach ($validaciones as $validacion) {
+            if ($validacion->getId() === (int) $id) {
+                $validacionEncontrada = true;
+                break;
+            }
+        }
+
+        TestUtils::comprobar(
+            $validacionEncontrada,
+            'findAll incluye la validación insertada' . eol()
+        );
+
         TestUtils::comprobar(
             $validacionEntidad instanceof Validaciones,
             'findById devuelve un objeto Validaciones' . eol()

@@ -47,6 +47,33 @@ function usuariosRepositoryTest(PDO $pdo): void
 
         $usuarioEntidad = $usuariosRepositorio->findById($id);
 
+        $usuarios = $usuariosRepositorio->findAll();
+
+        TestUtils::comprobar(
+            count($usuarios) > 0,
+            'findAll devuelve una colección no vacía' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuarios[0] instanceof Usuario,
+            'findAll devuelve objetos Usuario' . eol()
+        );
+
+        $usuarioEncontrado = false;
+
+        foreach ($usuarios as $usuario) {
+            if ($usuario->getId() === (int) $id) {
+                $usuarioEncontrado = true;
+                break;
+            }
+        }
+
+        TestUtils::comprobar(
+            $usuarioEncontrado,
+            'findAll incluye el usuario insertado' . eol()
+        );
+
+
         TestUtils::comprobar(
             $usuarioEntidad instanceof Usuario,
             'findById devuelve un objeto Usuario' . eol()

@@ -18,7 +18,25 @@ abstract class CrudRepository
         }
     }
 
+    /**
+     * Recupera todos los registros como entidades del modelo.
+     *
+     * @return array<int, RegistroDb>
+     */
     public function findAll(): array
+    {
+        $filas = $this->findAllRows();
+
+        $entidades = [];
+
+        foreach ($filas as $fila) {
+            $entidades[] = $this->hidratar($fila);
+        }
+
+        return $entidades;
+    }
+
+    public function findAllRows(): array
     {
         $stmt = $this->pdo->query("SELECT * FROM `{$this->table}`");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
