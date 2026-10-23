@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/CrudRepository.php';
+require_once __DIR__ . '/../modelos/Usuarios.php';
+
 final class UsuariosRepository extends CrudRepository
 {
     public function __construct(PDO $pdo)
@@ -10,6 +12,14 @@ final class UsuariosRepository extends CrudRepository
             primaryKey: 'id',
             fields: ['nombre', 'mail', 'telefono', 'tipo_documento', 'documento', 'pass', 'verificado', 'admin', 'validacion']
         );
+    }
+
+    /**
+     * @param array<string, mixed> $fila
+     */
+    protected function hidratar(array $fila): Usuario
+    {
+        return Usuario::desdePersistencia($fila);
     }
 
     public function findByNombre(string $nombre): array

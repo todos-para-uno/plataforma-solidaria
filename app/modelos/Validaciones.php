@@ -27,6 +27,25 @@ class Validaciones extends RegistroDb
         $this->descripcion = $descripcion;
     }
 
+    /**
+     * Reconstruye una validación a partir de una fila de la base de datos.
+     *
+     * @param array<string, mixed> $filaValidacion
+     */
+    public static function desdePersistencia(array $filaValidacion): self
+    {
+        $validacion = new self(
+            (int) $filaValidacion['nivel'],
+            $filaValidacion['nombre'],
+            $filaValidacion['descripcion'] ?? null
+        );
+
+        $validacion->setId((int) $filaValidacion['id']);
+
+        return $validacion;
+    }
+
+
     public function getNivel(): int
     {
         return $this->nivel;

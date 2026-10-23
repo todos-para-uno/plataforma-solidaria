@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../modelos/RegistroDb.php';
 
 abstract class CrudRepository
 {
@@ -94,5 +95,24 @@ abstract class CrudRepository
         return $stmt->rowCount() > 0;
     }
 
-    //abstract protected function hidratar(array $fila): object;
+    /**
+     * Convierte una fila asociativa en una entidad del modelo.
+     *
+     * @param array<string, mixed> $fila
+     */
+    abstract protected function hidratar(array $fila): RegistroDb;
+
+    /**
+     * Busca un registro por ID y devuelve su entidad.
+     */
+    public function findEntityById(int|string $id): ?RegistroDb
+    {
+        $fila = $this->findById($id);
+
+        if ($fila === null) {
+            return null;
+        }
+
+        return $this->hidratar($fila);
+    }
 }

@@ -45,6 +45,19 @@ function usuariosRepositoryTest(PDO $pdo): void
             'Se insertó un usuario y se obtuvo su ID' . eol()
         );
 
+        $usuarioEntidad = $usuariosRepositorio->findEntityById($id);
+
+        TestUtils::comprobar(
+            $usuarioEntidad instanceof Usuario,
+            'findEntityById devuelve un objeto Usuario' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuarioEntidad->getEmail() === $mail,
+            'La entidad recuperada conserva su correo' . eol()
+        );
+
+
         // 2. RECUPERAR POR ID
         $filaUsuario = $usuariosRepositorio->findById($id);
 

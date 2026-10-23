@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/CrudRepository.php';
+require_once __DIR__ . '/../modelos/Validaciones.php';
+
 final class ValidacionesRepository extends CrudRepository
 {
     public function __construct(PDO $pdo)
@@ -10,6 +12,14 @@ final class ValidacionesRepository extends CrudRepository
             primaryKey: 'id',
             fields: ['nivel', 'nombre', 'descripcion']
         );
+    }
+
+    /**
+     * @param array<string, mixed> $fila
+     */
+    protected function hidratar(array $fila): Validaciones
+    {
+        return Validaciones::desdePersistencia($fila);
     }
 
     public function findByNombre(string $nombre): array

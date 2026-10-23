@@ -1,14 +1,19 @@
 <?php
+require_once __DIR__ . '/../../app/modelos/Mensajes.php';
+require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
+
 function mensajesTest()
 {
-    require_once __DIR__ . '/../../app/modelos/Mensajes.php';
+    
 
-    echo "INICIANDO TEST: app/modelos/Mensajes.php" . "<br>";
+    echo "INICIANDO TEST: app/modelos/Mensajes.php" . eol();
 
     $mensaje = new Mensajes(1, 2, 'Probando 1, 2, 53!');
 
-    echo $mensaje->getContenido();
+    echo $mensaje->getContenido() . eol();
 
     $mensaje->setLeido(true);
+
+    echo '<hr>';
 }
 ?>

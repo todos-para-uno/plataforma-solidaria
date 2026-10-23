@@ -39,6 +39,18 @@ function validacionesRepositoryTest(PDO $pdo): void
             'Se insertó una validación y se obtuvo su ID' . eol()
         );
 
+        $validacionEntidad = $repositorio->findEntityById($id);
+
+        TestUtils::comprobar(
+            $validacionEntidad instanceof Validaciones,
+            'findEntityById devuelve un objeto Validaciones' . eol()
+        );
+
+        TestUtils::comprobar(
+            $validacionEntidad->getNivel() === $nivelPrueba,
+            'La entidad recuperada conserva su nivel' . eol()
+        );        
+
         // 2. RECUPERAR POR ID
         $filaValidacion = $repositorio->findById($id);
 

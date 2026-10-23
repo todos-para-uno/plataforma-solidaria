@@ -28,6 +28,39 @@ function validacionesTest()
     } catch (InvalidArgumentException $excepcion) {
         echo "OK<br>";
     }
+
+    $filaValidacion = [
+    'id' => 12,
+    'nivel' => 3,
+    'nombre' => 'azul',
+    'descripcion' => 'Validación de ejemplo'
+    ];
+
+    $validacionRecuperada = Validaciones::desdePersistencia(
+        $filaValidacion
+    );
+
+    TestUtils::comprobar(
+        $validacionRecuperada->getId() === 12,
+        'Se recuperó correctamente el ID' . eol()
+    );
+
+    TestUtils::comprobar(
+        $validacionRecuperada->getNivel() === 3,
+        'Se recuperó correctamente el nivel' . eol()
+    );
+
+    TestUtils::comprobar(
+        $validacionRecuperada->getNombre() === 'azul',
+        'Se recuperó correctamente el nombre' . eol()
+    );
+
+    TestUtils::comprobar(
+        $validacionRecuperada->getDescripcion() === 'Validación de ejemplo',
+        'Se recuperó correctamente la descripción' . eol()
+    );
+
+    
     echo "<hr>";
 }
 ?>
