@@ -22,11 +22,29 @@ final class UsuariosRepository extends CrudRepository
         return Usuario::desdePersistencia($fila);
     }
 
+    /**
+     * Busca usuarios por coincidencia exacta de nombre.
+     *
+     * @return array<int, Usuario>
+     */
     public function findByNombre(string $nombre): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT * FROM `usuarios` WHERE `nombre` = :nombre' 
+        return $this->hidratarFilas(
+            $this->findRowsByNombre($nombre)
         );
+    }
+
+    /**
+     * Recupera las filas correspondientes a un nombre.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findRowsByNombre(string $nombre): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM `usuarios` WHERE `nombre` = :nombre'
+        );
+
         $stmt->execute(['nombre' => $nombre]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -41,10 +59,5 @@ final class UsuariosRepository extends CrudRepository
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-    // protected function hidratar(array $fila): Usuarios
-    // {
-    //     return Usuarios::desdePersistencia($fila);
-    // }
 
 }

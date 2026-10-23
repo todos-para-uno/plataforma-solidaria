@@ -55,6 +55,38 @@ function usuariosRepositoryTest(PDO $pdo): void
             'findAll devuelve una colección no vacía' . eol()
         );
 
+        $usuariosPorNombre = $usuariosRepositorio->findByNombre($nombre);
+
+        TestUtils::comprobar(
+            count($usuariosPorNombre) > 0,
+            'findByNombre devuelve una colección no vacía' . eol()
+        );
+
+        $todosSonUsuarios = true;
+        $encontroUsuarioPrueba = false;
+
+        foreach ($usuariosPorNombre as $usuario) {
+            if (!($usuario instanceof Usuario)) {
+                $todosSonUsuarios = false;
+                continue;
+            }
+
+            if ($usuario->getId() === (int) $id) {
+                $encontroUsuarioPrueba = true;
+            }
+        }
+
+        TestUtils::comprobar(
+            $todosSonUsuarios,
+            'findByNombre devuelve únicamente objetos Usuario' . eol()
+        );
+
+        TestUtils::comprobar(
+            $encontroUsuarioPrueba,
+            'findByNombre incluye el usuario insertado' . eol()
+        );
+
+
         TestUtils::comprobar(
             $usuarios[0] instanceof Usuario,
             'findAll devuelve objetos Usuario' . eol()
@@ -141,7 +173,17 @@ function usuariosRepositoryTest(PDO $pdo): void
             'La búsqueda de una entidad inexistente devuelve null' . eol()
         );        
 
+        // 6. BUSQUEDAS SIN COINCIDENCIAS
+        TestUtils::comprobar(
+            $usuariosRepositorio->findByNombre($nombre) === [],
+            'findByNombre devuelve una colección vacía cuando no hay coincidencias' . eol()
+        );
+
+
         echo 'Pruebas de UsuariosRepository completadas correctamente.' . eol();
+
+
+        
 
     } finally {
         // Incluso si falla una comprobación, deshacemos los cambios.
