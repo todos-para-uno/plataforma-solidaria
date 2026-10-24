@@ -35,7 +35,7 @@ CREATE TABLE usuarios (
     pass VARCHAR(255) NOT NULL,
     verificado BOOLEAN DEFAULT FALSE,
     admin BOOLEAN DEFAULT FALSE,
-    id_validacion INT NOT NULL DEFAULT 1,
+    id_validacion INT NOT NULL,
     FOREIGN KEY (id_validacion) REFERENCES validaciones(id));
 
 -- categorias de campañas
