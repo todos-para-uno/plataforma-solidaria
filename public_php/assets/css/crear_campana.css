@@ -1,0 +1,61 @@
+CSS
+/* Layout de la pantalla de crear campaña. Solo acomoda; colores y componentes vienen de base.css. */
+.crear-interior {
+    max-width: 640px;
+    margin-inline: auto;
+}
+.crear-interior .seccion-encabezado {
+    margin-bottom: var(--e-8);
+}
+.crear-volver {
+    margin-bottom: var(--e-4);
+}
+
+/* Las tarjetas van una debajo de otra, con aire entre ellas. */
+.crear-formulario {
+    display: flex;
+    flex-direction: column;
+    gap: var(--e-6);
+}
+
+/* Animación de zoom y sombra al pasar el cursor (hover) */
+.crear-tarjeta {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.crear-tarjeta:hover {
+    transform: scale(1.015);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.crear-tarjeta h2 {
+    margin-bottom: var(--e-4);
+    font-size: var(--t-h3);
+}
+.crear-tarjeta .campo:last-child {
+    margin-bottom: 0;
+}
+
+/* Estilos para el contenedor del mapa de OpenStreetMap */
+#mapa-osm {
+    width: 100%;
+    height: 300px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-top: 8px;
+}
+
+/* Estructura para el input con símbolo pesos */
+.input-con-simbolo {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.input-con-simbolo span {
+    position: absolute;
+    left: 12px;
+    font-weight: bold;
+    color: #555;
+}
+.input-con-simbolo input {
+    padding-left: 28px !important;
+}
