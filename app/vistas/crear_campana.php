@@ -198,37 +198,65 @@ document.addEventListener('DOMContentLoaded', function() {
     actualizarFormulario();
 
     // 2. Inicialización de OpenStreetMap con Leaflet
-    setTimeout(function() {
-        // Coordenadas iniciales (por defecto centradas en Buenos Aires o usa las guardadas)
-        let latVal = document.getElementById('lat').value ? parseFloat(document.getElementById('lat').value) : -34.6037;
-        let lngVal = document.getElementById('lng').value ? parseFloat(document.getElementById('lng').value) : -58.3816;
+    let latVal = document.getElementById('lat').value ? parseFloat(document.getElementById('lat').value) : -34.6037;
+    let lngVal = document.getElementById('lng').value ? parseFloat(document.getElementById('lng').value) : -58.3816;
 
-        let map = L.map('mapa-osm').setView([latVal, lngVal], 13);
+    let map = L.map('mapa-osm').setView([latVal, lngVal], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-        let marker = L.marker([latVal, lngVal], { draggable: true }).addTo(map);
+    let marker = L.marker([latVal, lngVal], { draggable: true }).addTo(map);
 
-        function actualizarCoordenadas(lat, lng) {
-            document.getElementById('lat').value = lat;
-            document.getElementById('lng').value = lng;
-        }
+    function actualizarCoordenadas(lat, lng) {
+        document.getElementById('lat').value = lat;
+        document.getElementById('lng').value = lng;
+    }
 
-        // Evento al arrastrar el marcador
-        marker.on('dragend', function(e) {
-            let position = marker.getLatLng();
-            actualizarCoordenadas(position.lat, position.lng);
+    // Evento al arrastrar el marcador
+    marker.on('dragend', function(e) {
+        let position = marker.getLatLng();
+        actualizarCoordenadas(position.lat, position.lng);
+    });
+
+    // Evento al hacer clic en el mapa
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        actualizarCoordenadas(e.latlng.lat, e.latlng.lng);
+    });
+
+    // 3. NUEVO: Buscar dirección automáticamente cuando el usuario termina de escribir
+    const inputDireccion = document.getElementById('crear-direccion');
+    if (inputDireccion) {
+        inputDireccion.addEventListener('change', function() {
+            let query = this.value.trim();
+            if (!query) return;
+
+            // Consultamos la API pública de geocodificación de Nominatim (OpenStreetMap)
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        let lat = parseFloat(data[0].lat);
+                        let lon = parseFloat(data[0].lon);
+
+                        // Centramos el mapa y movemos el marcador a la ubicación encontrada
+                        map.setView([lat, lon], 15);
+                        marker.setLatLng([lat, lon]);
+                        
+                        // Guardamos las coordenadas en los campos ocultos
+                        actualizarCoordenadas(lat, lon);
+                    } else {
+                        alert('No se encontró la ubicación ingresada en el mapa. Probá agregando localidad o partido (ej: San Justo, Buenos Aires).');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al buscar la dirección:', error);
+                });
         });
-
-        // Evento al hacer clic en el mapa
-        map.on('click', function(e) {
-            marker.setLatLng(e.latlng);
-            actualizarCoordenadas(e.latlng.lat, e.latlng.lng);
-        });
-    }, 200); // Pequeño retardo para asegurar que el DOM cargó el contenedor del mapa
+    }
 });
 </script>
 
