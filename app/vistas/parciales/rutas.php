@@ -8,10 +8,11 @@ $rutaEntrada = ($rutaBase ?? '../../public_php') . '/index.php';
 
 return [
     'inicio'          => $rutaEntrada,
-    'explorar'        => '#',
+    'explorar'        => $rutaEntrada . '?ruta=buscador',
+    'resultados_buscar' => $rutaEntrada . '?ruta=resultados_buscar',
     'como_funciona'   => '#',
-    'contacto'        => '#',
-    'ingresar'        => '#',
+    'contacto'        => $rutaEntrada . '?ruta=contacto',
+    'ingresar'        => $rutaEntrada . '?ruta=ingresar',
     'registro'        => $rutaEntrada . '?ruta=registro',
     'crear_campana'   => '#',
     'mis_campanas'    => '#',
