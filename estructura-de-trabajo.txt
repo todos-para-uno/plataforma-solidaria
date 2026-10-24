@@ -1,0 +1,93 @@
+.
+├── app
+│   ├── controladores
+│   │   ├── RegistroController.php
+│   │   ├── UsuariosController.php
+│   │   └── ValidacionesController.php
+│   ├── modelos
+│   │   ├── Camp.php
+│   │   ├── CatalogoGeografico.php
+│   │   ├── CatCamp.php
+│   │   ├── CategoriaInsumos.php
+│   │   ├── Categoria.php
+│   │   ├── Donacion.php
+│   │   ├── Mensajes.php
+│   │   ├── Objetivo.php
+│   │   ├── RegistroDb.php
+│   │   ├── SubCategoriaInsumos.php
+│   │   ├── Ubicaciones.php
+│   │   ├── Usuarios.php
+│   │   └── Validaciones.php
+│   ├── repositorios
+│   │   ├── CampRepository.php
+│   │   ├── CatCampRepository.php
+│   │   ├── CategoriaInsumosRepository.php
+│   │   ├── CrudRepository.php
+│   │   ├── DonacionRepository.php
+│   │   ├── MensajesRepository.php
+│   │   ├── ObjetivosRepository.php
+│   │   ├── SubCategoriaInsumosRepository.php
+│   │   ├── UsuariosRepository.php
+│   │   └── ValidacionesRepository.php
+│   └── vistas
+│       ├── buscador.php
+│       ├── conexion.php
+│       ├── contacto.php
+│       ├── guia-estilos.php
+│       ├── index.php
+│       ├── ingresar.php
+│       ├── inicio-demo.php
+│       ├── parciales
+│       │   ├── ayudantes.php
+│       │   ├── cabecera.php
+│       │   ├── pie.php
+│       │   └── rutas.php
+│       ├── registro-confirmacion.php
+│       ├── registro.php
+│       └── resultados_buscar.php
+├── config
+│   ├── conexion.local.php
+│   └── conexion.php
+├── data
+│   └── geografia
+│       ├── localidades-por-provincia.json
+│       └── README.md
+├── database
+│   └── schema.sql
+├── public_php
+│   ├── assets
+│   │   ├── css
+│   │   │   ├── base.css
+│   │   │   ├── buscador.css
+│   │   │   ├── contacto.css
+│   │   │   ├── guia-estilos.css
+│   │   │   ├── index.css
+│   │   │   ├── ingresar.css
+│   │   │   ├── inicio.css
+│   │   │   ├── registro.css
+│   │   │   └── resultados_buscar.css
+│   │   ├── imagenes
+│   │   │   ├── fondo3.webp
+│   │   │   ├── logo-todosparauno-claro.png
+│   │   │   └── logo-todosparauno.png
+│   │   └── js
+│   │       └── base.js
+│   └── index.php
+├── README.md
+└── tests
+    ├── modelos
+    │   ├── CampTest.php
+    │   ├── CategoriaTest.php
+    │   ├── DonacionTest.php
+    │   ├── MensajesTest.php
+    │   ├── RegistroDbTest.php
+    │   ├── SubCategoriaInsumosTest.php
+    │   ├── UbicacionesTest.php
+    │   ├── UsuariosTest.php
+    │   └── ValidacionesTest.php
+    ├── repositorios
+    │   ├── UsuariosRepository.php
+    │   └── ValidacionesRepository.php
+    └── run_tests.php
+
+19 directories, 72 files

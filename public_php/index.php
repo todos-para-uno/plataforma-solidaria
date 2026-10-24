@@ -10,6 +10,7 @@ $vistas = [
     'resultados_buscar' => 'resultados_buscar.php',
     'ingresar' => 'ingresar.php',
     'contacto' => 'contacto.php',
+    'crear_campana' => 'crear_campana.php',
 ];
 
 if (!is_string($ruta) || ($ruta !== 'registro' && !isset($vistas[$ruta]))) {
