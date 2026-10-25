@@ -1,37 +1,125 @@
 <?php
-function run_modelos_tests(){
-    require_once __DIR__ . '/modelos/CategoriaTest.php';
-    require_once __DIR__ . '/modelos/DonacionTest.php';
-    require_once __DIR__ . '/modelos/RegistroDbTest.php';
-    require_once __DIR__ . '/modelos/SubCategoriaInsumosTest.php';
-    require_once __DIR__ . '/modelos/MensajesTest.php';
-    require_once __DIR__ . '/modelos/ValidacionesTest.php';
-    require_once __DIR__ . '/modelos/UsuariosTest.php';
-    require_once __DIR__ . '/modelos/CampTest.php';
-    require_once __DIR__ . '/modelos/UbicacionesTest.php';
+$pruebas = [
+    'modelos' => [
+        'Categoria' => [
+            'archivo' => 'modelos/CategoriaTest.php',
+            'funcion' => 'categoriaTest',
+        ],
+        'Donacion' => [
+            'archivo' => 'modelos/DonacionTest.php',
+            'funcion' => 'donacionTest',
+        ],
+        'RegistroDb' => [
+            'archivo' => 'modelos/RegistroDbTest.php',
+            'funcion' => 'registroDbTest',
+        ],
+        'SubCategoriaInsumos' => [
+            'archivo' => 'modelos/SubCategoriaInsumosTest.php',
+            'funcion' => 'subCategoriaInsumosTest',
+        ],
+        'Mensajes' => [
+            'archivo' => 'modelos/MensajesTest.php',
+            'funcion' => 'mensajesTest',
+        ],
+        'Validaciones' => [
+            'archivo' => 'modelos/ValidacionesTest.php',
+            'funcion' => 'validacionesTest',
+        ],
+        'Usuarios' => [
+            'archivo' => 'modelos/UsuariosTest.php',
+            'funcion' => 'usuariosTest',
+        ],
+        'Camp' => [
+            'archivo' => 'modelos/CampTest.php',
+            'funcion' => 'campTest',
+        ],
+        'Ubicaciones' => [
+            'archivo' => 'modelos/UbicacionesTest.php',
+            'funcion' => 'ubicacionesTest',
+        ],
+    ],
+    'repositorios' => [
+        'ValidacionesRepository' => [
+            'archivo' => 'repositorios/ValidacionesRepository.php',
+            'funcion' => 'validacionesRepositoryTest',
+        ],
+        'UsuariosRepository' => [
+            'archivo' => 'repositorios/UsuariosRepository.php',
+            'funcion' => 'usuariosRepositoryTest',
+        ],
+    ],
+    'controladores' => [
+        'ValidacionesController' => [
+            'archivo' => 'controladores/ValidacionesControllerTest.php',
+            'funcion' => 'validacionesControllerTest',
+        ],
+    ],
+];
 
-    
-    categoriaTest();
-    donacionTest();
-    registroDbTest();
-    subCategoriaInsumosTest();
-    mensajesTest();
-    validacionesTest();
-    usuariosTest();
-    campTest();
-    ubicacionesTest();
+function ejecutarPrueba(array $prueba, ?PDO $pdo): void
+{
+    require_once __DIR__ . '/' . $prueba['archivo'];
+
+    $funcion = $prueba['funcion'];
+
+    if ($pdo === null) {
+        $funcion();
+    } else {
+        $funcion($pdo);
+    }
 }
-function run_repositorios_tests(){
-    require_once __DIR__ . '/../config/conexion.php';
-    require_once __DIR__ . '/repositorios/UsuariosRepository.php';
-    require_once __DIR__ . '/repositorios/ValidacionesRepository.php';
 
-    $pdo = conectarBd();
+$argumentos = array_slice($argv, 1);
+$suite = $argumentos[0] ?? 'todos';
+$nombrePrueba = $argumentos[1] ?? null;
 
-    validacionesRepositoryTest($pdo);
-    usuariosRepositoryTest($pdo);
-    
+if (count($argumentos) > 2) {
+    fwrite(STDERR, 'Demasiados argumentos.' . PHP_EOL);
+    exit(1);
 }
 
-//run_modelos_tests();
-run_repositorios_tests();
+if ($suite === 'todos') {
+    if ($nombrePrueba !== null) {
+        fwrite(
+            STDERR,
+            'No se puede seleccionar una prueba con la suite todos.'
+            . PHP_EOL
+        );
+        exit(1);
+    }
+
+    $suitesSeleccionadas = array_keys($pruebas);
+} elseif (isset($pruebas[$suite])) {
+    $suitesSeleccionadas = [$suite];
+} else {
+    fwrite(STDERR, "Suite desconocida: {$suite}" . PHP_EOL);
+    exit(1);
+}
+
+if ($nombrePrueba !== null && !isset($pruebas[$suite][$nombrePrueba])) {
+    fwrite(
+        STDERR,
+        "Prueba desconocida: {$nombrePrueba}" . PHP_EOL
+    );
+    exit(1);
+}
+
+$pdo = null;
+
+foreach ($suitesSeleccionadas as $suiteActual) {
+    $pruebasSeleccionadas = $nombrePrueba === null
+        ? $pruebas[$suiteActual]
+        : [$pruebas[$suiteActual][$nombrePrueba]];
+
+    if ($suiteActual === 'repositorios'
+        || $suiteActual === 'controladores') {
+        if ($pdo === null) {
+            require_once __DIR__ . '/../config/conexion.php';
+            $pdo = conectarBd();
+        }
+    }
+
+    foreach ($pruebasSeleccionadas as $prueba) {
+        ejecutarPrueba($prueba, $pdo);
+    }
+}

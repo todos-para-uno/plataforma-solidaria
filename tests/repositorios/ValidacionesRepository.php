@@ -15,7 +15,7 @@ function validacionesRepositoryTest(PDO $pdo): void
     // Lo comprobamos antes de insertar para evitar colisiones.
     $nivelPrueba = 1000;
 
-    while ($repositorio->findByNivel($nivelPrueba) !== []) {
+    while ($repositorio->findByNivel($nivelPrueba) !== null) {
         $nivelPrueba++;
     }
 
@@ -51,37 +51,24 @@ function validacionesRepositoryTest(PDO $pdo): void
             'findByNombre devuelve objetos Validaciones' . eol()
         );
 
-        $validacionesPorNivel = $repositorio->findByNivel($nivelPrueba);
+        $validacionPorNivel = $repositorio->findByNivel($nivelPrueba);
 
         TestUtils::comprobar(
-            count($validacionesPorNivel) > 0,
-            'findByNivel devuelve una colección no vacía' . eol()
-        );
-
-        $todasSonValidaciones = true;
-        $encontroValidacionPrueba = false;
-
-        foreach ($validacionesPorNivel as $validacion) {
-            if (!($validacion instanceof Validaciones)) {
-                $todasSonValidaciones = false;
-                continue;
-            }
-
-            if ($validacion->getId() === (int) $id) {
-                $encontroValidacionPrueba = true;
-            }
-        }
-
-        TestUtils::comprobar(
-            $todasSonValidaciones,
-            'findByNivel devuelve únicamente objetos Validaciones' . eol()
+            $validacionPorNivel instanceof Validaciones,
+            'findByNivel devuelve un objeto Validaciones' . eol()
         );
 
         TestUtils::comprobar(
-            $encontroValidacionPrueba,
-            'findByNivel incluye la validación insertada' . eol()
+            $validacionPorNivel !== null
+                && $validacionPorNivel->getId() === (int) $id,
+            'findByNivel recupera la validación insertada' . eol()
         );
 
+        TestUtils::comprobar(
+            $validacionPorNivel !== null
+                && $validacionPorNivel->getNivel() === $nivelPrueba,
+            'findByNivel conserva el nivel solicitado' . eol()
+        );
         $validacionEntidad = $repositorio->findById($id);
 
         $validaciones = $repositorio->findAll();
@@ -169,6 +156,12 @@ function validacionesRepositoryTest(PDO $pdo): void
         TestUtils::comprobar(
             $repositorio->findRowById($id) === null,
             'La validación eliminada ya no puede recuperarse' . eol()
+        );
+
+        //  6. INEXISTENTE
+        TestUtils::comprobar(
+            $repositorio->findByNivel($nivelPrueba) === null,
+            'findByNivel devuelve null cuando el nivel no existe' . eol()
         );
 
         echo 'Pruebas de ValidacionesRepository completadas correctamente.' . eol();

@@ -50,15 +50,23 @@ final class ValidacionesRepository extends CrudRepository
     }
 
     /**
-     * Busca validaciones por nivel y devuelve entidades.
+     * Busca una validación por su nivel.
      *
-     * @return array<int, Validaciones>
+     * @return Validaciones|null
      */
-    public function findByNivel(int $nivel): array
+    public function findByNivel(int $nivel): ?Validaciones
     {
-        return $this->hidratarFilas(
-            $this->findRowsByNivel($nivel)
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM `validaciones` WHERE `nivel` = :nivel'
         );
+
+        $stmt->execute(['nivel' => $nivel]);
+
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $fila === false
+            ? null
+            : $this->hidratar($fila);
     }
 
     /**
@@ -75,8 +83,5 @@ final class ValidacionesRepository extends CrudRepository
         $stmt->execute(['nivel' => $nivel]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-
-
+    }    
 }
