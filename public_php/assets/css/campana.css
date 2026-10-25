@@ -1,0 +1,142 @@
+/* ==========================================================================
+   Estilos unificados para la pantalla de detalle de campaña y el modal
+   ========================================================================== */
+
+/* Layout específico para la pantalla de detalle de campaña (más ancha que las tarjetas múltiples) */
+.contenedor-detalle {
+    max-width: 100%;
+}
+
+.tarjeta-detalle {
+    display: flex;
+    flex-direction: column;
+}
+
+.imagen-detalle {
+    aspect-ratio: 16 / 9;
+    max-height: 300px;
+}
+
+.cuerpo-detalle {
+    gap: var(--e-4);
+    padding: var(--e-8);
+}
+
+.cuerpo-detalle h1 {
+    font-size: var(--t-h2);
+    margin: 0;
+}
+
+.detalle-seccion-bloque {
+    margin-top: var(--e-4);
+}
+
+.detalle-seccion-bloque h3 {
+    font-family: var(--fuente-texto);
+    font-size: var(--t-medio);
+    font-weight: 700;
+    color: var(--azul);
+    margin-bottom: var(--e-2);
+}
+
+.detalle-progreso-contenedor {
+    background: var(--hueso);
+    padding: var(--e-6);
+    border: 1px solid var(--linea);
+    border-radius: var(--radio-control);
+}
+
+.lista-objetivos-insumos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--e-4);
+}
+
+.item-objetivo-insumo {
+    background: var(--papel);
+    padding: var(--e-4);
+    border: 1px solid var(--linea);
+    border-radius: var(--radio-control);
+}
+
+.texto-insumo-nombre {
+    margin: 0 0 var(--e-2);
+}
+
+.detalle-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: var(--e-3);
+    margin-top: var(--e-6);
+    border-top: 1px solid var(--linea);
+    padding-top: var(--e-6);
+}
+
+/* ==========================================================================
+   Estilos del modal flotante de donación (superposición total garantizada)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(21, 58, 107, 0.75); /* Fondo semitransparente usando --azul */
+    padding: var(--e-4);
+    overflow-y: auto;
+}
+
+.modal-overlay[hidden] {
+    display: none !important;
+}
+
+.modal-contenido {
+    width: 100%;
+    max-width: 500px;
+    background: var(--papel);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 10px 10px 0 var(--sol-suave);
+}
+
+.modal-encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--e-2);
+    border-bottom: 1px solid var(--linea);
+    padding-bottom: var(--e-3);
+}
+
+.modal-encabezado h2 {
+    font-size: var(--t-h3);
+    margin: 0;
+}
+
+.modal-subtitulo {
+    margin-bottom: var(--e-6);
+    font-size: var(--t-medio);
+}
+
+.modal-cerrar {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--azul);
+    cursor: pointer;
+    padding: 0 var(--e-2);
+    line-height: 1;
+}
+
+.modal-cerrar:hover {
+    color: var(--corazon);
+}
+
+.modal-acciones {
+    margin-top: var(--e-6);
+}
