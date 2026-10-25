@@ -9,7 +9,8 @@ function usuariosCambioPasswordTest(): void
     $usuario = Usuario::crear(
         'Ana',
         'ana@example.com',
-        'PasswordOriginal123'
+        'PasswordOriginal123',
+        7
     );
 
     $hashAnterior = $usuario->getPassword();
@@ -40,7 +41,8 @@ function usuariosPersistenciaTest(): void
     $usuario = Usuario::crear(
         'Ana',
         'ana@example.com',
-        $password
+        $password,
+        7
     );
 
     $hashOriginal = $usuario->getPassword();
@@ -55,11 +57,29 @@ function usuariosPersistenciaTest(): void
         'documento' => null,
         'verificado' => 1,
         'admin' => 0,
-        'validacion' => 3
+        'id_validacion' => 7
     ];
 
     $usuarioRecuperado = Usuario::desdePersistencia(
         $filaUsuario
+    );
+
+    TestUtils::comprobar(
+        $usuarioRecuperado->getIdValidacion() === 7,
+        'Se conservó el identificador de validación' . eol()
+    );
+
+    TestUtils::comprobar(
+        $usuarioRecuperado->getVerificado() === true
+            && $usuarioRecuperado->getAdmin() === false,
+        'Se recuperaron correctamente los estados del usuario' . eol()
+    );
+
+    TestUtils::comprobar(
+        $usuario->getIdValidacion() === 7
+            && $usuario->getVerificado() === false
+            && $usuario->getAdmin() === false,
+        'El usuario nuevo conserva su validación y estados iniciales' . eol()
     );
 
     TestUtils::comprobar(
@@ -93,7 +113,7 @@ function usuariosTest(): void
     usuariosPersistenciaTest();
 
     echo 'Pruebas de Usuarios.php completadas correctamente.' . eol();
-    echo '<hr>';
+
 }
 
 // Permite ejecutar este test solo y también incluirlo desde un ejecutor de pruebas.

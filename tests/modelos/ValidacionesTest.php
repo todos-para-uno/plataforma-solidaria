@@ -1,8 +1,10 @@
 <?php
+require_once __DIR__ . '/../../utilidades/TestUtils.php';
+require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
+require_once __DIR__ . '/../../app/modelos/Validaciones.php';
+
 function validacionesTest()
 {
-    require_once __DIR__ . '/../../app/modelos/Validaciones.php';
-
     echo "INICIANDO TEST: app/modelos/Validaciones.php<br>";
 
     echo "Caso 1 - crea una validación con datos válidos: ";

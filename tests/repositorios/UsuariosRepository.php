@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
 require_once __DIR__ . '/../../utilidades/TestUtils.php';
+require_once __DIR__ . '/../../app/modelos/NivelValidacion.php';
 
 function usuariosRepositoryTest(PDO $pdo): void
 {
@@ -12,16 +13,17 @@ function usuariosRepositoryTest(PDO $pdo): void
     $validacionesRepositorio = new ValidacionesRepository($pdo);
     $usuariosRepositorio = new UsuariosRepository($pdo);
 
-    $validaciones = $validacionesRepositorio->findByNivel(1);
+    $validacion = $validacionesRepositorio->findByNivel(
+        NivelValidacion::DEFAULT_NIVEL_USUARIO
+    );
 
-    if ($validaciones === []) {
+    if ($validacion === null) {
         throw new RuntimeException(
-            'No existe una validación con nivel 1.'
+            'No existe la validación inicial.'
         );
     }
 
-    
-    $validacionId = (int) $validaciones[0]->getId(); 
+    $validacionId = $validacion->getId();
 
     // Identificador único para no depender de usuarios anteriores.
     $mail = 'test-' . bin2hex(random_bytes(8)) . '@example.com';
@@ -38,7 +40,7 @@ function usuariosRepositoryTest(PDO $pdo): void
             'pass' => password_hash('PasswordPrueba123', PASSWORD_BCRYPT),
             'verificado' => 0,
             'admin' => 0,
-            'validacion' => $validacionId
+            'id_validacion' => $validacionId
         ]);
 
         TestUtils::comprobar(
@@ -57,7 +59,7 @@ function usuariosRepositoryTest(PDO $pdo): void
                 'pass' => password_hash('PasswordPrueba456', PASSWORD_BCRYPT),
                 'verificado' => 0,
                 'admin' => 0,
-                'validacion' => $validacionId
+                'id_validacion' => $validacionId
             ]);
         }catch (PDOException $e) {
             if (($e->errorInfo[1] ?? null) === 1062) {
@@ -136,6 +138,12 @@ function usuariosRepositoryTest(PDO $pdo): void
         TestUtils::comprobar(
             $usuarioEntidad instanceof Usuario,
             'findById devuelve un objeto Usuario' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuarioEntidad !== null
+                && $usuarioEntidad->getIdValidacion() === $validacionId,
+            'La entidad recuperada conserva su ID de validación' . eol()
         );
 
         TestUtils::comprobar(
@@ -229,5 +237,4 @@ function usuariosRepositoryTest(PDO $pdo): void
         }
     }
 
-    echo '<hr>';
 }

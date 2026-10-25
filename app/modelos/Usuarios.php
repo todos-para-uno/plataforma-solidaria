@@ -16,20 +16,25 @@ class Usuario extends RegistroDb
     private ?string $documento;
     private bool $verificado;
     private bool $admin;
-    private int $validacion;
+    private int $idValidacion;
     
     private function __construct(
-        string $nombre, 
-        string $mail, 
-        string $hashPassword, 
-        ?string $miTelefono = null, 
-    ){
+        string $nombre,
+        string $mail,
+        string $hashPassword,
+        int $idValidacion,
+        ?string $miTelefono = null
+    ) {
+        if ($idValidacion < 1) {
+            throw new InvalidArgumentException(
+                'El identificador de validación debe ser positivo.'
+            );
+        }
+
         $this->setNombre($nombre);
         $this->setEmail($mail);
-  
-        $this->pass = $hashPassword;
-        // $this->setPassword($hashPassword); // $this->pass = password_hash($miPass, PASSWORD_DEFAULT);
 
+        $this->pass = $hashPassword;
         $this->setTelefono($miTelefono);
 
         $this->tipo_documento = null;
@@ -37,38 +42,42 @@ class Usuario extends RegistroDb
 
         $this->verificado = false;
         $this->admin = false;
-        $this->validacion = 1;
+        $this->idValidacion = $idValidacion;
     }
 
-    public static function crear (
+    public static function crear(
         string $nombre,
         string $mail,
         string $password,
+        int $idValidacion,
         ?string $telefono = null,
         ?TipoDocumento $tipoDocumento = null,
         ?string $documento = null
-    ): self 
-    {
-            $usuario = new self(
+    ): self {
+        $usuario = new self(
             $nombre,
             $mail,
             self::generarHashPassword($password),
+            $idValidacion,
             $telefono
-            );
-            if ($tipoDocumento !== null || $documento !== null) {
-                if ($tipoDocumento === null || $documento === null) {
-                    throw new InvalidArgumentException(
-                        'Debés indicar el tipo y número de documento.'
-                    );
-                }
+        );
 
-                $usuario->agregarDocumento(
-                    $tipoDocumento,
-                    $documento
+        if ($tipoDocumento !== null || $documento !== null) {
+            if ($tipoDocumento === null || $documento === null) {
+                throw new InvalidArgumentException(
+                    'Debés indicar el tipo y número de documento.'
                 );
             }
-        return $usuario;            
+
+            $usuario->agregarDocumento(
+                $tipoDocumento,
+                $documento
+            );
+        }
+
+        return $usuario;
     }
+
     /**
      * 
      * @param array<string,mixed> $filaUsuario
@@ -76,17 +85,17 @@ class Usuario extends RegistroDb
     public static function desdePersistencia(array $filaUsuario): self
     {
         $usuario = new self(
-            $filaUsuario['nombre'],
-            $filaUsuario['mail'],
-            $filaUsuario['pass'],
-            $filaUsuario['telefono'] ?? null
+        $filaUsuario['nombre'],
+        $filaUsuario['mail'],
+        $filaUsuario['pass'],
+        (int) $filaUsuario['id_validacion'],
+        $filaUsuario['telefono'] ?? null
         );
 
         $usuario->setId((int) $filaUsuario['id']);
         
         $usuario->verificado = (bool) $filaUsuario['verificado'];
         $usuario->admin = (bool) $filaUsuario['admin'];
-        $usuario->validacion = (int) $filaUsuario['validacion'];
 
         if (
             !empty($filaUsuario['tipo_documento']) &&
@@ -188,9 +197,9 @@ class Usuario extends RegistroDb
         return $this->admin;
     }
 
-    public function getValidacion(): int
+    public function getIdValidacion(): int
     {
-        return $this->validacion;
+        return $this->idValidacion;
     }
 
     public function verificarPassword(string $password): bool
