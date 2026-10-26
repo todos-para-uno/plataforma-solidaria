@@ -14,12 +14,16 @@ $estilosPagina = [];   // Utiliza exclusivamente base.css
 $donaciones = $donaciones ?? [
     [
         'campaña_nombre' => 'Una mesa para compartir',
+        'imagen'         => 'donaciones-mesa-compartir.webp',
+        'imagen_alt'     => 'Escena ficticia de voluntarios compartiendo una comida con una vecina en un comedor comunitario.',
         'monetaria'      => true,
         'cantidad'       => 15000,
         'fecha_hora'     => '2026-06-10 14:30:00'
     ],
     [
         'campaña_nombre' => 'Mochilas llenas de futuro',
+        'imagen'         => 'donaciones-mochilas-futuro.webp',
+        'imagen_alt'     => 'Escena ficticia de una voluntaria entregando una mochila con útiles a una niña acompañada por su mamá.',
         'monetaria'      => false,
         'cantidad'       => 5, // Representa unidades o insumos aportados
         'fecha_hora'     => '2026-06-05 10:15:00'
@@ -48,7 +52,14 @@ require __DIR__ . '/parciales/cabecera.php';
             <div class="grilla-campanas">
                 <?php foreach ($donaciones as $donacion): ?>
                     <article class="tarjeta campana">
-                        <div class="campana-imagen" role="img" aria-label="Foto de la campaña"></div>
+                        <?php if (!empty($donacion['imagen'])): ?>
+                            <img class="campana-imagen"
+                                 src="<?= escapar($rutaAssets . '/imagenes/' . $donacion['imagen']) ?>"
+                                 alt="<?= escapar($donacion['imagen_alt'] ?? 'Imagen ilustrativa de la campaña') ?>"
+                                 width="960" height="640" loading="lazy" decoding="async">
+                        <?php else: ?>
+                            <div class="campana-imagen" role="img" aria-label="Foto de la campaña"></div>
+                        <?php endif; ?>
                         <div class="campana-cuerpo">
                             <div class="campana-datos">
                                 <span class="insignia">
