@@ -11,6 +11,7 @@ $vistas = [
     'ingresar' => 'ingresar.php',
     'contacto' => 'contacto.php',
     'crear_campana' => 'crear_campana.php',
+    'mis_donaciones' => 'mis_donaciones.php',
 ];
 
 if (!is_string($ruta) || ($ruta !== 'registro' && !isset($vistas[$ruta]))) {
