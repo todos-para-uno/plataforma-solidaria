@@ -25,6 +25,32 @@ final class UsuariosRepository extends CrudRepository
     }
 
     /**
+     * Inserta un usuario nuevo a partir de una entidad.
+     *
+     * @return int|string ID generado por la base de datos.
+     */
+    public function insertarUsuario(Usuario $usuario): int|string
+    {
+        if ($usuario->getId() !== null) {
+            throw new InvalidArgumentException(
+                'No se puede insertar un usuario que ya tiene ID.'
+            );
+        }
+
+        return $this->save([
+            'nombre' => $usuario->getNombre(),
+            'mail' => $usuario->getEmail(),
+            'telefono' => $usuario->getTelefono(),
+            'tipo_documento' => $usuario->getTipoDocumento()?->value,
+            'documento' => $usuario->getDocumento(),
+            'pass' => $usuario->getPassword(),
+            'verificado' => (int) $usuario->getVerificado(),
+            'admin' => (int) $usuario->getAdmin(),
+            'id_validacion' => $usuario->getIdValidacion(),
+        ]);
+    }
+
+    /**
      * @param array<string, mixed> $fila
      */
     protected function hidratar(array $fila): Usuario

@@ -33,6 +33,75 @@ function usuariosRepositoryTest(PDO $pdo): void
 
     try {
         // 1. INSERTAR
+
+        // Inserción de una entidad Usuario mediante el repositorio.
+        $mailEntidad = 'entidad-' . bin2hex(random_bytes(8)) . '@example.com';
+        $passwordEntidad = 'PasswordEntidad123';
+
+        $usuarioNuevo = Usuario::crear(
+            'Usuario de prueba',
+            $mailEntidad,
+            $passwordEntidad,
+            $validacionId
+        );
+
+        $idEntidad = $usuariosRepositorio->insertarUsuario($usuarioNuevo);
+
+        TestUtils::comprobar(
+            (int) $idEntidad > 0,
+            'insertarUsuario devuelve el ID generado' . eol()
+        );
+
+        $usuarioGuardado = $usuariosRepositorio->findById($idEntidad);
+
+        TestUtils::comprobar(
+            $usuarioGuardado instanceof Usuario,
+            'insertarUsuario permite recuperar una entidad Usuario' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuarioGuardado !== null
+                && $usuarioGuardado->verificarPassword($passwordEntidad),
+            'La contraseña se verifica después de recuperar el usuario' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuarioGuardado !== null
+                && $usuarioGuardado->getPassword() === $usuarioNuevo->getPassword(),
+            'El hash se conserva sin volver a generarse' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuarioGuardado !== null
+                && $usuarioGuardado->getIdValidacion() === $validacionId,
+            'Se conserva el identificador de validación' . eol()
+        );
+
+        TestUtils::comprobar(
+            $usuarioGuardado !== null
+                && !$usuarioGuardado->getVerificado()
+                && !$usuarioGuardado->getAdmin(),
+            'El usuario se registra sin verificación ni privilegios administrativos' . eol()
+        );
+
+        // No permitir insertar una entidad que ya tiene ID.
+        $usuarioNuevo->setId((int) $idEntidad);
+
+        $insercionRechazada = false;
+
+        try {
+            $usuariosRepositorio->insertarUsuario($usuarioNuevo);
+        } catch (InvalidArgumentException $e) {
+            $insercionRechazada = true;
+        }
+
+        TestUtils::comprobar(
+            $insercionRechazada,
+            'insertarUsuario rechaza una entidad con ID asignado' . eol()
+        );
+
+
+
         $id = $usuariosRepositorio->save([
             'nombre' => $nombre,
             'mail' => $mail,

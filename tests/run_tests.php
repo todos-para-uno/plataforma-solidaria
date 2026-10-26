@@ -1,4 +1,7 @@
 <?php
+// Evita que la salida de las pruebas envíe cabeceras HTTP
+// antes de ejecutar las pruebas de controladores.
+ob_start();
 $pruebas = [
     'modelos' => [
         'Categoria' => [
@@ -52,6 +55,10 @@ $pruebas = [
         'ValidacionesController' => [
             'archivo' => 'controladores/ValidacionesControllerTest.php',
             'funcion' => 'validacionesControllerTest',
+        ],
+        'RegistroController' => [
+            'archivo' => 'controladores/RegistroControllerTest.php',
+            'funcion' => 'registroControllerTest',
         ],
     ],
 ];
