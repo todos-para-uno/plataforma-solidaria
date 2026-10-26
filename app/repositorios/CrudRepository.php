@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../modelos/RegistroDb.php';
 
 abstract class CrudRepository
 {
@@ -17,21 +18,42 @@ abstract class CrudRepository
         }
     }
 
+    /**
+     * Recupera todos los registros como entidades.
+     *
+     * @return array<int, RegistroDb>
+     */
     public function findAll(): array
+    {
+        return $this->hidratarFilas($this->findAllRows());
+    }
+
+
+    public function findAllRows(): array
     {
         $stmt = $this->pdo->query("SELECT * FROM `{$this->table}`");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function findById(int|string $id): ?array
+    public function findRowById(int|string $id): ?array
     {
         $sql = "SELECT * FROM `{$this->table}` WHERE `{$this->primaryKey}` = :id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row === false ? null : $row;
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $fila === false ? null : $fila;
     }
+
+    public function findById(int|string $id): ?RegistroDb
+{
+    $fila = $this->findRowById($id);
+
+    return $fila === null
+        ? null
+        : $this->hidratar($fila);
+}
 
     /**
      * Inserta si no hay clave primaria; actualiza si se proporciona.
@@ -92,4 +114,28 @@ abstract class CrudRepository
 
         return $stmt->rowCount() > 0;
     }
+
+    /**
+     * Convierte un conjunto de filas asociativas en entidades.
+     *
+     * @param array<int, array<string, mixed>> $filas
+     * @return array<int, RegistroDb>
+     */
+    protected function hidratarFilas(array $filas): array
+    {
+        $entidades = [];
+
+        foreach ($filas as $fila) {
+            $entidades[] = $this->hidratar($fila);
+        }
+
+        return $entidades;
+    }
+
+    /**
+     * Convierte una fila asociativa en una entidad del modelo.
+     *
+     * @param array<string, mixed> $fila
+     */
+    abstract protected function hidratar(array $fila): RegistroDb;
 }

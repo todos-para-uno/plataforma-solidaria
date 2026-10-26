@@ -38,11 +38,29 @@ if (isset($vistas[$ruta])) {
     return;
 }
 
-require_once __DIR__ . '/../app/controladores/RegistroController.php';
-$controlador = new RegistroController();
+if ($ruta === 'registro') {
 
-if ($metodo === 'POST') {
-    $controlador->procesarRegistro($rutaBase, $rutaAssets);
-} else {
-    $controlador->mostrarFormulario($rutaBase, $rutaAssets);
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/repositorios/UsuariosRepository.php';
+    require_once __DIR__ . '/../app/repositorios/ValidacionesRepository.php';
+    require_once __DIR__ . '/../app/controladores/RegistroController.php';
+
+    $pdo = conectarBd();
+
+    $controlador = new RegistroController(
+        new UsuariosRepository($pdo),
+        new ValidacionesRepository($pdo)
+    );
+
+    if ($metodo === 'POST') {
+        $controlador->procesarRegistro($rutaBase, $rutaAssets);
+    } else {
+        $controlador->mostrarFormulario($rutaBase, $rutaAssets);
+    }
+
+    return;
 }

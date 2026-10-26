@@ -15,7 +15,7 @@ final class CampRepository extends CrudRepository
     public function findByNombre(string $nombre): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT * FROM `usuarios` WHERE `nombre` = :nombre' 
+            'SELECT * FROM `camp` WHERE `nombre` = :nombre' 
         );
         $stmt->execute(['nombre' => $nombre]);
 
@@ -31,5 +31,11 @@ final class CampRepository extends CrudRepository
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
+    // protected function hidratar(array $fila): Camp
+    // {
+    //     return Camp::desdePersistencia($fila);
+    // }
 
 }

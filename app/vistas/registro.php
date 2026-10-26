@@ -1,16 +1,17 @@
 <?php
 /*
- * Formulario de registro. Recibe datos para mostrar; su envío va al controlador.
+ * Formulario de registro.
  *
- * Al integrar la validación, el controlador podrá pasarle:
- *   $errores  string[]  Mensajes de validación. Con un arreglo vacío, no se muestran errores.
- *   $nombre   string    Nombre ingresado, para conservarlo si hay que corregir el formulario.
- *   $mail     string    Correo ingresado, con el mismo propósito.
- * Las contraseñas no se vuelven a mostrar en los campos.
+ * Recibe del controlador:
+ *   $errores    string[] Mensajes de validación.
+ *   $nombre     string   Nombre ingresado.
+ *   $mail       string   Correo ingresado.
+ *   $csrfToken  string   Token de protección CSRF.
  *
- * Hoy el POST muestra una confirmación de prueba. Falta validar los datos y guardar
- * el usuario desde RegistroController; este formulario todavía no crea una cuenta.
+ * El envío del formulario es procesado por RegistroController.
+ * Las contraseñas no se vuelven a mostrar después de un error.
  */
+
 $tituloPagina = 'Crear cuenta';
 $paginaActual = 'registro';
 $usuarioActual = null;
@@ -42,10 +43,12 @@ require __DIR__ . '/parciales/cabecera.php';
                 </div>
             <?php endif; ?>
 
-            <!-- required, type y minlength ayudan a completar el formulario en el navegador.
-                 Al integrar el registro, validá también en el servidor: se puede enviar un POST
-                 sin pasar por esta pantalla. Comprobá además que las contraseñas coincidan. -->
             <form class="tarjeta" action="<?= escapar($rutas['registro']) ?>" method="post">
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>"
+                >
                 <div class="campo">
                     <label for="registro-nombre">Nombre</label>
                     <input id="registro-nombre" name="nombre" type="text" autocomplete="name"

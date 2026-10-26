@@ -5,7 +5,7 @@ enum TipoDocumento: string
     case DNI = 'DNI';
     case Pasaporte = 'Pasaporte';
 }
-class Usuarios extends RegistroDb
+class Usuario extends RegistroDb
 {
     private string $nombre;
     private string $mail;
@@ -16,32 +16,115 @@ class Usuarios extends RegistroDb
     private ?string $documento;
     private bool $verificado;
     private bool $admin;
-    private int $validacion;
-
-    public function __construct(
-        string $miNombre,
-        string $miMail,
-        string $miPass,
-        ?string $miTelefono = null,
-        ?TipoDocumento $miTipoDoc = null,
-        ?string $miDocumento = null
+    private int $idValidacion;
+    
+    private function __construct(
+        string $nombre,
+        string $mail,
+        string $hashPassword,
+        int $idValidacion,
+        ?string $miTelefono = null
     ) {
-        $this->setNombre($miNombre);
-        $this->setEmail($miMail);
-        $this->setPassword($miPass);
+        if ($idValidacion < 1) {
+            throw new InvalidArgumentException(
+                'El identificador de validación debe ser positivo.'
+            );
+        }
+
+        $this->setNombre($nombre);
+        $this->setEmail($mail);
+
+        $this->pass = $hashPassword;
         $this->setTelefono($miTelefono);
+
         $this->tipo_documento = null;
         $this->documento = null;
+
         $this->verificado = false;
         $this->admin = false;
-        $this->validacion = 1;
+        $this->idValidacion = $idValidacion;
+    }
 
-        if ($miTipoDoc !== null || $miDocumento !== null) {
-            if ($miTipoDoc === null || $miDocumento === null) {
-                throw new InvalidArgumentException("Debés indicar el tipo y número de documento.");
+    public static function crear(
+        string $nombre,
+        string $mail,
+        string $password,
+        int $idValidacion,
+        ?string $telefono = null,
+        ?TipoDocumento $tipoDocumento = null,
+        ?string $documento = null
+    ): self {
+        $usuario = new self(
+            $nombre,
+            $mail,
+            self::generarHashPassword($password),
+            $idValidacion,
+            $telefono
+        );
+
+        if ($tipoDocumento !== null || $documento !== null) {
+            if ($tipoDocumento === null || $documento === null) {
+                throw new InvalidArgumentException(
+                    'Debés indicar el tipo y número de documento.'
+                );
             }
-            $this->agregarDocumento($miTipoDoc, $miDocumento);
+
+            $usuario->agregarDocumento(
+                $tipoDocumento,
+                $documento
+            );
         }
+
+        return $usuario;
+    }
+
+    /**
+     * 
+     * @param array<string,mixed> $filaUsuario
+     */
+    public static function desdePersistencia(array $filaUsuario): self
+    {
+        $usuario = new self(
+        $filaUsuario['nombre'],
+        $filaUsuario['mail'],
+        $filaUsuario['pass'],
+        (int) $filaUsuario['id_validacion'],
+        $filaUsuario['telefono'] ?? null
+        );
+
+        $usuario->setId((int) $filaUsuario['id']);
+        
+        $usuario->verificado = (bool) $filaUsuario['verificado'];
+        $usuario->admin = (bool) $filaUsuario['admin'];
+
+        if (
+            !empty($filaUsuario['tipo_documento']) &&
+            !empty($filaUsuario['documento'])
+        ) {
+            $usuario->agregarDocumento(
+                TipoDocumento::from($filaUsuario['tipo_documento']),
+                $filaUsuario['documento']
+            );
+        }
+
+        return $usuario;
+    }
+
+    private static function generarHashPassword(string $password): string
+    {
+        if (trim($password) === '') {
+            throw new InvalidArgumentException('La contraseña no puede estar vacía.');
+        }
+        if (mb_strlen($password, 'UTF-8') < 8) {
+            throw new InvalidArgumentException('La contraseña debe tener al menos 8 caracteres.');
+        }
+        // Bcrypt solo utiliza los primeros 72 bytes y no admite bytes nulos.
+        if (strlen($password) > 72 || strpos($password, "\0") !== false) {
+            throw new InvalidArgumentException(
+                'La contraseña debe ocupar como máximo 72 bytes y no contener bytes nulos.'
+            );
+        }
+        return password_hash($password, PASSWORD_BCRYPT);
     }
     
     public function setNombre(string $nombre): void
@@ -68,57 +151,60 @@ class Usuarios extends RegistroDb
         }
         $this->mail = $email;
     }
+
     public function getEmail(): string
     {
         return $this->mail;
     }
+
     public function setPassword(string $password): void
     {
-        if (trim($password) === '') {
-            throw new InvalidArgumentException('La contraseña no puede estar vacía.');
-        }
-        if (mb_strlen($password, 'UTF-8') < 8) {
-            throw new InvalidArgumentException('La contraseña debe tener al menos 8 caracteres.');
-        }
-        // Bcrypt solo utiliza los primeros 72 bytes y no admite bytes nulos.
-        if (strlen($password) > 72 || strpos($password, "\0") !== false) {
-            throw new InvalidArgumentException(
-                'La contraseña debe ocupar como máximo 72 bytes y no contener bytes nulos.'
-            );
-        }
-        $this->pass = password_hash($password, PASSWORD_DEFAULT);
+        $this->pass = self::generarHashPassword($password);
     }
+
     public function getPassword(): string
     {
         return $this->pass;
     }
+
     public function setTelefono(?string $telefono): void
     {
         $this->telefono = $telefono;
     }
+
     public function getTelefono(): ?string
     {
         return $this->telefono;
     }
+
     public function getTipoDocumento(): ?TipoDocumento
     {
         return $this->tipo_documento;
     }
+
     public function getDocumento(): ?string
     {
         return $this->documento;
     }
+
     public function getVerificado(): bool
     {
         return $this->verificado;
     }
+
     public function getAdmin(): bool
     {
         return $this->admin;
     }
-    public function getValidacion(): int
+
+    public function getIdValidacion(): int
     {
-        return $this->validacion;
+        return $this->idValidacion;
+    }
+
+    public function verificarPassword(string $password): bool
+    {
+        return password_verify($password, $this->pass);
     }
 
     public function agregarDocumento(TipoDocumento $tipo, string $numero): void
@@ -129,7 +215,8 @@ class Usuarios extends RegistroDb
             );
         }
         $this->tipo_documento = $tipo;
-        $this->documento = trim($numero); //por si el usuario copypastea su dni y se generan espacios antes
+        $this->documento = trim($numero); 
     }
+    
 }
 ?>
