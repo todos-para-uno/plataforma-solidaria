@@ -36,9 +36,9 @@ final class CampRepository extends CrudRepository
     }
 
 
-    protected function hidratar(array $fila): Camp
+    protected function hidratar(array $filaCamp): Camp
     {
-        return Camp::desdePersistencia($fila);
+        return Camp::desdePersistencia($filaCamp);
     }
 
 }

@@ -69,7 +69,7 @@ function campTest(): void
         'Un nombre vacío se rechaza y conserva el anterior.'
     );
 
-    $fila = [
+    $filaCamp = [
         'id' => '12',
         'owner_id' => '53',
         'nombre' => 'Campaña guardada',
@@ -81,27 +81,27 @@ function campTest(): void
         'estado' => 'finalizada',
         'id_ubicacion' => null,
     ];
-    $guardada = Camp::desdePersistencia($fila);
+    $guardada = Camp::desdePersistencia($filaCamp);
     campComprobar(
         $guardada->getId() === 12
             && $guardada->getOwnerId() === 53
-            && $guardada->getNombre() === $fila['nombre']
+            && $guardada->getNombre() === $filaCamp['nombre']
             && $guardada->getMonetaria()
             && $guardada->getCategoria() === 2
             && $guardada->getLogrado() === 1250.75
-            && $guardada->getDescripcion() === $fila['descripcion']
+            && $guardada->getDescripcion() === $filaCamp['descripcion']
             && $guardada->getCbu() === $cbu
             && $guardada->getEstado() === EstadoCamp::Finalizada
             && $guardada->getIdUbicacion() === null,
         'La reconstrucción conserva los datos, el avance y el estado finalizado.'
     );
 
-    $fila['monetaria'] = '0';
-    $fila['cbu'] = null;
-    $fila['id_ubicacion'] = '7';
-    $fila['descripcion'] = null;
-    $fila['estado'] = 'suspendida';
-    $guardada = Camp::desdePersistencia($fila);
+    $filaCamp['monetaria'] = '0';
+    $filaCamp['cbu'] = null;
+    $filaCamp['id_ubicacion'] = '7';
+    $filaCamp['descripcion'] = null;
+    $filaCamp['estado'] = 'suspendida';
+    $guardada = Camp::desdePersistencia($filaCamp);
     campComprobar(
         !$guardada->getMonetaria()
             && $guardada->getCbu() === null
