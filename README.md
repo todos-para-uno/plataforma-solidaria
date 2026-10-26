@@ -144,6 +144,8 @@ La prueba de registro requiere la base y comprueba el guardado, la contraseña h
 
 La prueba de ingreso también requiere la base. Comprueba las credenciales, los errores del formulario, la renovación del identificador de sesión y del token CSRF, y el cierre de sesión. Los usuarios de prueba se crean dentro de una transacción que se revierte al terminar.
 
+La prueba de Mis campañas comprueba el acceso con el usuario recuperado por el inicio de sesión, que solo se listen sus campañas y que el menú incluya un token CSRF para salir.
+
 ## Entender el recorrido del código
 
 Usamos **MVC (Modelo-Vista-Controlador)** y repositorios para repartir responsabilidades. Así podemos trabajar en distintas partes y acordar qué datos se pasan entre ellas.

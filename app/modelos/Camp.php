@@ -39,6 +39,32 @@ class Camp extends RegistroDb
         $this->setIdUbicacion($id_ubicacion);
     }
 
+    /**
+     * Reconstruye una campaña conservando los valores guardados.
+     *
+     * @param array<string, mixed> $filaCamp
+     */
+    public static function desdePersistencia(array $filaCamp): self
+    {
+        $campana = new self(
+            owner_id: (int) $filaCamp['owner_id'],
+            nombre: $filaCamp['nombre'],
+            monetaria: (bool) $filaCamp['monetaria'],
+            categoria: (int) $filaCamp['categoria'],
+            descripcion: $filaCamp['descripcion'] ?? null,
+            cbu: $filaCamp['cbu'] ?? null,
+            id_ubicacion: isset($filaCamp['id_ubicacion'])
+                ? (int) $filaCamp['id_ubicacion']
+                : null
+        );
+
+        $campana->setId((int) $filaCamp['id']);
+        $campana->logrado = (float) $filaCamp['logrado'];
+        $campana->estado = EstadoCamp::from($filaCamp['estado']);
+
+        return $campana;
+    }
+
     public function setOwnerId(int $owner_id): void
     {
         if ($owner_id <= 0) {

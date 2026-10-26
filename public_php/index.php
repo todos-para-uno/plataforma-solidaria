@@ -13,7 +13,10 @@ $vistas = [
     'mis_donaciones' => 'mis_donaciones.php',
 ];
 
-if (!is_string($ruta) || (!in_array($ruta, ['registro', 'ingresar', 'salir'], true) && !isset($vistas[$ruta]))) {
+// Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
+$rutasConControlador = ['registro', 'ingresar', 'salir', 'mis_campanas'];
+
+if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset($vistas[$ruta]))) {
     http_response_code(404);
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Página no encontrada.';
@@ -82,6 +85,13 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
 
 if (isset($vistas[$ruta])) {
     require __DIR__ . '/../app/vistas/' . $vistas[$ruta];
+    return;
+}
+
+if ($ruta === 'mis_campanas') {
+    require_once __DIR__ . '/../app/controladores/MisCampanasController.php';
+    $controlador = new MisCampanasController();
+    $controlador->mostrar($rutaBase, $rutaAssets, $usuario ?? null);
     return;
 }
 
