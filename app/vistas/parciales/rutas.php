@@ -15,7 +15,7 @@ return [
     'ingresar'        => $rutaEntrada . '?ruta=ingresar',
     'registro'        => $rutaEntrada . '?ruta=registro',
     'crear_campana'   => $rutaEntrada . '?ruta=crear_campana',
-    'mis_campanas'    => '#',
+    'mis_campanas'    => $rutaEntrada . '?ruta=mis_campanas',
     'mis_donaciones'  => $rutaEntrada . '?ruta=mis_donaciones',
     'mensajes'        => '#',
     'perfil'          => '#',

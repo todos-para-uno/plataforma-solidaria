@@ -11,12 +11,12 @@
 $tituloPagina = 'Guía de estilos';
 $paginaActual = 'explorar';
 $estilosPagina = ['guia-estilos.css'];
-
+ 
 $modo = $_GET['sesion'] ?? '';
 $usuarioActual = $modo === ''
     ? null
     : ['nombre' => 'Ana Pérez', 'admin' => $modo === 'admin', 'mensajesSinLeer' => 2];
-
+ 
 $campanasEjemplo = [
     ['titulo' => 'Comedor comunitario Barrio Sur', 'categoria' => 'Alimentos', 'autor' => 'Ana Pérez', 'nivel' => 'azul',
      'logrado' => 320000, 'objetivo' => 500000, 'monetaria' => true],
@@ -34,7 +34,7 @@ $colores = [
     ['variable' => 'grafito', 'hex' => '#4d4b46', 'uso' => 'Trazo de bordes'],
 ];
 $nombresNivel = ['blanco' => 'Blanco', 'celeste' => 'Celeste', 'azul' => 'Azul', 'violeta' => 'Violeta'];
-
+ 
 require __DIR__ . '/parciales/cabecera.php';
 ?>
 <div class="contenedor">
@@ -42,7 +42,7 @@ require __DIR__ . '/parciales/cabecera.php';
         <h1>Guía de estilos</h1>
         <p class="bajada">Todo lo que aparece en esta página sale de <code>base.css</code>. Si una pantalla necesita algo que no está acá, primero se agrega acá.</p>
     </section>
-
+ 
     <section class="guia-seccion" aria-labelledby="g-colores">
         <h2 id="g-colores">Colores</h2>
         <ul class="guia-muestras">
@@ -55,7 +55,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <?php endforeach; ?>
         </ul>
     </section>
-
+ 
     <section class="guia-seccion" aria-labelledby="g-tipo">
         <h2 id="g-tipo">Tipografía</h2>
         <p class="guia-h1">Título de página (h1)</p>
@@ -65,7 +65,7 @@ require __DIR__ . '/parciales/cabecera.php';
         <p>Texto común. Hablamos de vos, con tildes y en oraciones cortas. Los títulos van en Georgia; el resto, en la fuente del sistema.</p>
         <p class="texto-secundario"><small>Texto secundario y ayudas.</small></p>
     </section>
-
+ 
     <section class="guia-seccion" aria-labelledby="g-botones">
         <h2 id="g-botones">Botones</h2>
         <div class="guia-fila">
@@ -76,7 +76,7 @@ require __DIR__ . '/parciales/cabecera.php';
         </div>
         <p class="texto-secundario">Un solo botón principal por pantalla. El rojo corazón es exclusivo de donar.</p>
     </section>
-
+ 
     <section class="guia-seccion guia-dos" aria-labelledby="g-form">
         <div>
             <h2 id="g-form">Formularios</h2>
@@ -110,7 +110,7 @@ require __DIR__ . '/parciales/cabecera.php';
                 <p>No pudimos publicar la campaña:</p>
                 <ul><li>Falta el objetivo a recaudar.</li><li>El CBU tiene 22 números.</li></ul>
             </div>
-
+ 
             <h2>Niveles de confianza</h2>
             <div class="guia-fila">
                 <?php foreach ($nombresNivel as $clase => $nombre): ?>
@@ -120,7 +120,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <p class="texto-secundario">Se muestran junto al nombre del creador de una campaña.</p>
         </div>
     </section>
-
+ 
     <section class="guia-seccion" aria-labelledby="g-campanas">
         <h2 id="g-campanas">Tarjeta de campaña</h2>
         <div class="grilla-campanas">
@@ -157,6 +157,20 @@ require __DIR__ . '/parciales/cabecera.php';
             <?php endforeach; ?>
         </div>
     </section>
+ 
+    <section class="guia-seccion" aria-labelledby="g-datos">
+        <h2 id="g-datos">Dato de resumen</h2>
+        <div class="grilla-campanas">
+            <div class="tarjeta dato">
+                <span class="dato-cifra">3</span>
+                <span class="dato-etiqueta">Campañas activas</span>
+            </div>
+            <div class="tarjeta dato">
+                <span class="dato-cifra"><?= formatearPesos(320000) ?></span>
+                <span class="dato-etiqueta">Dinero recaudado</span>
+            </div>
+        </div>
+    </section>
 </div>
-
+ 
 <?php require __DIR__ . '/parciales/pie.php'; ?>
