@@ -69,6 +69,48 @@ function campTest(): void
         'Un nombre vacío se rechaza y conserva el anterior.'
     );
 
+    $filaCamp = [
+        'id' => '12',
+        'owner_id' => '53',
+        'nombre' => 'Campaña guardada',
+        'monetaria' => '1',
+        'categoria' => '2',
+        'logrado' => '1250.75',
+        'descripcion' => 'Descripción guardada',
+        'cbu' => $cbu,
+        'estado' => 'finalizada',
+        'id_ubicacion' => null,
+    ];
+    $guardada = Camp::desdePersistencia($filaCamp);
+    campComprobar(
+        $guardada->getId() === 12
+            && $guardada->getOwnerId() === 53
+            && $guardada->getNombre() === $filaCamp['nombre']
+            && $guardada->getMonetaria()
+            && $guardada->getCategoria() === 2
+            && $guardada->getLogrado() === 1250.75
+            && $guardada->getDescripcion() === $filaCamp['descripcion']
+            && $guardada->getCbu() === $cbu
+            && $guardada->getEstado() === EstadoCamp::Finalizada
+            && $guardada->getIdUbicacion() === null,
+        'La reconstrucción conserva los datos, el avance y el estado finalizado.'
+    );
+
+    $filaCamp['monetaria'] = '0';
+    $filaCamp['cbu'] = null;
+    $filaCamp['id_ubicacion'] = '7';
+    $filaCamp['descripcion'] = null;
+    $filaCamp['estado'] = 'suspendida';
+    $guardada = Camp::desdePersistencia($filaCamp);
+    campComprobar(
+        !$guardada->getMonetaria()
+            && $guardada->getCbu() === null
+            && $guardada->getIdUbicacion() === 7
+            && $guardada->getDescripcion() === null
+            && $guardada->getEstado() === EstadoCamp::Suspendida,
+        'La reconstrucción de insumos conserva la ubicación y el estado suspendido.'
+    );
+
     echo 'Todas las pruebas de Camp pasaron.' . PHP_EOL;
     eol();
     echo '<hr>';
