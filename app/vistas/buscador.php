@@ -5,7 +5,7 @@
 
 $tituloPagina     = 'Buscar campañas — todospara.uno';
 $paginaActual     = 'explorar';
-$usuarioActual    = null; // Cambiar según corresponda si hay sesión iniciada
+$usuarioActual    = $usuarioActual ?? null;
 $estilosPagina    = ['buscador.css']; // Hoja propia para el layout del buscador
 
 // Nota técnica: $categoriasCampanas es provista por el controlador consultando al repositorio correspondiente.

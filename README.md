@@ -29,9 +29,10 @@ Estamos en desarrollo. El objetivo es tener registro e inicio de sesión, perfil
 | Repositorios | Consulta y guardado de usuarios y niveles de confianza conectados al registro. Las demás funcionalidades siguen en integración. |
 | Pantallas | Inicio con campañas ficticias, formulario de registro y componentes compartidos. |
 | Registro | Valida los datos en el servidor, comprueba correos duplicados y guarda el usuario con contraseña hasheada y nivel de confianza inicial. El formulario tiene protección CSRF. |
-| Integración | El recorrido de registro llega hasta el guardado y la confirmación. El inicio de sesión y las demás funcionalidades todavía no tienen un recorrido completo desde la web. |
+| Ingreso y salida | Comprueba correo y contraseña, mantiene la sesión al navegar y permite cerrarla desde el menú. Ambos envíos tienen protección CSRF. |
+| Integración | Registro, ingreso y cierre de sesión están conectados. Las demás funcionalidades todavía no tienen un recorrido completo desde la web. |
 
-**El registro ya crea una cuenta en la base de datos.** El usuario nuevo queda sin verificar y sin permisos de administrador. Registrarse todavía no inicia sesión: el alcance actual es crear y guardar la cuenta. Los enlaces que apuntan a `#` representan funcionalidades pendientes.
+**El registro ya crea una cuenta en la base de datos.** El usuario nuevo queda sin verificar y sin permisos de administrador. Registrarse no inicia sesión automáticamente: después podés entrar desde **Ingresar**. Los enlaces que apuntan a `#` representan funcionalidades pendientes.
 
 ## Preparar el entorno
 
@@ -97,12 +98,14 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | GET | `/` o `/index.php` | Página de inicio con datos ficticios. |
 | GET | `/index.php?ruta=registro` | Formulario de registro con token CSRF; requiere conexión a la base. |
 | POST | `/index.php?ruta=registro` | Validación y guardado del usuario; confirmación si se crea la cuenta o mensajes si hay errores de validación. |
-| GET | `/index.php?ruta=ingresar` | Pantalla de ingreso; el envío y la autenticación siguen pendientes. |
+| GET | `/index.php?ruta=ingresar` | Formulario de ingreso con token CSRF; si ya hay un usuario autenticado, redirige al inicio. |
+| POST | `/index.php?ruta=ingresar` | Comprueba las credenciales e inicia la sesión; redirige al inicio si son correctas. |
+| POST | `/index.php?ruta=salir` | Valida el token CSRF, elimina la sesión y su cookie, y redirige al inicio. No acepta GET. |
 | GET | `/index.php?ruta=mis_donaciones` | Historial con datos e imágenes de ejemplo. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
 
-[`app/vistas/parciales/rutas.php`](app/vistas/parciales/rutas.php) construye los enlaces que usan las vistas; el punto de entrada público resuelve esas peticiones. Registro tiene un bloque propio que llama al controlador, por eso no aparece en el arreglo `$vistas`. Para probarlo, entrá por `/index.php?ruta=registro`: abrir `app/vistas/registro.php` directamente saltea la preparación del formulario y del token CSRF.
+[`app/vistas/parciales/rutas.php`](app/vistas/parciales/rutas.php) construye los enlaces que usan las vistas; el punto de entrada público resuelve esas peticiones. Registro e ingreso tienen bloques propios que llaman a sus controladores, por eso no aparecen en el arreglo `$vistas`. Para probarlos, entrá por `/index.php?ruta=registro` o `/index.php?ruta=ingresar`: abrir las vistas directamente saltea la preparación del formulario y del token CSRF.
 
 Con Apache o XAMPP, configurá `public_php/` como directorio público. Si clonaste el proyecto dentro de `htdocs`, también podés entrar a `/plataforma-solidaria/public_php/index.php` desde tu servidor local.
 
@@ -134,9 +137,12 @@ También podés elegir una prueba por suite y nombre. Por ejemplo:
 php tests/run_tests.php modelos Usuarios
 php tests/run_tests.php modelos Camp
 php tests/run_tests.php controladores RegistroController
+php tests/run_tests.php controladores IngresoController
 ```
 
 La prueba de registro requiere la base y comprueba el guardado, la contraseña hasheada, los permisos iniciales, el rechazo de correos duplicados, las validaciones y la protección CSRF.
+
+La prueba de ingreso también requiere la base. Comprueba las credenciales, los errores del formulario, la renovación del identificador de sesión y del token CSRF, y el cierre de sesión. Los usuarios de prueba se crean dentro de una transacción que se revierte al terminar.
 
 ## Entender el recorrido del código
 
@@ -243,7 +249,17 @@ Con la base preparada, abrí el formulario desde `/index.php?ruta=registro` y ve
 4. Si hay un error, el formulario conserva nombre y correo, sin volver a mostrar las contraseñas.
 5. Un envío sin token CSRF válido devuelve **403** y no registra al usuario. Para enviar normalmente, abrí primero el formulario desde la aplicación.
 
-La sesión que se abre para proteger el formulario no representa un usuario autenticado. El inicio de sesión y la verificación de la cuenta quedan pendientes.
+La sesión que se abre para proteger el formulario no representa por sí sola un usuario autenticado. La identidad se guarda únicamente después de un ingreso correcto. La verificación de la cuenta sigue pendiente y no impide ingresar.
+
+### Comprobar el ingreso y la salida
+
+1. Creá una cuenta de prueba y abrí **Ingresar** desde el menú.
+2. Enviá su correo y contraseña. Deberías volver al inicio y ver el nombre del usuario en el menú.
+3. Navegá al buscador o a contacto. El menú debe conservar al usuario; sus datos se consultan en la base usando el ID guardado en la sesión.
+4. Elegí **Salir** desde el menú del usuario. Deberías volver al inicio y ver las opciones **Ingresar** y **Crear cuenta**.
+5. Probá un correo inexistente o una contraseña incorrecta. Ambos casos muestran **El correo o la contraseña son incorrectos**, conservan el correo ingresado y no inician sesión.
+
+El cierre se envía mediante un formulario POST con token CSRF. No se puede cerrar la sesión abriendo un enlace GET a `?ruta=salir`. El perfil, el guardado de documentos y las acciones propias de campañas o donaciones todavía necesitan sus controladores y comprobaciones de permisos.
 
 ## Trabajar en equipo
 
@@ -294,7 +310,8 @@ Si documentás una integración pendiente, indicá qué falta y dónde se hará.
 | Aparece `Access denied` o `Connection refused`. | Revisá las credenciales de `config/conexion.local.php` y que MariaDB esté iniciado. Si no existe ese archivo, se usan los valores por defecto de `config/conexion.php`. |
 | El registro falla porque no existe `id_validacion`. | Compará la tabla `usuarios` con `database/schema.sql`. Una base local antigua puede tener todavía la columna `validacion`; actualizar el código no actualiza la base. |
 | El registro devuelve **403** o falta `$csrfToken`. | Abrí `/index.php?ruta=registro` desde el servidor de `public_php/`, permití las cookies de sesión y enviá desde ese formulario. No abras la vista directamente. |
-| El formulario de ingreso devuelve **405** al enviarlo. | El inicio de sesión sigue pendiente. El registro actual crea la cuenta y la guarda en la base. |
+| Ingresar o salir devuelve **403**. | Recargá el formulario o la página y volvé a enviar. El token anterior deja de ser válido al iniciar o cerrar sesión. Permití las cookies de sesión del sitio. |
+| El formulario de ingreso devuelve **405** al enviarlo. | Comprobá que la copia servida por Apache esté actualizada y que `public_php/index.php` acepte POST para `ingresar`. |
 | El servidor no puede usar el puerto 8000. | Detené el servidor que ya lo ocupa o elegí otro puerto, por ejemplo `php -S localhost:8002 -t public_php`. Abrí ese mismo puerto en el navegador. |
 | La página abre sin estilos. | Entrá por la URL del servidor PHP y revisá que hayas usado `-t public_php` desde la raíz. Abrir el archivo con doble clic no ejecuta PHP. |
 | Un enlace no cambia de pantalla. | Revisá si su destino en `rutas.php` sigue siendo `#`: esa funcionalidad todavía está pendiente. |

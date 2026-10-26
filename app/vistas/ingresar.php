@@ -2,13 +2,12 @@
 /*
  * Vista de inicio de sesión: solo la presentación del formulario.
  *
- * Integración pendiente (la hace el controlador, no esta vista):
+ * Recibe del controlador:
  *   - $errores: arreglo de textos con los errores del servidor.
  *     Si no existe o está vacío, no se muestra ningún mensaje.
  *   - $mail: lo que escribió la persona, para no hacerle tipear de nuevo
  *     si hubo un error. La contraseña nunca se vuelve a mostrar.
- *   - La ruta real de 'ingresar' en rutas.php. Mientras sea '#', el formulario
- *     todavía no tiene a dónde enviarse.
+ *   - $csrfToken: token de protección del formulario.
  */
 $tituloPagina = 'Ingresar';
 $paginaActual = 'ingresar';
@@ -43,6 +42,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <!-- Si el correo o la contraseña no coinciden, el controlador muestra un solo
                  mensaje para los dos casos, así no se revela qué correos están registrados. -->
             <form class="tarjeta" action="<?= escapar($rutas['ingresar']) ?>" method="post">
+                <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken ?? '') ?>">
                 <div class="campo">
                     <label for="ingresar-mail">Correo electrónico</label>
                     <input id="ingresar-mail" name="mail" type="email" autocomplete="email"

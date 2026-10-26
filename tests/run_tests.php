@@ -52,6 +52,10 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'IngresoController' => [
+            'archivo' => 'controladores/IngresoControllerTest.php',
+            'funcion' => 'ingresoControllerTest',
+        ],
         'ValidacionesController' => [
             'archivo' => 'controladores/ValidacionesControllerTest.php',
             'funcion' => 'validacionesControllerTest',

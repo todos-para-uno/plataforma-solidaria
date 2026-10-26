@@ -87,7 +87,12 @@ $estilosPagina = $estilosPagina ?? [];
                                 <?php if (!empty($usuarioActual['admin'])): ?>
                                     <li><a href="<?= escapar($rutas['administracion']) ?>"<?= marcarActual('administracion', $paginaActual) ?>>Administración</a></li>
                                 <?php endif; ?>
-                                <li><a href="<?= escapar($rutas['salir']) ?>">Salir</a></li>
+                                <li>
+                                    <form action="<?= escapar($rutas['salir']) ?>" method="post">
+                                        <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken ?? '') ?>">
+                                        <button class="menu-salir" type="submit">Salir</button>
+                                    </form>
+                                </li>
                             </ul>
                         </details>
                     </li>

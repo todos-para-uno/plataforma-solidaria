@@ -13,7 +13,7 @@
  */
 $tituloPagina = 'Contacto';
 $paginaActual = 'contacto';
-$usuarioActual = null;
+$usuarioActual = $usuarioActual ?? null;
 $estilosPagina = ['contacto.css'];
 
 // Valores por defecto para que la vista funcione sola, antes de que exista el controlador.

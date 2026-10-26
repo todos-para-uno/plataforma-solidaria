@@ -20,7 +20,7 @@ return [
     'mensajes'        => '#',
     'perfil'          => '#',
     'administracion'  => '#',
-    'salir'           => '#',
+    'salir'           => $rutaEntrada . '?ruta=salir',
     'preguntas'       => '#',
     'terminos'        => '#',
     'privacidad'      => '#',

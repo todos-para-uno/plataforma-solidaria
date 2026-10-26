@@ -6,7 +6,7 @@
 
 $tituloPagina  = 'Resultados de búsqueda — todospara.uno';
 $paginaActual  = 'explorar';
-$usuarioActual = null; // Cambiar según corresponda si hay sesión iniciada
+$usuarioActual = $usuarioActual ?? null;
 $estilosPagina = ['resultados_buscar.css']; // Hoja propia para el layout de este listado
 
 require __DIR__ . '/parciales/cabecera.php';

@@ -6,7 +6,7 @@
 
 $tituloPagina  = 'Todospara.uno — Campañas solidarias';
 $paginaActual  = 'inicio';
-$usuarioActual = null; // Muestra el menú de visitante mientras falta integrar la sesión.
+$usuarioActual = $usuarioActual ?? null;
 $estilosPagina = ['inicio.css', 'index.css']; // Se cargan en este orden, después de base.css.
 
 $campanas = [
