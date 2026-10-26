@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
 require_once __DIR__ . '/../../app/modelos/Camp.php';
 
 function campComprobar(bool $condicion, string $mensaje): void
@@ -10,7 +11,8 @@ function campComprobar(bool $condicion, string $mensaje): void
 }
 
 function campTest(): void
-{
+{   
+    eol();
     echo 'INICIANDO TEST: app/modelos/Camp.php' . PHP_EOL;
     $cbu = '00' . str_repeat('53', 10);
 
@@ -68,6 +70,8 @@ function campTest(): void
     );
 
     echo 'Todas las pruebas de Camp pasaron.' . PHP_EOL;
+    eol();
+    echo '<hr>';
 }
 
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {

@@ -1,5 +1,132 @@
 <?php
 require_once __DIR__ . '/../../app/modelos/Usuarios.php';
+require_once __DIR__ . '/../../utilidades/TestUtils.php';
+require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
+
+
+function usuariosCambioPasswordTest(): void
+{
+    $usuario = Usuario::crear(
+        'Ana',
+        'ana@example.com',
+        'PasswordOriginal123',
+        7
+    );
+
+    $hashAnterior = $usuario->getPassword();
+
+    $usuario->setPassword('PasswordNueva456');
+
+    TestUtils::comprobar (
+        $usuario->verificarPassword('PasswordNueva456'),
+        'La contraseña nueva se verifica correctamente' . eol()
+    );
+
+    TestUtils::comprobar (
+        !$usuario->verificarPassword('PasswordOriginal123'),
+        'La contraseña anterior deja de ser válida' . eol()
+    );
+
+    TestUtils::comprobar (
+        $usuario->getPassword() !== $hashAnterior,
+        'El hash cambió al actualizar la contraseña' . eol()
+    );
+}
+
+function usuariosPersistenciaTest(): void
+{
+
+    $password = 'MiPasswordSegura123';
+
+    $usuario = Usuario::crear(
+        'Ana',
+        'ana@example.com',
+        $password,
+        7
+    );
+
+    $hashOriginal = $usuario->getPassword();
+
+    $filaUsuario = [
+        'id' => 5,
+        'nombre' => $usuario->getNombre(),
+        'mail' => $usuario->getEmail(),
+        'pass' => $hashOriginal,
+        'telefono' => null,
+        'tipo_documento' => null,
+        'documento' => null,
+        'verificado' => 1,
+        'admin' => 0,
+        'id_validacion' => 7
+    ];
+
+    $usuarioRecuperado = Usuario::desdePersistencia(
+        $filaUsuario
+    );
+
+    TestUtils::comprobar(
+        $usuarioRecuperado->getIdValidacion() === 7,
+        'Se conservó el identificador de validación' . eol()
+    );
+
+    TestUtils::comprobar(
+        $usuarioRecuperado->getVerificado() === true
+            && $usuarioRecuperado->getAdmin() === false,
+        'Se recuperaron correctamente los estados del usuario' . eol()
+    );
+
+    TestUtils::comprobar(
+        $usuario->getIdValidacion() === 7
+            && $usuario->getVerificado() === false
+            && $usuario->getAdmin() === false,
+        'El usuario nuevo conserva su validación y estados iniciales' . eol()
+    );
+
+    TestUtils::comprobar(
+        $usuarioRecuperado->getId() === 5,
+        'Se recuperó correctamente el ID' . eol()
+    );
+
+    TestUtils::comprobar(
+        $usuarioRecuperado->verificarPassword($password),
+        'La contraseña se verifica correctamente' . eol()
+    );
+
+    TestUtils::comprobar(
+        $usuarioRecuperado->getPassword() === $hashOriginal,
+        'El hash original se conservó sin modificaciones' . eol()
+    );
+
+    TestUtils::comprobar(
+        !$usuarioRecuperado->verificarPassword('PasswordIncorrecta'),
+        'Se rechaza una contraseña incorrecta' . eol()
+    );    
+
+}
+
+function usuariosTest(): void
+{
+    echo 'INICIANDO TEST: cambio de contraseña' . eol();
+    usuariosCambioPasswordTest();
+
+    echo 'INICIANDO TEST: reconstrucción desde persistencia' . eol();
+    usuariosPersistenciaTest();
+
+    echo 'Pruebas de Usuarios.php completadas correctamente.' . eol();
+
+}
+
+// Permite ejecutar este test solo y también incluirlo desde un ejecutor de pruebas.
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    usuariosTest();
+}
+
+//UsuariosTest propuesto por Lakhezis, tome el consejo de realpath.
+//Lo dejo aqui documentado porque puede haber mas cosas interesantes
+//para tener en cuenta!.
+/* 
+<?php
+require_once __DIR__ . '/../../app/modelos/Usuarios.php';
 
 function usuariosComprobar(bool $condicion, string $mensaje): void
 {
@@ -162,3 +289,6 @@ function usuariosTest(): void
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     usuariosTest();
 }
+
+
+*/

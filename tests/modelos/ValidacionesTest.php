@@ -1,8 +1,10 @@
 <?php
+require_once __DIR__ . '/../../utilidades/TestUtils.php';
+require_once __DIR__ . '/../../utilidades/ManejoDeCadenas.php';
+require_once __DIR__ . '/../../app/modelos/Validaciones.php';
+
 function validacionesTest()
 {
-    require_once __DIR__ . '/../../app/modelos/Validaciones.php';
-
     echo "INICIANDO TEST: app/modelos/Validaciones.php<br>";
 
     echo "Caso 1 - crea una validación con datos válidos: ";
@@ -28,6 +30,39 @@ function validacionesTest()
     } catch (InvalidArgumentException $excepcion) {
         echo "OK<br>";
     }
+
+    $filaValidacion = [
+    'id' => 12,
+    'nivel' => 3,
+    'nombre' => 'azul',
+    'descripcion' => 'Validación de ejemplo'
+    ];
+
+    $validacionRecuperada = Validaciones::desdePersistencia(
+        $filaValidacion
+    );
+
+    TestUtils::comprobar(
+        $validacionRecuperada->getId() === 12,
+        'Se recuperó correctamente el ID' . eol()
+    );
+
+    TestUtils::comprobar(
+        $validacionRecuperada->getNivel() === 3,
+        'Se recuperó correctamente el nivel' . eol()
+    );
+
+    TestUtils::comprobar(
+        $validacionRecuperada->getNombre() === 'azul',
+        'Se recuperó correctamente el nombre' . eol()
+    );
+
+    TestUtils::comprobar(
+        $validacionRecuperada->getDescripcion() === 'Validación de ejemplo',
+        'Se recuperó correctamente la descripción' . eol()
+    );
+
+    
     echo "<hr>";
 }
 ?>

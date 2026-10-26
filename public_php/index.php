@@ -11,18 +11,19 @@ $vistas = [
     'ingresar' => 'ingresar.php',
     'contacto' => 'contacto.php',
     'crear_campana' => 'crear_campana.php',
+    'mis_donaciones' => 'mis_donaciones.php',
 ];
- 
+
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
 $rutasConControlador = ['registro', 'mis_campanas'];
- 
+
 if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset($vistas[$ruta]))) {
     http_response_code(404);
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Página no encontrada.';
     return;
 }
- 
+
 $aceptaPost = in_array($ruta, ['registro', 'resultados_buscar'], true);
 if (!$esLectura && !($aceptaPost && $metodo === 'POST')) {
     http_response_code(405);
@@ -31,28 +32,46 @@ if (!$esLectura && !($aceptaPost && $metodo === 'POST')) {
     echo 'Método no permitido.';
     return;
 }
- 
+
 header('Content-Type: text/html; charset=UTF-8');
 $rutaBase = '.';
 $rutaAssets = './assets';
- 
+
 if (isset($vistas[$ruta])) {
     require __DIR__ . '/../app/vistas/' . $vistas[$ruta];
     return;
 }
- 
+
 if ($ruta === 'mis_campanas') {
     require_once __DIR__ . '/../app/controladores/MisCampanasController.php';
     $controlador = new MisCampanasController();
     $controlador->mostrar($rutaBase, $rutaAssets);
     return;
 }
- 
-require_once __DIR__ . '/../app/controladores/RegistroController.php';
-$controlador = new RegistroController();
- 
-if ($metodo === 'POST') {
-    $controlador->procesarRegistro($rutaBase, $rutaAssets);
-} else {
-    $controlador->mostrarFormulario($rutaBase, $rutaAssets);
+
+if ($ruta === 'registro') {
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/repositorios/UsuariosRepository.php';
+    require_once __DIR__ . '/../app/repositorios/ValidacionesRepository.php';
+    require_once __DIR__ . '/../app/controladores/RegistroController.php';
+
+    $pdo = conectarBd();
+
+    $controlador = new RegistroController(
+        new UsuariosRepository($pdo),
+        new ValidacionesRepository($pdo)
+    );
+
+    if ($metodo === 'POST') {
+        $controlador->procesarRegistro($rutaBase, $rutaAssets);
+    } else {
+        $controlador->mostrarFormulario($rutaBase, $rutaAssets);
+    }
+
+    return;
 }

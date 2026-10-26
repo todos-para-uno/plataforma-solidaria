@@ -11,27 +11,27 @@ final class CampRepository extends CrudRepository
             fields: ['owner_id', 'nombre', 'monetaria', 'categoria', 'logrado', 'descripcion', 'cbu', 'estado']
         );
     }
- 
+
     public function findByNombre(string $nombre): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT * FROM `usuarios` WHERE `nombre` = :nombre' 
+            'SELECT * FROM `camp` WHERE `nombre` = :nombre'
         );
         $stmt->execute(['nombre' => $nombre]);
- 
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
- 
+
     public function findByCategoria(int $categoria): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT * FROM `camp` WHERE `categoria` = :categoria' 
+            'SELECT * FROM `camp` WHERE `categoria` = :categoria'
         );
         $stmt->execute(['categoria' => $categoria]);
- 
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
- 
+
     /**
      * Devuelve las campañas creadas por un usuario, de la más nueva a la más vieja.
      * Cada fila trae el nombre de la categoría y la suma de sus objetivos.
@@ -54,8 +54,13 @@ final class CampRepository extends CrudRepository
              ORDER BY camp.id DESC'
         );
         $stmt->execute(['idUsuario' => $idUsuario]);
- 
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
- 
+
+    // protected function hidratar(array $fila): Camp
+    // {
+    //     return Camp::desdePersistencia($fila);
+    // }
+
 }
