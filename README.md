@@ -26,12 +26,12 @@ Estamos en desarrollo. El objetivo es tener registro e inicio de sesión, perfil
 | --- | --- |
 | Modelos | Clases y validaciones de datos, con pruebas de distinto alcance. |
 | Base de datos | Script con las tablas y los niveles iniciales de confianza de usuarios. |
-| Repositorios | Métodos para consultar y guardar datos; todavía hay diferencias con el modelo y el esquema que debemos resolver al integrarlos. |
+| Repositorios | Consulta y guardado de usuarios y niveles de confianza conectados al registro. Las demás funcionalidades siguen en integración. |
 | Pantallas | Inicio con campañas ficticias, formulario de registro y componentes compartidos. |
-| Registro | Se puede abrir y enviar el formulario. El envío muestra una confirmación de prueba. |
-| Integración | Falta conectar el registro con la validación del servidor, el guardado y la sesión. Las demás funcionalidades tampoco tienen un recorrido completo desde la web. |
+| Registro | Valida los datos en el servidor, comprueba correos duplicados y guarda el usuario con contraseña hasheada y nivel de confianza inicial. El formulario tiene protección CSRF. |
+| Integración | El recorrido de registro llega hasta el guardado y la confirmación. El inicio de sesión y las demás funcionalidades todavía no tienen un recorrido completo desde la web. |
 
-**Enviar el formulario todavía no crea una cuenta.** El controlador de registro no lee ni conserva las contraseñas enviadas. Los enlaces que apuntan a `#` representan funcionalidades pendientes.
+**El registro ya crea una cuenta en la base de datos.** El usuario nuevo queda sin verificar y sin permisos de administrador. Registrarse todavía no inicia sesión: el alcance actual es crear y guardar la cuenta. Los enlaces que apuntan a `#` representan funcionalidades pendientes.
 
 ## Preparar el entorno
 
@@ -39,7 +39,7 @@ Necesitás:
 
 - **PHP 8.1 o superior**, con `mbstring` para trabajar con textos con tildes.
 - **Git o GitHub Desktop** para descargar el código y compartir cambios.
-- **MariaDB y la extensión PHP `pdo_mysql`** cuando trabajes con la base de datos. Las pantallas actuales y las pruebas de modelos se pueden probar sin MariaDB.
+- **MariaDB y la extensión PHP `pdo_mysql`** para abrir y procesar el registro y para ejecutar las pruebas de repositorios y controladores. El inicio con datos ficticios y las pruebas de modelos se pueden probar sin MariaDB.
 
 Podés usar el servidor que trae PHP para ver la aplicación. Si ya tenés LAMP o XAMPP, también sirve. No hay dependencias de Composer ni de npm que instalar en esta versión.
 
@@ -68,14 +68,15 @@ En los pasos que siguen, **raíz del proyecto** significa la carpeta `plataforma
    php -v
    ```
 
-2. Iniciá el servidor local:
+2. Prepará la base y la conexión siguiendo [Preparar MariaDB](#preparar-mariadb). Si ya tenés una base local, comprobá que su estructura coincida con el esquema actual.
+3. Iniciá el servidor local:
 
    ```bash
    php -S localhost:8000 -t public_php
    ```
 
-3. Abrí <http://localhost:8000/> y elegí **Crear cuenta**.
-4. Completá el formulario con datos ficticios y enviá. Deberías ver **Formulario recibido** y la aclaración de que todavía no se creó una cuenta.
+4. Abrí <http://localhost:8000/> y elegí **Crear cuenta**.
+5. Completá el formulario con datos ficticios y enviá. Si los datos son válidos y el correo no está registrado, deberías ver **Cuenta creada correctamente**. Podés comprobar la nueva fila en la tabla `usuarios`.
 
 La terminal queda ocupada mientras el servidor está funcionando. Para detenerlo, presioná `Ctrl+C`. Si querés ejecutar otros comandos mientras tanto, abrí otra terminal en la raíz del proyecto.
 
@@ -94,10 +95,14 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | Método | URL | Resultado |
 | --- | --- | --- |
 | GET | `/` o `/index.php` | Página de inicio con datos ficticios. |
-| GET | `/index.php?ruta=registro` | Formulario de registro. |
-| POST | `/index.php?ruta=registro` | Confirmación de prueba, sin crear una cuenta. |
+| GET | `/index.php?ruta=registro` | Formulario de registro con token CSRF; requiere conexión a la base. |
+| POST | `/index.php?ruta=registro` | Validación y guardado del usuario; confirmación si se crea la cuenta o mensajes si hay errores de validación. |
+| GET | `/index.php?ruta=ingresar` | Pantalla de ingreso; el envío y la autenticación siguen pendientes. |
+| GET | `/index.php?ruta=mis_donaciones` | Historial con datos e imágenes de ejemplo. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
+
+[`app/vistas/parciales/rutas.php`](app/vistas/parciales/rutas.php) construye los enlaces que usan las vistas; el punto de entrada público resuelve esas peticiones. Registro tiene un bloque propio que llama al controlador, por eso no aparece en el arreglo `$vistas`. Para probarlo, entrá por `/index.php?ruta=registro`: abrir `app/vistas/registro.php` directamente saltea la preparación del formulario y del token CSRF.
 
 Con Apache o XAMPP, configurá `public_php/` como directorio público. Si clonaste el proyecto dentro de `htdocs`, también podés entrar a `/plataforma-solidaria/public_php/index.php` desde tu servidor local.
 
@@ -115,16 +120,23 @@ En PowerShell con XAMPP, si PHP no está en el `PATH`:
 & "C:\xampp\php\php.exe" tests/run_tests.php
 ```
 
-El ejecutor llama a las pruebas de **modelos**; no se conecta a MariaDB. Las de `Usuarios` y `Camp` comprueban condiciones y lanzan una excepción si algo falla. Otras son demostraciones que imprimen valores; `ValidacionesTest` informa sus fallos por pantalla. Por eso, revisá también la salida: que el comando termine sin error no garantiza que todos los comportamientos estén comprobados. Algunos mensajes incluyen etiquetas `<br>` porque también se pensaron para verse en el navegador.
+El ejecutor llama a las pruebas de **modelos, repositorios y controladores**. Necesita MariaDB y una base preparada con el esquema actual. Las pruebas de repositorios y registro escriben datos dentro de transacciones que se revierten al terminar; usá una base local de prueba. Algunos mensajes incluyen etiquetas `<br>` porque también se pensaron para verse en el navegador; revisá la salida además del código de salida.
 
-Para ejecutar solo las pruebas de usuarios o campañas:
+Para ejecutar solo los modelos, sin conectarte a MariaDB:
 
 ```bash
-php tests/modelos/UsuariosTest.php
-php tests/modelos/CampTest.php
+php tests/run_tests.php modelos
 ```
 
-Las funciones de `tests/repositorios/` **escriben datos en la base** y no se ejecutan con el comando principal. Antes de habilitarlas, prepará una instancia de MariaDB exclusiva para pruebas y revisá qué registros crean.
+También podés elegir una prueba por suite y nombre. Por ejemplo:
+
+```bash
+php tests/run_tests.php modelos Usuarios
+php tests/run_tests.php modelos Camp
+php tests/run_tests.php controladores RegistroController
+```
+
+La prueba de registro requiere la base y comprueba el guardado, la contraseña hasheada, los permisos iniciales, el rechazo de correos duplicados, las validaciones y la protección CSRF.
 
 ## Entender el recorrido del código
 
@@ -134,7 +146,7 @@ Usamos **MVC (Modelo-Vista-Controlador)** y repositorios para repartir responsab
 | --- | --- | --- |
 | `public_php/index.php` | Recibir la petición y elegir la ruta. | Derivar el envío de registro al controlador. |
 | `app/controladores/` | Coordinar lo que necesita una petición. | Recibir un formulario y decidir qué vista mostrar. |
-| `app/modelos/` | Representar los datos y sus reglas. | `Usuarios` valida el correo y genera el hash de la contraseña. |
+| `app/modelos/` | Representar los datos y sus reglas. | La clase `Usuario`, en `Usuarios.php`, valida el correo y genera el hash de la contraseña. |
 | `app/repositorios/` | Ejecutar las consultas SQL mediante PDO, la interfaz de PHP para acceder a la base. | Buscar usuarios por correo. |
 | `app/vistas/` | Presentar la información en HTML. | Mostrar el formulario y sus mensajes. |
 | `app/vistas/parciales/` | Compartir partes de las pantallas. | Cabecera, menú, pie y funciones de presentación. |
@@ -146,14 +158,18 @@ Usamos **MVC (Modelo-Vista-Controlador)** y repositorios para repartir responsab
 Por ejemplo, al enviar el registro, el recorrido actual es:
 
 ```text
-Formulario → public_php/index.php → RegistroController → vista de confirmación
+Formulario → public_php/index.php → RegistroController
+  → validación de datos y token CSRF
+  → consulta de correo y nivel de confianza inicial
+  → Usuario::crear() → UsuariosRepository → MariaDB
+  → vista de confirmación
 ```
 
-Cuando se integre el guardado, el controlador también tendrá que validar los datos con el modelo y usar el repositorio. **Crear un objeto `Usuarios` no lo guarda en la base.** A su vez, `CrudRepository::save()` recibe un arreglo y no ejecuta las validaciones del modelo. Al conectarlos, armá explícitamente los campos que se pueden guardar; evitá pasar `$_POST` completo.
+El controlador comprueba los datos y crea la entidad con `Usuario::crear()`. **Crear un objeto `Usuario` no lo guarda en la base**: el guardado lo realiza `UsuariosRepository::insertarUsuario()`, que prepara los campos y llama a `CrudRepository::save()`. No se pasa `$_POST` completo al repositorio. Si hay errores de validación, se vuelve a mostrar el formulario con el nombre y correo ingresados, sin volver a mostrar las contraseñas.
 
 ## Trabajar en las vistas
 
-Antes de conectar una pantalla, acordá con quien trabaja en el controlador los nombres de los campos (`name`), la ruta de envío y los datos que recibirá la vista. En registro ya usamos `nombre`, `mail`, `pass` y `confirmar_pass`.
+Antes de conectar una pantalla, acordá con quien trabaja en el controlador los nombres de los campos (`name`), la ruta de envío y los datos que recibirá la vista. En registro ya usamos `nombre`, `mail`, `pass`, `confirmar_pass` y el campo oculto `csrf_token`.
 
 ### Reutilizar la cabecera y el pie
 
@@ -198,21 +214,36 @@ Si necesitás un componente compartido nuevo, agregalo a `base.css` y mostrá un
 
 ## Preparar MariaDB
 
-Este paso hace falta cuando trabajás con repositorios o con la integración del guardado.
+Este paso hace falta para usar el registro y para trabajar con repositorios o ejecutar pruebas que acceden a la base.
 
 1. Iniciá MariaDB. En XAMPP, el servicio aparece como **MySQL**.
 2. En una instancia local de prueba, importá [`database/schema.sql`](database/schema.sql) con phpMyAdmin o el cliente de MariaDB. El script crea la base `todosparauno`, las tablas y los niveles de confianza iniciales. **Usalo en una base nueva**: las tablas no tienen `IF NOT EXISTS`, así que volver a importarlo genera errores.
-3. Revisá [`config/conexion.php`](config/conexion.php). Actualmente intenta conectarse a `localhost`, base `todosparauno`, usuario `root` y contraseña vacía. Ajustá las credenciales a tu instalación local y dejalas fuera del commit que compartas.
+3. Revisá [`config/conexion.php`](config/conexion.php). Por defecto intenta conectarse a `localhost`, base `todosparauno`, usuario `root` y contraseña vacía. Para usar tus propias credenciales, creá `config/conexion.local.php`, que está excluido de Git, con un arreglo como este:
+
+   ```php
+   <?php
+   return [
+       'dsn' => 'mysql:host=localhost;dbname=todosparauno;charset=utf8mb4',
+       'usuario' => 'tu_usuario',
+       'password' => 'tu_contraseña',
+   ];
+   ```
+
 4. Comprobá que PHP tenga habilitada la extensión `pdo_mysql`. Si importás con phpMyAdmin, también necesitás Apache iniciado.
 
-### Comprobar el registro cuando se integre
+Si ya tenías una base creada, traer los cambios de Git **no actualiza sus tablas**. Compará la estructura con `database/schema.sql`: el registro espera `usuarios.id_validacion`, relacionada con `validaciones.id`, y una fila en `validaciones` con `nivel = 1`. Una base antigua con la columna `usuarios.validacion` necesita actualizarse antes de probar el guardado. No hace falta borrar tus datos ni volver a importar todo el esquema para corregir esa diferencia.
 
-Este recorrido todavía está pendiente. Cuando se conecten las partes, verificá con datos ficticios que:
+### Comprobar el registro
 
-1. Un formulario válido crea una sola fila en `usuarios`, con los permisos iniciales esperados.
+Con la base preparada, abrí el formulario desde `/index.php?ruta=registro` y verificá con datos ficticios que:
+
+1. Un formulario válido muestra **Cuenta creada correctamente** y crea una sola fila en `usuarios`, con `admin = 0`, `verificado = 0` y el `id_validacion` correspondiente al nivel `1`.
 2. La contraseña se guarda como **hash**, el resultado de `password_hash()`, y se comprueba con `password_verify()`.
 3. Un correo repetido, un dato inválido o contraseñas que no coinciden no crean la cuenta y muestran un mensaje útil.
 4. Si hay un error, el formulario conserva nombre y correo, sin volver a mostrar las contraseñas.
+5. Un envío sin token CSRF válido devuelve **403** y no registra al usuario. Para enviar normalmente, abrí primero el formulario desde la aplicación.
+
+La sesión que se abre para proteger el formulario no representa un usuario autenticado. El inicio de sesión y la verificación de la cuenta quedan pendientes.
 
 ## Trabajar en equipo
 
@@ -260,7 +291,10 @@ Si documentás una integración pendiente, indicá qué falta y dónde se hará.
 | La terminal no reconoce `php`. | Comprobá que esté instalado y en el `PATH`, la lista de carpetas donde la terminal busca ejecutables. Con XAMPP podés usar la ruta completa que mostramos arriba. |
 | Aparece `Call to undefined function mb_strlen()`. | Habilitá `mbstring` en el PHP que estás ejecutando. `php --ini` muestra su configuración y `php -m` lista las extensiones activas. Reiniciá el servidor después del cambio. |
 | Aparece `could not find driver` al usar la base. | Revisá con `php -m` que `pdo_mysql` esté habilitada. |
-| Aparece `Access denied` o `Connection refused`. | Revisá las credenciales de `config/conexion.php` y que MariaDB esté iniciado. |
+| Aparece `Access denied` o `Connection refused`. | Revisá las credenciales de `config/conexion.local.php` y que MariaDB esté iniciado. Si no existe ese archivo, se usan los valores por defecto de `config/conexion.php`. |
+| El registro falla porque no existe `id_validacion`. | Compará la tabla `usuarios` con `database/schema.sql`. Una base local antigua puede tener todavía la columna `validacion`; actualizar el código no actualiza la base. |
+| El registro devuelve **403** o falta `$csrfToken`. | Abrí `/index.php?ruta=registro` desde el servidor de `public_php/`, permití las cookies de sesión y enviá desde ese formulario. No abras la vista directamente. |
+| El formulario de ingreso devuelve **405** al enviarlo. | El inicio de sesión sigue pendiente. El registro actual crea la cuenta y la guarda en la base. |
 | El servidor no puede usar el puerto 8000. | Detené el servidor que ya lo ocupa o elegí otro puerto, por ejemplo `php -S localhost:8002 -t public_php`. Abrí ese mismo puerto en el navegador. |
 | La página abre sin estilos. | Entrá por la URL del servidor PHP y revisá que hayas usado `-t public_php` desde la raíz. Abrir el archivo con doble clic no ejecuta PHP. |
 | Un enlace no cambia de pantalla. | Revisá si su destino en `rutas.php` sigue siendo `#`: esa funcionalidad todavía está pendiente. |
