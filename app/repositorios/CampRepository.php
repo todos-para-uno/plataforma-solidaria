@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/CrudRepository.php';
+require_once __DIR__ . '/../modelos/Camp.php';
 final class CampRepository extends CrudRepository
 {
     public function __construct(PDO $pdo)
@@ -8,10 +9,11 @@ final class CampRepository extends CrudRepository
             $pdo,
             table: 'camp',
             primaryKey: 'id',
-            fields: ['owner_id', 'nombre', 'monetaria', 'categoria', 'logrado', 'descripcion', 'cbu', 'estado']
+            fields: ['owner_id', 'nombre', 'monetaria', 'categoria', 'logrado', 'descripcion', 'cbu', 'estado', 'id_ubicacion']
         );
     }
 
+    /** @return array<int, Camp> */
     public function findByNombre(string $nombre): array
     {
         $stmt = $this->pdo->prepare(
@@ -19,9 +21,10 @@ final class CampRepository extends CrudRepository
         );
         $stmt->execute(['nombre' => $nombre]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    /** @return array<int, Camp> */
     public function findByCategoria(int $categoria): array
     {
         $stmt = $this->pdo->prepare(
@@ -29,13 +32,13 @@ final class CampRepository extends CrudRepository
         );
         $stmt->execute(['categoria' => $categoria]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
 
-    // protected function hidratar(array $fila): Camp
-    // {
-    //     return Camp::desdePersistencia($fila);
-    // }
+    protected function hidratar(array $fila): Camp
+    {
+        return Camp::desdePersistencia($fila);
+    }
 
 }
