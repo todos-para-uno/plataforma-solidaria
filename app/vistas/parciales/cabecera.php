@@ -38,6 +38,10 @@ $estilosPagina = $estilosPagina ?? [];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $tituloPagina ? escapar($tituloPagina) . ' | ' : '' ?>todospara.uno</title>
+    <link rel="icon" type="image/x-icon" sizes="48x48" href="<?= escapar($rutaAssets) ?>/imagenes/favicons/favicon-todosparauno-48x48.ico">
+    <?php foreach ([16, 32, 48, 192, 512] as $tamanoIcono): ?>
+        <link rel="icon" type="image/png" sizes="<?= $tamanoIcono ?>x<?= $tamanoIcono ?>" href="<?= escapar($rutaAssets) ?>/imagenes/favicons/favicon-todosparauno-<?= $tamanoIcono ?>x<?= $tamanoIcono ?>.png">
+    <?php endforeach; ?>
     <link rel="stylesheet" href="<?= escapar($rutaAssets) ?>/css/base.css">
     <?php foreach ($estilosPagina as $hoja): ?>
         <link rel="stylesheet" href="<?= escapar($rutaAssets) ?>/css/<?= escapar($hoja) ?>">
