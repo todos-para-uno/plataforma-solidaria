@@ -4,6 +4,10 @@
 ob_start();
 $pruebas = [
     'modelos' => [
+        'Baneo' => [
+            'archivo' => 'modelos/BaneoTest.php',
+            'funcion' => 'baneoTest',
+        ],
         'Categoria' => [
             'archivo' => 'modelos/CategoriaTest.php',
             'funcion' => 'categoriaTest',
