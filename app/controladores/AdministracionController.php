@@ -12,26 +12,26 @@ require_once __DIR__ . '/../seguridad/Csrf.php';
  */
 class AdministracionController
 {
+    public function __construct(
+        private UsuariosRepository $usuarios,
+        private CampRepository $campanas
+    )
+    {}
     public function mostrar(
         string $rutaBase,
         string $rutaAssets,
         ?Usuario $usuario = null
     ): void {
-        // Ocultar el enlace en el menú no alcanza: alguien puede escribir la dirección
-        // a mano. Por eso el servidor controla el permiso en cada petición.
+
         if (!$this->esAdministrador($usuario)) {
             $this->redirigirAlIngreso($rutaBase);
             return;
         }
 
-        $pdo = conectarBd();
-        $usuarios = new UsuariosRepository($pdo);
-        $campanas = new CampRepository($pdo);
-
         $estadisticas = [
-            'usuarios' => $usuarios->contarRegistrados(),
-            'activas' => $campanas->contarPorEstado('activa'),
-            'finalizadas' => $campanas->contarPorEstado('finalizada'),
+            'usuarios' => count($this->usuarios->findAll()),
+            'activas' => count($this->campanas->findByEstado(EstadoCamp::Activa)),
+            'finalizadas' => count($this->campanas->findByEstado(EstadoCamp::Finalizada)),
         ];
 
         $usuarioActual = [

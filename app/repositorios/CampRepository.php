@@ -35,6 +35,17 @@ final class CampRepository extends CrudRepository
         return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    /** @return array<int, Camp> */
+    public function findByEstado(EstadoCamp $estadoCamp): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM `camp` WHERE `estado` = :estadoCamp'
+        );
+        $stmt->execute(['estadoCamp' => $estadoCamp->value]);
+
+        return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     /**
      * Devuelve las campañas creadas por un usuario, de la más nueva a la más vieja.
      * Cada fila trae el nombre de la categoría y la suma de sus objetivos.

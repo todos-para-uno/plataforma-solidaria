@@ -14,7 +14,13 @@ $vistas = [
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
-$rutasConControlador = ['registro', 'ingresar', 'salir', 'mis_campanas'];
+$rutasConControlador = [
+    'registro',
+    'ingresar',
+    'salir',
+    'mis_campanas',
+    'administracion',
+];
 
 if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset($vistas[$ruta]))) {
     http_response_code(404);
@@ -113,6 +119,28 @@ if ($ruta === 'registro') {
     } else {
         $controlador->mostrarFormulario($rutaBase, $rutaAssets);
     }
+
+    return;
+}
+
+if ($ruta === 'administracion') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/repositorios/UsuariosRepository.php';
+    require_once __DIR__ . '/../app/repositorios/CampRepository.php';
+    require_once __DIR__ . '/../app/controladores/AdministracionController.php';
+
+    $pdo = conectarBd();
+
+    $controlador = new AdministracionController(
+        new UsuariosRepository($pdo),
+        new CampRepository($pdo)
+    );
+
+    $controlador->mostrar(
+        $rutaBase,
+        $rutaAssets,
+        $usuario ?? null
+    );
 
     return;
 }

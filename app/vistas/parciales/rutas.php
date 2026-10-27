@@ -19,7 +19,7 @@ return [
     'mis_donaciones'  => $rutaEntrada . '?ruta=mis_donaciones',
     'mensajes'        => '#',
     'perfil'          => '#',
-    'administracion'  => '#',
+    'administracion'  => $rutaEntrada . '?ruta=administracion',
     'salir'           => $rutaEntrada . '?ruta=salir',
     'preguntas'       => '#',
     'terminos'        => '#',
