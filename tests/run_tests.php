@@ -46,6 +46,10 @@ $pruebas = [
         ],
     ],
     'repositorios' => [
+        'BaneoRepository' => [
+            'archivo' => 'repositorios/BaneoRepository.php',
+            'funcion' => 'baneoRepositoryTest',
+        ],
         'ValidacionesRepository' => [
             'archivo' => 'repositorios/ValidacionesRepository.php',
             'funcion' => 'validacionesRepositoryTest',
