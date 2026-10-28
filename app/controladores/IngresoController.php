@@ -5,7 +5,8 @@ require_once __DIR__ . '/../seguridad/Csrf.php';
 class IngresoController
 {
     public function __construct(
-        private UsuariosRepository $usuarios
+        private UsuariosRepository $usuarios,
+        private BaneoRepository $baneos
     ) {}
 
     public function mostrarFormulario(
@@ -48,6 +49,9 @@ class IngresoController
                 if ($usuario === null || !$usuario->verificarPassword($password)) {
                     http_response_code(422);
                     $errores[] = 'El correo o la contraseña son incorrectos.';
+                } elseif ($this->baneos->estaBaneado($usuario->getId())) {
+                    http_response_code(403);
+                    $errores[] = 'Tu cuenta se encuentra baneada.';
                 } else {
                     session_regenerate_id(true);
                     // Conservar solo la identidad; los datos se consultan en cada petición.

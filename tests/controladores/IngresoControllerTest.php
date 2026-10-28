@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../app/repositorios/UsuariosRepository.php';
 require_once __DIR__ . '/../../app/repositorios/ValidacionesRepository.php';
+require_once __DIR__ . '/../../app/repositorios/BaneoRepository.php';
 require_once __DIR__ . '/../../app/controladores/IngresoController.php';
 require_once __DIR__ . '/../../utilidades/TestUtils.php';
 
@@ -13,8 +14,11 @@ function ingresoControllerTest(PDO $pdo): void
     $sesionOriginal = $_SESSION;
     $postOriginal = $_POST;
     $codigoOriginal = http_response_code();
+    $getOriginal = $_GET;
+    $servidorOriginal = $_SERVER;
     $usuarios = new UsuariosRepository($pdo);
-    $controlador = new IngresoController($usuarios);
+    $baneos = new BaneoRepository($pdo);
+    $controlador = new IngresoController($usuarios, $baneos);
     $mail = 'ingreso-test-' . bin2hex(random_bytes(8)) . '@example.com';
     $password = 'PasswordIngreso123';
     $pdo->beginTransaction();
@@ -57,6 +61,40 @@ function ingresoControllerTest(PDO $pdo): void
         TestUtils::comprobar(str_contains($respuestas[0], $mail), 'Se conserva el correo después de un error');
         TestUtils::comprobar(!str_contains($respuestas[0], 'value="incorrecta"'), 'La contraseña no se vuelve a mostrar');
 
+        $ahora = new DateTimeImmutable($pdo->query('SELECT CURRENT_TIMESTAMP')->fetchColumn());
+        $ayer = $ahora->modify('-1 day')->format('Y-m-d H:i:s');
+        $manana = $ahora->modify('+1 day')->format('Y-m-d H:i:s');
+        $adminId = (int) $usuarios->save([
+            'nombre' => 'Administrador de prueba',
+            'mail' => 'admin-' . $mail,
+            'pass' => password_hash('PasswordAdmin123', PASSWORD_DEFAULT),
+            'admin' => 1,
+            'id_validacion' => $validacion->getId(),
+        ]);
+        $idBaneo = $baneos->insertarBaneo(new Baneo($id, $adminId, 'Fraude', $ayer));
+        foreach ([null, $manana] as $fechaFin) {
+            $baneos->save(['id' => $idBaneo, 'fecha_fin' => $fechaFin]);
+            $_POST = ['mail' => $mail, 'pass' => $password, 'csrf_token' => $token];
+            ob_start();
+            $controlador->procesarIngreso('.', './assets');
+            $html = ob_get_clean();
+            TestUtils::comprobar(
+                http_response_code() === 403
+                    && !isset($_SESSION['usuario_id'])
+                    && str_contains($html, 'Tu cuenta se encuentra baneada.'),
+                'Un baneo vigente, permanente o temporal, impide ingresar.'
+            );
+        }
+        $_POST['pass'] = 'incorrecta';
+        ob_start();
+        $controlador->procesarIngreso('.', './assets');
+        $html = ob_get_clean();
+        TestUtils::comprobar(
+            http_response_code() === 422 && str_contains($html, $mensaje),
+            'La contraseña incorrecta conserva el error de credenciales aunque el usuario esté baneado.'
+        );
+        $baneos->save(['id' => $idBaneo, 'fecha_fin' => $ayer]);
+
         $sesionAnterior = session_id();
         $_POST = ['mail' => ' ' . $mail . ' ', 'pass' => $password, 'csrf_token' => $token];
         $controlador->procesarIngreso('.', './assets');
@@ -65,6 +103,57 @@ function ingresoControllerTest(PDO $pdo): void
         TestUtils::comprobar(session_id() !== $sesionAnterior, 'El ingreso renueva el identificador de sesión');
         TestUtils::comprobar(!Csrf::validar($token), 'El ingreso renueva el token CSRF');
         TestUtils::comprobar(!isset($_SESSION['pass']), 'La sesión no guarda la contraseña');
+
+        // Ejercitar el punto de entrada real con la misma conexión y transacción.
+        $abrirRuta = static function (string $ruta): string {
+            $_GET = ['ruta' => $ruta];
+            $_SERVER['REQUEST_METHOD'] = 'GET';
+            ob_start();
+            require __DIR__ . '/../../public_php/index.php';
+            return ob_get_clean();
+        };
+        http_response_code(200);
+        $abrirRuta('contacto');
+        TestUtils::comprobar(
+            http_response_code() === 200 && ($_SESSION['usuario_id'] ?? null) === $id,
+            'Un antecedente vencido permite ingresar y mantener la sesión al navegar.'
+        );
+
+        $baneos->save(['id' => $idBaneo, 'fecha_inicio' => $manana, 'fecha_fin' => null]);
+        $abrirRuta('contacto');
+        TestUtils::comprobar(
+            ($_SESSION['usuario_id'] ?? null) === $id,
+            'Un baneo que aún no comenzó conserva la sesión abierta.'
+        );
+
+        $baneos->save(['id' => $idBaneo, 'fecha_inicio' => $ayer]);
+        $tokenSesion = Csrf::generar();
+        $sesionAntesDelBaneo = session_id();
+        $html = $abrirRuta('mis_campanas');
+        TestUtils::comprobar(
+            http_response_code() === 403
+                && $html === 'Tu cuenta se encuentra baneada.'
+                && !isset($_SESSION['usuario_id'])
+                && session_id() !== $sesionAntesDelBaneo
+                && !Csrf::validar($tokenSesion),
+            'Un baneo nuevo revoca la sesión y el token antes de ejecutar el controlador solicitado.'
+        );
+
+        $baneos->finalizarBaneo((int) $idBaneo, 'Nos equivocamos de usuario');
+        $_POST = ['mail' => $mail, 'pass' => $password, 'csrf_token' => Csrf::generar()];
+        $controlador->procesarIngreso('.', './assets');
+        TestUtils::comprobar(
+            ($_SESSION['usuario_id'] ?? null) === $id,
+            'Al levantar manualmente un baneo permanente, el usuario puede volver a ingresar.'
+        );
+
+        http_response_code(200);
+        $abrirRuta('contacto');
+        TestUtils::comprobar(
+            http_response_code() === 200 && ($_SESSION['usuario_id'] ?? null) === $id
+                && $baneos->findById($idBaneo)->getFechaFin() === null,
+            'Un baneo levantado conserva su vencimiento y no revoca la sesión al navegar.'
+        );
 
         $_POST = ['csrf_token' => $token];
         ob_start();
@@ -85,6 +174,8 @@ function ingresoControllerTest(PDO $pdo): void
         }
         $_SESSION = $sesionOriginal;
         $_POST = $postOriginal;
+        $_GET = $getOriginal;
+        $_SERVER = $servidorOriginal;
         http_response_code($codigoOriginal ?: 200);
     }
 }

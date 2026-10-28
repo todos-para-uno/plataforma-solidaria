@@ -46,6 +46,10 @@ $pruebas = [
         ],
     ],
     'repositorios' => [
+        'BaneoRepository' => [
+            'archivo' => 'repositorios/BaneoRepository.php',
+            'funcion' => 'baneoRepositoryTest',
+        ],
         'BuscadorRepository' => [
             'archivo' => 'repositorios/BuscadorRepositoryTest.php',
             'funcion' => 'buscadorRepositoryTest',
@@ -60,6 +64,10 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'BaneoController' => [
+            'archivo' => 'controladores/BaneoControllerTest.php',
+            'funcion' => 'baneoControllerTest',
+        ],
         'BuscadorController' => [
             'archivo' => 'controladores/BuscadorControllerTest.php',
             'funcion' => 'buscadorControllerTest',

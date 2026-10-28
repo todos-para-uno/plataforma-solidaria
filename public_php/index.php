@@ -23,6 +23,8 @@ $rutasConControlador = [
     'mis_campanas',
     'administracion',
     'contacto',
+    'banear',
+    'finalizar_baneo',
 ];
 
 if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset($vistas[$ruta]))) {
@@ -32,10 +34,11 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$aceptaPost = in_array($ruta, ['registro', 'ingresar', 'salir', 'resultados_buscar', 'contacto'], true);
-if (($ruta === 'salir' && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto'], true);
+if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
-    header('Allow: ' . ($ruta === 'salir' ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
+    header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Método no permitido.';
     return;
@@ -60,7 +63,9 @@ $usuarioActual = null;
 if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], true)) {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/repositorios/UsuariosRepository.php';
+    require_once __DIR__ . '/../app/repositorios/BaneoRepository.php';
     $usuarios = new UsuariosRepository(conectarBd());
+    $baneos = new BaneoRepository(conectarBd());
 
     if (isset($_SESSION['usuario_id'])) {
         $usuario = is_int($_SESSION['usuario_id'])
@@ -68,6 +73,14 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
             : null;
         if ($usuario === null) {
             unset($_SESSION['usuario_id']);
+        } elseif ($baneos->estaBaneado($usuario->getId())) {
+            // Revocar la identidad antes de ejecutar cualquier acción de la petición.
+            $_SESSION = [];
+            session_regenerate_id(true);
+            Csrf::generar();
+            http_response_code(403);
+            echo 'Tu cuenta se encuentra baneada.';
+            return;
         } else {
             $usuarioActual = [
                 'nombre' => $usuario->getNombre(),
@@ -78,7 +91,7 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
 
     if (in_array($ruta, ['ingresar', 'salir'], true)) {
         require_once __DIR__ . '/../app/controladores/IngresoController.php';
-        $controlador = new IngresoController($usuarios);
+        $controlador = new IngresoController($usuarios, $baneos);
         if ($ruta === 'salir') {
             $controlador->cerrarSesion($rutaBase);
         } elseif ($usuarioActual !== null) {
@@ -90,6 +103,19 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         }
         return;
     }
+}
+
+if (in_array($ruta, ['banear', 'finalizar_baneo'], true)) {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/BaneoController.php';
+    $pdo = conectarBd();
+    $controlador = new BaneoController(new UsuariosRepository($pdo), new BaneoRepository($pdo));
+    if ($ruta === 'banear') {
+        $controlador->procesarBaneo();
+    } else {
+        $controlador->finalizarBaneo();
+    }
+    return;
 }
 
 if ($ruta === 'contacto') {
