@@ -25,8 +25,8 @@ require __DIR__ . '/parciales/cabecera.php';
         <h1>Todospara.uno</h1>
         <p class="bajada">
             Todospara.uno es una plataforma solidaria cuyo objetivo es conectar a las almas solidarias de la 
-            argentina con quienes más las necesitan, a traves del poder del internet<br>
-            Buscamos agrupar campañas solidarias en una plataforma confiable, y facilitar su propagacion a traves de las redes sociales.
+            argentina con quienes más las necesitan, a través del poder del internet<br>
+            Buscamos agrupar campañas solidarias en una plataforma confiable, y facilitar su propagación a través de las redes sociales.
         </p>
         <div>
             <a href="<?= escapar($rutas['explorar']) ?>" class="boton">Explorar campañas</a>
