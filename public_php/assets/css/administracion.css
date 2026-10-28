@@ -1,0 +1,11 @@
+/* Distribución del panel de administración. Colores, fuentes y componentes vienen de base.css. */
+
+/* Estadísticas: tres columnas en escritorio y una sola en el celular. */
+.administracion-estadisticas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--e-8);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}

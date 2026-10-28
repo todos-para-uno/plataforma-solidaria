@@ -76,6 +76,10 @@ $pruebas = [
             'archivo' => 'controladores/RegistroControllerTest.php',
             'funcion' => 'registroControllerTest',
         ],
+        'AdministracionController' => [
+            'archivo' => 'controladores/AdministracionControllerTest.php',
+            'funcion' => 'administracionControllerTest',
+        ],
     ],
 ];
 
