@@ -34,6 +34,69 @@ require __DIR__ . '/parciales/cabecera.php';
                 <span class="dato-etiqueta">Campañas finalizadas</span>
             </li>
         </ul>
+
+        <section class="admin-panel" id="gestion-usuarios" aria-labelledby="usuarios-titulo"
+                 data-api="<?= escapar($rutaBase) ?>/index.php"
+                 data-csrf="<?= escapar($csrfToken) ?>">
+            <div class="admin-tabs" role="tablist" aria-label="Secciones administrativas">
+                <button type="button" role="tab" id="tab-usuarios" aria-selected="true" aria-controls="panel-usuarios">Usuarios</button>
+                <button type="button" role="tab" id="tab-mensajes" aria-selected="false" aria-controls="panel-mensajes">Mensajes</button>
+            </div>
+            <div id="panel-usuarios" role="tabpanel" aria-labelledby="tab-usuarios">
+                <div class="admin-controles">
+                    <label>Buscar por nombre o correo
+                        <input id="admin-busqueda" type="search" maxlength="150" autocomplete="off" placeholder="Nombre o correo electrónico">
+                    </label>
+                    <label>Usuarios por página
+                        <select id="admin-limite"><option>10</option><option selected>15</option><option>25</option><option>50</option></select>
+                    </label>
+                </div>
+                <p id="admin-estado" role="status" aria-live="polite">Cargando usuarios…</p>
+                <div id="admin-lista" class="admin-lista" aria-label="Listado de usuarios"></div>
+                <nav class="admin-paginacion" aria-label="Páginas de usuarios">
+                    <button type="button" id="admin-anterior">Anterior</button>
+                    <span id="admin-pagina">Página 1</span>
+                    <button type="button" id="admin-siguiente">Siguiente</button>
+                </nav>
+            </div>
+            <div id="panel-mensajes" role="tabpanel" aria-labelledby="tab-mensajes" hidden>
+                <p>La gestión de mensajes se incorporará en el siguiente incremento.</p>
+            </div>
+        </section>
+        <dialog id="admin-dialogo" aria-labelledby="admin-dialogo-titulo">
+            <form id="admin-formulario" method="dialog">
+                <h2 id="admin-dialogo-titulo">Actualizar contraseña</h2>
+                <p id="admin-dialogo-descripcion"></p>
+                <input type="hidden" name="id_usuario" id="admin-id-usuario">
+                <label>Nueva contraseña <input type="password" name="password" minlength="8" autocomplete="new-password" required></label>
+                <label>Confirmar contraseña <input type="password" name="confirmacion" minlength="8" autocomplete="new-password" required></label>
+                <p id="admin-dialogo-error" role="alert"></p>
+                <div class="admin-dialogo-acciones">
+                    <button type="button" id="admin-cancelar">Cancelar</button>
+                    <button type="submit" id="admin-confirmar">Confirmar</button>
+                </div>
+            </form>
+        </dialog>
+        <dialog id="admin-baneo-dialogo" aria-labelledby="admin-baneo-titulo">
+            <form id="admin-baneo-formulario" method="dialog">
+                <h2 id="admin-baneo-titulo">Gestionar baneo</h2>
+                <p id="admin-baneo-descripcion"></p>
+                <input type="hidden" name="id_usuario" id="admin-baneo-usuario">
+                <input type="hidden" name="id_baneo" id="admin-baneo-id">
+                <label id="admin-baneo-motivo-label">Motivo
+                    <textarea id="admin-baneo-motivo" name="motivo" maxlength="500" rows="3" required></textarea>
+                </label>
+                <label id="admin-baneo-fecha-label">Finalización opcional
+                    <input id="admin-baneo-fecha" type="datetime-local" name="fecha_fin">
+                </label>
+                <p id="admin-baneo-error" role="alert"></p>
+                <div class="admin-dialogo-acciones">
+                    <button type="button" id="admin-baneo-cancelar">Cancelar</button>
+                    <button type="submit" id="admin-baneo-confirmar">Confirmar</button>
+                </div>
+            </form>
+        </dialog>
+        <script src="<?= escapar($rutaAssets) ?>/js/administracion.js" defer></script>
     </div>
 </section>
 

@@ -124,6 +124,10 @@ final class UsuariosRepository extends CrudRepository
         }
         $sql = "SELECT u.id, u.nombre, u.mail, u.telefono, u.admin, u.verificado,
                        u.id_validacion, v.nombre AS validacion_nombre,
+                       (SELECT b.id FROM baneados b WHERE b.id_usuario = u.id
+                           AND b.fecha_unban IS NULL AND b.fecha_inicio <= CURRENT_TIMESTAMP
+                           AND (b.fecha_fin IS NULL OR b.fecha_fin > CURRENT_TIMESTAMP)
+                           ORDER BY b.fecha_inicio DESC, b.id DESC LIMIT 1) AS id_baneo_vigente,
                        EXISTS(SELECT 1 FROM baneados b WHERE b.id_usuario = u.id
                            AND b.fecha_unban IS NULL AND b.fecha_inicio <= CURRENT_TIMESTAMP
                            AND (b.fecha_fin IS NULL OR b.fecha_fin > CURRENT_TIMESTAMP)) AS baneado,
