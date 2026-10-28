@@ -8,7 +8,6 @@ $vistas = [
     'inicio' => 'index.php',
     'buscador' => 'buscador.php',
     'resultados_buscar' => 'resultados_buscar.php',
-    'contacto' => 'contacto.php',
     'crear_campana' => 'crear_campana.php',
     'mis_donaciones' => 'mis_donaciones.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
@@ -17,7 +16,7 @@ $vistas = [
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
-$rutasConControlador = ['registro', 'ingresar', 'salir', 'mis_campanas'];
+$rutasConControlador = ['registro', 'ingresar', 'salir', 'mis_campanas', 'contacto'];
 
 if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset($vistas[$ruta]))) {
     http_response_code(404);
@@ -26,7 +25,7 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$aceptaPost = in_array($ruta, ['registro', 'ingresar', 'salir', 'resultados_buscar'], true);
+$aceptaPost = in_array($ruta, ['registro', 'ingresar', 'salir', 'resultados_buscar', 'contacto'], true);
 if (($ruta === 'salir' && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($ruta === 'salir' ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -84,6 +83,18 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         }
         return;
     }
+}
+
+if ($ruta === 'contacto') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/ContactoController.php';
+    $controlador = new ContactoController(new ContactoRepository(conectarBd()));
+    if ($metodo === 'POST') {
+        $controlador->procesarContacto($rutaBase, $rutaAssets, $usuario ?? null);
+    } else {
+        $controlador->mostrarFormulario($rutaBase, $rutaAssets, $usuario ?? null);
+    }
+    return;
 }
 
 if (isset($vistas[$ruta])) {
