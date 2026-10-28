@@ -36,6 +36,7 @@ function administracionUsuariosControllerTest(PDO $pdo): void
             ob_start();
             try {
                 if ($accion === 'buscar') $controlador->buscar();
+                elseif ($accion === 'actividad') $controlador->actividad();
                 else $controlador->password($accion === 'desbloquear');
                 $salida = ob_get_contents();
             } finally {
@@ -52,6 +53,22 @@ function administracionUsuariosControllerTest(PDO $pdo): void
         TestUtils::comprobar(!array_key_exists('pass', $datos['usuarios'][0]), 'API administrativa: búsqueda no revela hashes.');
         [$http] = $solicitar('buscar', $idAdmin, ['limite' => '999']);
         TestUtils::comprobar($http === 422, 'API administrativa: límite inválido rechazado.');
+        [$http] = $solicitar('actividad', null, ['id_usuario' => (string) $idUsuario, 'tipo' => 'resumen']);
+        TestUtils::comprobar($http === 401, 'Actividad: visitante rechazado.');
+        [$http] = $solicitar('actividad', $idUsuario, ['id_usuario' => (string) $idUsuario, 'tipo' => 'resumen']);
+        TestUtils::comprobar($http === 403, 'Actividad: usuario común rechazado.');
+        [$http] = $solicitar('actividad', $idAdmin, ['id_usuario' => '0', 'tipo' => 'resumen']);
+        TestUtils::comprobar($http === 422, 'Actividad: ID inválido rechazado.');
+        [$http] = $solicitar('actividad', $idAdmin, ['id_usuario' => (string) $idUsuario, 'tipo' => 'invalido']);
+        TestUtils::comprobar($http === 422, 'Actividad: tipo inválido rechazado.');
+        [$http] = $solicitar('actividad', $idAdmin, ['id_usuario' => '2147483647', 'tipo' => 'resumen']);
+        TestUtils::comprobar($http === 404, 'Actividad: usuario inexistente.');
+        [$http, $datos] = $solicitar('actividad', $idAdmin, ['id_usuario' => (string) $idUsuario, 'tipo' => 'resumen']);
+        TestUtils::comprobar($http === 200 && isset($datos['datos']['campanas'], $datos['datos']['donaciones']), 'Actividad: resumen disponible.');
+        [$http, $datos] = $solicitar('actividad', $idAdmin, ['id_usuario' => (string) $idUsuario, 'tipo' => 'campanas']);
+        TestUtils::comprobar($http === 200 && is_array($datos['datos']), 'Actividad: consulta de campañas.');
+        [$http, $datos] = $solicitar('actividad', $idAdmin, ['id_usuario' => (string) $idUsuario, 'tipo' => 'donaciones']);
+        TestUtils::comprobar($http === 200 && is_array($datos['datos']), 'Actividad: consulta de donaciones.');
         $form = ['id_usuario' => (string) $idUsuario, 'password' => 'NuevaClave1234', 'confirmacion' => 'NuevaClave1234'];
         [$http] = $solicitar('password', $idAdmin, $form, false);
         TestUtils::comprobar($http === 403 && $usuarios->findById($idUsuario)->verificarPassword('Anterior1234'), 'API administrativa: CSRF obligatorio y sin cambios ante rechazo.');

@@ -96,6 +96,12 @@ require __DIR__ . '/parciales/cabecera.php';
                 </div>
             </form>
         </dialog>
+        <dialog id="admin-actividad-dialogo" aria-labelledby="admin-actividad-titulo">
+            <h2 id="admin-actividad-titulo">Actividad del usuario</h2>
+            <p id="admin-actividad-estado" role="status" aria-live="polite"></p>
+            <div id="admin-actividad-contenido"></div>
+            <div class="admin-dialogo-acciones"><button type="button" id="admin-actividad-cerrar">Cerrar</button></div>
+        </dialog>
         <script src="<?= escapar($rutaAssets) ?>/js/administracion.js" defer></script>
     </div>
 </section>

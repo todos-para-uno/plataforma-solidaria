@@ -26,6 +26,7 @@ $rutasConControlador = [
     'banear',
     'finalizar_baneo',
     'admin_usuarios',
+    'admin_actividad',
     'admin_password',
     'admin_desbloquear',
 ];
@@ -108,13 +109,14 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
     }
 }
 
-if (in_array($ruta, ['admin_usuarios', 'admin_password', 'admin_desbloquear'], true)) {
+if (in_array($ruta, ['admin_usuarios', 'admin_actividad', 'admin_password', 'admin_desbloquear'], true)) {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/AdministracionUsuariosController.php';
     $pdo = conectarBd();
     $controlador = new AdministracionUsuariosController($pdo, new UsuariosRepository($pdo),
         new EstadoAutenticacionRepository($pdo));
     if ($ruta === 'admin_usuarios') $controlador->buscar();
+    elseif ($ruta === 'admin_actividad') $controlador->actividad();
     else $controlador->password($ruta === 'admin_desbloquear');
     return;
 }

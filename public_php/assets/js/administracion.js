@@ -65,6 +65,18 @@
         detail(dl,'Baneo',Number(user.baneado) ? 'Vigente' : 'Sin baneo vigente');
         detail(dl,'Bloqueo',Number(user.bloqueado) ? 'Bloqueada' : 'Sin bloqueo vigente');
         box.append(dl);
+        const activity = create('div',undefined,'admin-actividad-resumen');
+        activity.textContent = 'Cargando actividad…';
+        box.append(activity);
+        const activityActions = create('div',undefined,'admin-acciones');
+        for (const [type,label] of [['campanas','Ver campañas'],['donaciones','Ver donaciones']]) {
+          const button = create('button',label);
+          button.type = 'button';
+          button.addEventListener('click',()=>openActivity(user,type));
+          activityActions.append(button);
+        }
+        box.append(activityActions);
+        requestActivity(user,'resumen',activity);
         if (!Number(user.admin)) {
           const actions = create('div',undefined,'admin-acciones');
           const reset = create('button','Restablecer contraseña');
@@ -88,6 +100,70 @@
       list.append(row);
     }
   }
+  const activityDialog = byId('admin-actividad-dialogo');
+  const activityContent = byId('admin-actividad-contenido');
+  const activityStatus = byId('admin-actividad-estado');
+  let activityRequest = 0, summaryRequest = 0;
+  async function requestActivity(user, type, target) {
+    const requestId = type === 'resumen' ? ++summaryRequest : ++activityRequest;
+    if (target) target.textContent = 'Cargando…';
+    const params = new URLSearchParams({ruta:'admin_actividad',id_usuario:String(user.id),tipo:type});
+    try {
+      const response = await fetch(`${api}?${params}`, {credentials:'same-origin',headers:{Accept:'application/json'}});
+      const result = await response.json();
+      if (!response.ok) throw Error(result.error || 'No se pudo cargar la actividad.');
+      if (requestId !== (type === 'resumen' ? summaryRequest : activityRequest)) return;
+      if (type === 'resumen') {
+        if (target && target.isConnected) target.textContent = `Campañas creadas: ${result.datos.campanas} · Donaciones realizadas: ${result.datos.donaciones}`;
+      } else {
+        activityStatus.textContent = '';
+        renderActivity(type, Array.isArray(result.datos) ? result.datos : []);
+      }
+    } catch (error) {
+      if (requestId !== (type === 'resumen' ? summaryRequest : activityRequest)) return;
+      if (type === 'resumen') { if (target && target.isConnected) target.textContent = error.message; }
+      else activityStatus.textContent = error.message;
+    }
+  }
+  function renderActivity(type, entries) {
+    activityContent.replaceChildren();
+    if (!entries.length) {
+      activityContent.append(create('p',type === 'campanas' ? 'Este usuario todavía no creó campañas.' : 'Este usuario todavía no realizó donaciones.'));
+      return;
+    }
+    const list = create('ul',undefined,'admin-actividad-lista');
+    for (const item of entries) {
+      const li = create('li');
+      li.append(create('strong',type === 'campanas' ? item.nombre : item.campana_nombre));
+      const dl = create('dl');
+      if (type === 'campanas') {
+        detail(dl,'ID',item.id);
+        detail(dl,'Estado',item.estado);
+        detail(dl,'Tipo',Number(item.monetaria) ? 'Monetaria' : 'Insumos');
+        detail(dl,'Categoría',item.nombre_categoria);
+        detail(dl,'Objetivo',item.objetivo);
+        detail(dl,'Progreso',Number(item.monetaria) ? item.logrado : item.parcial);
+      } else {
+        detail(dl,'ID',item.id);
+        detail(dl,'Campaña ID',item.id_camp);
+        detail(dl,'Tipo',Number(item.monetaria) ? 'Monetaria' : 'Insumos');
+        detail(dl,'Cantidad',item.cantidad);
+        detail(dl,'Fecha',item.fecha_hora);
+        if (item.categoria_insumo) detail(dl,'Categoría de insumo',item.categoria_insumo);
+        if (item.subcategoria_insumo) detail(dl,'Subcategoría',item.subcategoria_insumo);
+      }
+      li.append(dl); list.append(li);
+    }
+    activityContent.append(list);
+  }
+  function openActivity(user, type) {
+    activityContent.replaceChildren();
+    activityStatus.textContent = 'Cargando…';
+    byId('admin-actividad-titulo').textContent = `${type === 'campanas' ? 'Campañas creadas' : 'Donaciones realizadas'} · ${user.nombre}`;
+    activityDialog.showModal();
+    requestActivity(user,type);
+  }
+  byId('admin-actividad-cerrar').addEventListener('click',()=>activityDialog.close());
   function openDialog(user, unlock) {
     action = unlock ? 'admin_desbloquear' : 'admin_password';
     form.reset();

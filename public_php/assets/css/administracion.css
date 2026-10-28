@@ -49,3 +49,12 @@ main {
 #admin-baneo-formulario label { display:grid; gap:.3rem; }
 #admin-baneo-formulario input,#admin-baneo-formulario textarea { padding:.6rem; border:1px solid #aaa; border-radius:.35rem; max-width:100%; width:100%; box-sizing:border-box; font:inherit; }
 #admin-baneo-error { color:#9d2424; }
+
+/* Consultas de actividad, sin mezclar cantidades de insumos con importes. */
+.admin-actividad-resumen { margin: .5rem 0; font-weight: 600; }
+#admin-actividad-dialogo { width: min(95vw, 740px); max-height: 85vh; overflow-y: auto; border: 1px solid #aaa; border-radius: .6rem; padding: 1.5rem; }
+#admin-actividad-dialogo::backdrop { background: rgba(0,0,0,.55); }
+.admin-actividad-lista { list-style: none; padding: 0; display: grid; gap: .75rem; }
+.admin-actividad-lista li { border: 1px solid #ddd; padding: .8rem; border-radius: .4rem; overflow-wrap: anywhere; }
+.admin-actividad-lista dl { display: grid; grid-template-columns: minmax(100px,auto) 1fr; gap: .25rem .75rem; margin: .6rem 0 0; }
+.admin-actividad-lista dd { margin: 0; }
