@@ -38,6 +38,19 @@ CREATE TABLE usuarios (
     id_validacion INT NOT NULL,
     FOREIGN KEY (id_validacion) REFERENCES validaciones(id));
 
+-- Estado de autenticación por usuario
+CREATE TABLE estado_autenticacion (
+    id_usuario INT NOT NULL,
+    intentos_fallidos TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ultimo_intento DATETIME(6) NULL,
+    bloqueada_hasta DATETIME(6) NULL,
+
+    PRIMARY KEY (id_usuario),
+    CONSTRAINT fk_estado_autenticacion_usuario
+        FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- categorias de campañas
 CREATE TABLE cat_camp (
     id INT AUTO_INCREMENT PRIMARY KEY,

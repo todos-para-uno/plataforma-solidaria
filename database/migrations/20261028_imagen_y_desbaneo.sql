@@ -1,6 +1,18 @@
 -- Seleccionar la base de la aplicación antes de importar este archivo.
--- Agrega solo las columnas que faltan. Se puede volver a ejecutar.
+-- Agrega solo las columnas y tablas que faltan. Se puede volver a ejecutar.
 -- Conserva los datos y las columnas existentes. Compatible con MySQL y MariaDB.
+
+CREATE TABLE IF NOT EXISTS estado_autenticacion (
+    id_usuario INT NOT NULL,
+    intentos_fallidos TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ultimo_intento DATETIME(6) NULL,
+    bloqueada_hasta DATETIME(6) NULL,
+
+    PRIMARY KEY (id_usuario),
+    CONSTRAINT fk_estado_autenticacion_usuario
+        FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 SET @solidaria_migracion_sql = IF(
     EXISTS (
