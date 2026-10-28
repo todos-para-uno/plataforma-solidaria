@@ -6,8 +6,6 @@ $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $esLectura = in_array($metodo, ['GET', 'HEAD'], true);
 $vistas = [
     'inicio' => 'index.php',
-    'buscador' => 'buscador.php',
-    'resultados_buscar' => 'resultados_buscar.php',
     'crear_campana' => 'crear_campana.php',
     'mis_donaciones' => 'mis_donaciones.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
@@ -17,6 +15,8 @@ $vistas = [
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
 $rutasConControlador = [
+    'buscador',
+    'resultados_buscar',
     'registro',
     'ingresar',
     'salir',
@@ -101,6 +101,17 @@ if ($ruta === 'contacto') {
     } else {
         $controlador->mostrarFormulario($rutaBase, $rutaAssets, $usuario ?? null);
     }
+    return;
+}
+
+if (in_array($ruta, ['buscador', 'resultados_buscar'], true)) {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/BuscadorController.php';
+    $pdo = conectarBd();
+    $controlador = new BuscadorController(new CampRepository($pdo), new CatCampRepository($pdo));
+    // Las búsquedas nuevas usan GET. Se conserva la lectura de formularios POST anteriores.
+    $controlador->mostrar($rutaBase, $rutaAssets, $metodo === 'POST' ? $_POST : $_GET,
+        $ruta === 'resultados_buscar', $usuarioActual);
     return;
 }
 
