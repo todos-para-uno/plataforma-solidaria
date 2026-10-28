@@ -25,6 +25,9 @@ $rutasConControlador = [
     'contacto',
     'banear',
     'finalizar_baneo',
+    'admin_usuarios',
+    'admin_password',
+    'admin_desbloquear',
 ];
 
 if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset($vistas[$ruta]))) {
@@ -34,7 +37,7 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo'], true);
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear'], true);
 $aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
@@ -103,6 +106,17 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         }
         return;
     }
+}
+
+if (in_array($ruta, ['admin_usuarios', 'admin_password', 'admin_desbloquear'], true)) {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/AdministracionUsuariosController.php';
+    $pdo = conectarBd();
+    $controlador = new AdministracionUsuariosController($pdo, new UsuariosRepository($pdo),
+        new EstadoAutenticacionRepository($pdo));
+    if ($ruta === 'admin_usuarios') $controlador->buscar();
+    else $controlador->password($ruta === 'admin_desbloquear');
+    return;
 }
 
 if (in_array($ruta, ['banear', 'finalizar_baneo'], true)) {
