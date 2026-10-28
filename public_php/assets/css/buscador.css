@@ -18,7 +18,7 @@
     color: var(--texto-secundario);
     pointer-events: none; /* Permite hacer clic a través del SVG hacia el input */
 }
-.seccion{
+main {
     background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
     background-size: cover;
     background-position: center;
