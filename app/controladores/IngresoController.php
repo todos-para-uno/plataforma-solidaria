@@ -1,12 +1,14 @@
 <?php
 
 require_once __DIR__ . '/../seguridad/Csrf.php';
+require_once __DIR__ . '/../repositorios/EstadoAutenticacionRepository.php';
 
 class IngresoController
 {
     public function __construct(
         private UsuariosRepository $usuarios,
-        private BaneoRepository $baneos
+        private BaneoRepository $baneos,
+        private ?EstadoAutenticacionRepository $estadoAutenticacion = null
     ) {}
 
     public function mostrarFormulario(
@@ -46,13 +48,20 @@ class IngresoController
                 $errores[] = 'Ingresá tu correo electrónico y contraseña.';
             } else {
                 $usuario = $this->usuarios->findByMail($mail);
-                if ($usuario === null || !$usuario->verificarPassword($password)) {
+                if ($usuario !== null && $this->estadoAutenticacion?->estaBloqueado($usuario->getId())) {
+                    http_response_code(403);
+                    $errores[] = 'La cuenta está bloqueada temporalmente. Intentá nuevamente más tarde.';
+                } elseif ($usuario === null || !$usuario->verificarPassword($password)) {
+                    if ($usuario !== null) {
+                        $this->estadoAutenticacion?->registrarFallo($usuario->getId());
+                    }
                     http_response_code(422);
                     $errores[] = 'El correo o la contraseña son incorrectos.';
                 } elseif ($this->baneos->estaBaneado($usuario->getId())) {
                     http_response_code(403);
                     $errores[] = 'Tu cuenta se encuentra baneada.';
                 } else {
+                    $this->estadoAutenticacion?->limpiar($usuario->getId());
                     session_regenerate_id(true);
                     // Conservar solo la identidad; los datos se consultan en cada petición.
                     $_SESSION = ['usuario_id' => $usuario->getId()];

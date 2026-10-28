@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../app/repositorios/UsuariosRepository.php';
 require_once __DIR__ . '/../../app/repositorios/ValidacionesRepository.php';
 require_once __DIR__ . '/../../app/repositorios/BaneoRepository.php';
+require_once __DIR__ . '/../../app/repositorios/EstadoAutenticacionRepository.php';
 require_once __DIR__ . '/../../app/controladores/IngresoController.php';
 require_once __DIR__ . '/../../utilidades/TestUtils.php';
 
@@ -18,7 +19,8 @@ function ingresoControllerTest(PDO $pdo): void
     $servidorOriginal = $_SERVER;
     $usuarios = new UsuariosRepository($pdo);
     $baneos = new BaneoRepository($pdo);
-    $controlador = new IngresoController($usuarios, $baneos);
+    $estadoAutenticacion = new EstadoAutenticacionRepository($pdo);
+    $controlador = new IngresoController($usuarios, $baneos, $estadoAutenticacion);
     $mail = 'ingreso-test-' . bin2hex(random_bytes(8)) . '@example.com';
     $password = 'PasswordIngreso123';
     $pdo->beginTransaction();
@@ -60,6 +62,63 @@ function ingresoControllerTest(PDO $pdo): void
         TestUtils::comprobar(str_contains($respuestas[0], $mensaje) && str_contains($respuestas[1], $mensaje), 'Correo inexistente y contraseña incorrecta muestran el mismo mensaje');
         TestUtils::comprobar(str_contains($respuestas[0], $mail), 'Se conserva el correo después de un error');
         TestUtils::comprobar(!str_contains($respuestas[0], 'value="incorrecta"'), 'La contraseña no se vuelve a mostrar');
+
+        // Integración real: cinco intentos fallidos a través del controlador.
+        $estadoAutenticacion->limpiar($id);
+        $token = Csrf::generar();
+        for ($intento = 1; $intento <= 5; $intento++) {
+            $_POST = ['mail' => $mail, 'pass' => 'incorrecta', 'csrf_token' => $token];
+            http_response_code(200);
+            ob_start();
+            $controlador->procesarIngreso('.', './assets');
+            ob_end_clean();
+            $estado = $estadoAutenticacion->estado($id);
+            TestUtils::comprobar(
+                http_response_code() === 422 && !isset($_SESSION['usuario_id'])
+                    && (int) $estado['intentos_fallidos'] === $intento,
+                'Ingreso: intento incorrecto ' . $intento . ' contabilizado sin autenticar.'
+            );
+            TestUtils::comprobar(
+                $estadoAutenticacion->estaBloqueado($id) === ($intento === 5),
+                'Ingreso: bloqueo solo al alcanzar cinco fallos (' . $intento . ').'
+            );
+        }
+
+        $_POST = ['mail' => $mail, 'pass' => $password, 'csrf_token' => $token];
+        http_response_code(200);
+        ob_start();
+        $controlador->procesarIngreso('.', './assets');
+        $respuestaBloqueo = ob_get_clean();
+        TestUtils::comprobar(
+            http_response_code() === 403 && !isset($_SESSION['usuario_id'])
+                && str_contains($respuestaBloqueo, 'bloqueada temporalmente'),
+            'Ingreso: una contraseña correcta no evita el bloqueo vigente.'
+        );
+        TestUtils::comprobar(
+            (int) $estadoAutenticacion->estado($id)['intentos_fallidos'] === 5,
+            'Ingreso: intentar acceder durante el bloqueo no aumenta el contador.'
+        );
+
+        // Simular vencimiento con el reloj de MySQL, sin esperar una hora.
+        $pdo->prepare('UPDATE estado_autenticacion SET bloqueada_hasta = DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 1 SECOND) WHERE id_usuario = :id')
+            ->execute(['id' => $id]);
+        TestUtils::comprobar(!$estadoAutenticacion->estaBloqueado($id), 'Ingreso: el bloqueo vencido deja de estar activo.');
+        $_POST = ['mail' => $mail, 'pass' => $password, 'csrf_token' => $token];
+        http_response_code(200);
+        $controlador->procesarIngreso('.', './assets');
+        $estado = $estadoAutenticacion->estado($id);
+        TestUtils::comprobar(
+            http_response_code() === 303 && ($_SESSION['usuario_id'] ?? null) === $id,
+            'Ingreso: la contraseña correcta permite entrar después del vencimiento.'
+        );
+        TestUtils::comprobar(
+            (int) $estado['intentos_fallidos'] === 0 && $estado['bloqueada_hasta'] === null
+                && $estado['ultimo_intento'] === null,
+            'Ingreso: el acceso exitoso reinicia el contador y limpia el bloqueo.'
+        );
+        // Restaurar la sesión de visitante para las pruebas de baneos existentes.
+        $_SESSION = [];
+        $token = Csrf::generar();
 
         $ahora = new DateTimeImmutable($pdo->query('SELECT CURRENT_TIMESTAMP')->fetchColumn());
         $ayer = $ahora->modify('-1 day')->format('Y-m-d H:i:s');

@@ -116,4 +116,41 @@ final class UsuariosRepository extends CrudRepository
     }
 
 
+    /** Búsqueda administrativa paginada; no expone hashes. */
+    public function buscarAdministracion(string $termino, int $limite = 15, int $offset = 0): array
+    {
+        if (!in_array($limite, [10, 15, 25, 50], true) || $offset < 0) {
+            throw new InvalidArgumentException('Paginación inválida.');
+        }
+        $sql = "SELECT u.id, u.nombre, u.mail, u.telefono, u.admin, u.verificado,
+                       u.id_validacion, v.nombre AS validacion_nombre,
+                       (SELECT b.id FROM baneados b WHERE b.id_usuario = u.id
+                           AND b.fecha_unban IS NULL AND b.fecha_inicio <= CURRENT_TIMESTAMP
+                           AND (b.fecha_fin IS NULL OR b.fecha_fin > CURRENT_TIMESTAMP)
+                           ORDER BY b.fecha_inicio DESC, b.id DESC LIMIT 1) AS id_baneo_vigente,
+                       EXISTS(SELECT 1 FROM baneados b WHERE b.id_usuario = u.id
+                           AND b.fecha_unban IS NULL AND b.fecha_inicio <= CURRENT_TIMESTAMP
+                           AND (b.fecha_fin IS NULL OR b.fecha_fin > CURRENT_TIMESTAMP)) AS baneado,
+                       EXISTS(SELECT 1 FROM estado_autenticacion ea WHERE ea.id_usuario = u.id
+                           AND ea.bloqueada_hasta > CURRENT_TIMESTAMP(6)) AS bloqueado
+                FROM usuarios u LEFT JOIN validaciones v ON v.id = u.id_validacion
+                WHERE LOWER(u.nombre) LIKE :nombre ESCAPE '!' OR LOWER(u.mail) LIKE :mail ESCAPE '!'
+                ORDER BY u.nombre, u.id LIMIT :limite OFFSET :offset";
+        // El carácter ! es el escape explícito para LIKE.
+        $patron = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower(trim($termino), 'UTF-8')) . '%';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':nombre', $patron);
+        $stmt->bindValue(':mail', $patron);
+        $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function actualizarHashPassword(int $idUsuario, string $hash): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE usuarios SET pass = :hash WHERE id = :id');
+        $stmt->execute(['hash' => $hash, 'id' => $idUsuario]);
+    }
+
 }

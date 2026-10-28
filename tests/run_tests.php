@@ -46,6 +46,10 @@ $pruebas = [
         ],
     ],
     'repositorios' => [
+        'EstadoAutenticacionRepository' => [
+            'archivo' => 'repositorios/EstadoAutenticacionRepositoryTest.php',
+            'funcion' => 'estadoAutenticacionRepositoryTest',
+        ],
         'BaneoRepository' => [
             'archivo' => 'repositorios/BaneoRepository.php',
             'funcion' => 'baneoRepositoryTest',
@@ -91,6 +95,10 @@ $pruebas = [
         'RegistroController' => [
             'archivo' => 'controladores/RegistroControllerTest.php',
             'funcion' => 'registroControllerTest',
+        ],
+        'AdministracionUsuariosController' => [
+            'archivo' => 'controladores/AdministracionUsuariosControllerTest.php',
+            'funcion' => 'administracionUsuariosControllerTest',
         ],
         'AdministracionController' => [
             'archivo' => 'controladores/AdministracionControllerTest.php',

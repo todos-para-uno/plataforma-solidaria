@@ -15,3 +15,37 @@ main {
     background-position: center;
     background-repeat: no-repeat;
 }
+/* Gestión de usuarios: controles y acciones accesibles también en pantallas pequeñas. */
+.admin-panel { margin-top: 2rem; padding: 1.25rem; background: #fff; border: 1px solid #d8d8d8; border-radius: .75rem; }
+.admin-tabs { display:flex; gap:.5rem; border-bottom:1px solid #ddd; margin-bottom:1.25rem; }
+.admin-tabs button { padding:.7rem 1rem; border:0; border-bottom:3px solid transparent; background:transparent; cursor:pointer; font:inherit; }
+.admin-tabs button[aria-selected="true"] { border-bottom-color:#25745e; font-weight:700; }
+.admin-controles { display:flex; flex-wrap:wrap; gap:1rem; align-items:end; margin-bottom:1rem; }
+.admin-controles label { display:grid; gap:.35rem; flex:1 1 240px; }
+.admin-controles input,.admin-controles select,#admin-dialogo input { padding:.6rem; border:1px solid #aaa; border-radius:.35rem; max-width:100%; }
+.admin-controles label:last-child { flex:0 1 180px; }
+.admin-lista { min-height: 340px; }
+.admin-fila { padding:.8rem 0; border-bottom:1px solid #ddd; }
+.admin-fila > button { display:flex; align-items:center; justify-content:space-between; gap:1rem; width:100%; padding:.4rem; text-align:left; background:transparent; border:0; cursor:pointer; font:inherit; }
+.admin-fila small { display:block; overflow-wrap:anywhere; }
+.admin-detalles { padding:.8rem; background:#f7f7f5; border-radius:.4rem; }
+.admin-detalles dl { display:grid; grid-template-columns:minmax(90px,auto) 1fr; gap:.3rem .8rem; margin:0 0 .8rem; }
+.admin-detalles dd { margin:0; overflow-wrap:anywhere; }
+.admin-acciones { display:flex; flex-wrap:wrap; gap:.5rem; }
+.admin-acciones button,.admin-paginacion button,.admin-dialogo-acciones button { padding:.55rem .8rem; cursor:pointer; }
+.admin-paginacion { display:flex; justify-content:center; align-items:center; gap:1rem; padding:1rem 0 0; }
+#admin-dialogo { width:min(95vw,460px); border:1px solid #aaa; border-radius:.6rem; padding:1.5rem; }
+#admin-dialogo::backdrop { background:rgba(0,0,0,.55); }
+#admin-formulario { display:grid; gap:.8rem; }
+#admin-formulario label { display:grid; gap:.3rem; }
+.admin-dialogo-acciones { display:flex; justify-content:end; gap:.6rem; }
+#admin-dialogo-error { color:#9d2424; }
+@media(max-width:540px) { .admin-panel {padding:.75rem;} .admin-controles label:last-child {flex:1 1 100%;} .admin-paginacion {gap:.4rem;} }
+
+/* Diálogo de baneo: conserva el estilo de los diálogos administrativos. */
+#admin-baneo-dialogo { width:min(95vw,480px); border:1px solid #aaa; border-radius:.6rem; padding:1.5rem; }
+#admin-baneo-dialogo::backdrop { background:rgba(0,0,0,.55); }
+#admin-baneo-formulario { display:grid; gap:.8rem; }
+#admin-baneo-formulario label { display:grid; gap:.3rem; }
+#admin-baneo-formulario input,#admin-baneo-formulario textarea { padding:.6rem; border:1px solid #aaa; border-radius:.35rem; max-width:100%; width:100%; box-sizing:border-box; font:inherit; }
+#admin-baneo-error { color:#9d2424; }
