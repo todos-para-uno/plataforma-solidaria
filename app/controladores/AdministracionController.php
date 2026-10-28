@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../repositorios/UsuariosRepository.php';
 require_once __DIR__ . '/../repositorios/CampRepository.php';
 require_once __DIR__ . '/../modelos/Usuarios.php';
@@ -23,11 +22,15 @@ class AdministracionController
         ?Usuario $usuario = null
     ): void {
 
-        if (!$this->esAdministrador($usuario)) {
+        if ($usuario === null) {
             $this->redirigirAlIngreso($rutaBase);
             return;
         }
 
+        if (!$this->esAdministrador($usuario)) {
+            header('Location: ' . $rutaBase . '/index.php?ruta=inicio', true, 303);
+            return;
+        }
         $estadisticas = [
             'usuarios' => count($this->usuarios->findAll()),
             'activas' => count($this->campanas->findByEstado(EstadoCamp::Activa)),
