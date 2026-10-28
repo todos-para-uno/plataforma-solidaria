@@ -276,6 +276,21 @@ El aviso usa la función PHP `mail()` y el destino simulado `contacto@todosparau
 
 El cierre se envía mediante un formulario POST con token CSRF. No se puede cerrar la sesión abriendo un enlace GET a `?ruta=salir`. El perfil, el guardado de documentos y las acciones propias de campañas o donaciones todavía necesitan sus controladores y comprobaciones de permisos.
 
+## Buscar campañas
+
+Desde **Explorar campañas**, buscá una palabra del nombre o de la descripción y, si querés, elegí una categoría. Ambos filtros se combinan y solo se muestran campañas activas. Dejá los campos vacíos para explorarlas todas. Los resultados conservan los filtros y la URL se puede compartir o recargar.
+
+Las categorías y campañas se leen de MariaDB mediante `BuscadorController`, `CatCampRepository` y `CampRepository`. La búsqueda no agrega campañas de ejemplo: si la base está vacía, muestra el estado sin resultados. Las tarjetas muestran el tipo de ayuda, la categoría y la descripción; el detalle y la donación se implementan en sus respectivos recorridos.
+
+Para comprobar el buscador con MariaDB preparada:
+
+```bash
+php tests/run_tests.php repositorios BuscadorRepository
+php tests/run_tests.php controladores BuscadorController
+```
+
+Las pruebas crean sus categorías, usuario y campañas dentro de una transacción y deshacen esos registros al terminar. Comprueban filtros combinados, búsqueda en descripción, estados públicos, caracteres especiales, validación y escape del HTML.
+
 ## Trabajar en equipo
 
 Una **rama** es una línea de trabajo para desarrollar un cambio. Un **commit** guarda un conjunto de cambios en tu repositorio local. Un **pull request (PR)** propone integrar los commits de tu rama y permite que otra persona los revise antes de sumarlos a `main`.

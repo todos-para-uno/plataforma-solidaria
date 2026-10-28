@@ -24,3 +24,14 @@ main {
     background-position: center;
     background-repeat: no-repeat;
 }
+.buscador-filtros {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: var(--e-6);
+}
+.buscador-acciones { display: flex; flex-wrap: wrap; gap: var(--e-3); }
+.buscador-ayuda { margin: var(--e-4) 0 0; font-size: var(--t-chico); }
+.buscador-formulario .alerta p:last-child { margin-bottom: 0; }
+@media (max-width: 760px) {
+    .buscador-filtros { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}

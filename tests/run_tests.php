@@ -46,6 +46,10 @@ $pruebas = [
         ],
     ],
     'repositorios' => [
+        'BuscadorRepository' => [
+            'archivo' => 'repositorios/BuscadorRepositoryTest.php',
+            'funcion' => 'buscadorRepositoryTest',
+        ],
         'ValidacionesRepository' => [
             'archivo' => 'repositorios/ValidacionesRepository.php',
             'funcion' => 'validacionesRepositoryTest',
@@ -56,6 +60,10 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'BuscadorController' => [
+            'archivo' => 'controladores/BuscadorControllerTest.php',
+            'funcion' => 'buscadorControllerTest',
+        ],
         'ContactoController' => [
             'archivo' => 'controladores/ContactoControllerTest.php',
             'funcion' => 'contactoControllerTest',
