@@ -79,7 +79,8 @@ body {
     flex-direction: column;
 }
  
-main { flex: 1; padding-bottom: var(--e-16); }
+/* Las secciones ya incluyen el espacio de cierre antes del pie. */
+main { flex: 1; }
  
 h1, h2, h3 {
     font-family: var(--fuente-titulos);

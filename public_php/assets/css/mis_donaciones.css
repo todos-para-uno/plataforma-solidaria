@@ -1,4 +1,4 @@
-.seccion{
+main {
     background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
     background-size: cover;
     background-position: center;
