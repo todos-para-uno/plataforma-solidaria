@@ -17,7 +17,7 @@ $vistas = [
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
-$rutasConControlador = ['registro', 'ingresar', 'salir', 'mis_campanas'];
+$rutasConControlador = ['registro', 'ingresar', 'salir', 'mis_campanas', 'banear', 'finalizar_baneo'];
 
 if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset($vistas[$ruta]))) {
     http_response_code(404);
@@ -26,10 +26,11 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$aceptaPost = in_array($ruta, ['registro', 'ingresar', 'salir', 'resultados_buscar'], true);
-if (($ruta === 'salir' && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar'], true);
+if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
-    header('Allow: ' . ($ruta === 'salir' ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
+    header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Método no permitido.';
     return;
@@ -94,6 +95,19 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         }
         return;
     }
+}
+
+if (in_array($ruta, ['banear', 'finalizar_baneo'], true)) {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/BaneoController.php';
+    $pdo = conectarBd();
+    $controlador = new BaneoController(new UsuariosRepository($pdo), new BaneoRepository($pdo));
+    if ($ruta === 'banear') {
+        $controlador->procesarBaneo();
+    } else {
+        $controlador->finalizarBaneo();
+    }
+    return;
 }
 
 if (isset($vistas[$ruta])) {

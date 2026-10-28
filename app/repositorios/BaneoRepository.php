@@ -64,6 +64,25 @@ final class BaneoRepository extends CrudRepository
         return $stmt->fetchColumn() !== false;
     }
 
+    public function fechaActual(): string
+    {
+        return $this->pdo->query('SELECT CURRENT_TIMESTAMP')->fetchColumn();
+    }
+
+    // Conservar el registro como antecedente y finalizarlo solo si sigue vigente.
+    public function finalizarBaneo(int $idBaneo): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE `baneados` SET `fecha_fin` = CURRENT_TIMESTAMP
+             WHERE `id` = :id
+               AND `fecha_inicio` <= CURRENT_TIMESTAMP
+               AND (`fecha_fin` IS NULL OR `fecha_fin` > CURRENT_TIMESTAMP)'
+        );
+        $stmt->execute(['id' => $idBaneo]);
+
+        return $stmt->rowCount() > 0;
+    }
+
     // Incluye baneos vencidos y vigentes, es decir, si está baneado todavía también arroja true.
     public function estuvoBaneado(int $idUsuario): bool
     {

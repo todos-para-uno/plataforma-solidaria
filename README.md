@@ -101,6 +101,8 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | GET | `/index.php?ruta=ingresar` | Formulario de ingreso con token CSRF; si ya hay un usuario autenticado, redirige al inicio. |
 | POST | `/index.php?ruta=ingresar` | Comprueba las credenciales e inicia la sesión; redirige al inicio si son correctas. |
 | POST | `/index.php?ruta=salir` | Valida el token CSRF, elimina la sesión y su cookie, y redirige al inicio. No acepta GET. |
+| POST | `/index.php?ruta=banear` | Un administrador crea un baneo para un usuario común; requiere sesión y token CSRF. Devuelve JSON. |
+| POST | `/index.php?ruta=finalizar_baneo` | Un administrador finaliza un baneo vigente sin borrar su historial; requiere sesión y token CSRF. Devuelve JSON. |
 | GET | `/index.php?ruta=mis_donaciones` | Historial con datos e imágenes de ejemplo. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
@@ -264,6 +266,10 @@ La sesión que se abre para proteger el formulario no representa por sí sola un
 El cierre se envía mediante un formulario POST con token CSRF. No se puede cerrar la sesión abriendo un enlace GET a `?ruta=salir`. El perfil, el guardado de documentos y las acciones propias de campañas o donaciones todavía necesitan sus controladores y comprobaciones de permisos.
 
 Un baneo vigente impide iniciar sesión y muestra **Tu cuenta se encuentra baneada** con respuesta **403**. Si el usuario ya tenía una sesión abierta, la siguiente petición a la aplicación revoca su identidad, renueva la sesión y el token CSRF, y detiene la acción solicitada con el mismo mensaje. Los baneos vencidos o que todavía no comenzaron no bloquean el acceso; un baneo sin fecha de fin se considera permanente. Por ahora, la administración de baneos desde una pantalla sigue pendiente.
+
+`BaneoController` reutiliza `Csrf::validar()`, los repositorios y las validaciones de `Baneo`. Para crear un baneo, el POST a `?ruta=banear` recibe `id_usuario`, `motivo`, `csrf_token` y, opcionalmente, `fecha_fin`. Si la fecha está vacía o no se envía, el baneo es permanente. Una fecha de fin debe ser futura y usar `AAAA-MM-DD HH:MM:SS` o el formato de un campo HTML `datetime-local` (`AAAA-MM-DDTHH:MM`), según la hora de la base. El inicio se asigna al momento de la operación. Para finalizarlo, el POST a `?ruta=finalizar_baneo` recibe `id_baneo` y `csrf_token`.
+
+La identidad del administrador se obtiene del ID guardado en la sesión y sus permisos se consultan en la base en cada petición. No se permite banearse a uno mismo ni banear a otros administradores. Tampoco se crea otro baneo si el usuario ya tiene uno vigente. Las respuestas JSON incluyen `mensaje` y, cuando la operación tiene éxito, `id_baneo`. Crear devuelve **201**; finalizar, **200**. Los errores de sesión, permisos o CSRF no modifican los registros. La prueba `php tests/run_tests.php controladores BaneoController` verifica estas reglas dentro de una transacción que se revierte al terminar.
 
 ## Trabajar en equipo
 
