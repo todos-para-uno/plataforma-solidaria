@@ -11,6 +11,9 @@ $vistas = [
     'contacto' => 'contacto.php',
     'crear_campana' => 'crear_campana.php',
     'mis_donaciones' => 'mis_donaciones.php',
+    'preguntas_frecuentes' => 'preguntas_frecuentes.php',
+    'perfil' => 'perfil.php'
+    
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.

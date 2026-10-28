@@ -138,3 +138,15 @@ CREATE TABLE mensajes (
     FOREIGN KEY (id_emisor) REFERENCES usuarios(id),
     FOREIGN KEY (id_receptor) REFERENCES usuarios(id)
 );
+
+-- baneados
+CREATE TABLE baneados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_admin INT NOT NULL,
+    motivo VARCHAR(500) NOT NULL,
+    fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_fin DATETIME,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_admin) REFERENCES usuarios(id)
+);
