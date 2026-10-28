@@ -86,7 +86,7 @@ CREATE TABLE camp (
     categoria INT NOT NULL,
     logrado DECIMAL(12,2) DEFAULT 0,
     descripcion TEXT,
-    -- Ruta relativa a assets/imagenes/imagenes-camp.
+    -- Ruta relativa a assets/imagenes/imagenes-camp, por ejemplo: alimentos/alimentos-01.webp.
     imagen VARCHAR(255) NULL,
     cbu VARCHAR(22),
     estado ENUM('activa', 'finalizada', 'suspendida') NOT NULL DEFAULT 'activa',
@@ -141,6 +141,19 @@ CREATE TABLE mensajes (
     FOREIGN KEY (id_receptor) REFERENCES usuarios(id)
 );
 
+-- Consultas al equipo; también se permite escribir sin tener una cuenta.
+CREATE TABLE contactos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    mail VARCHAR(150) NOT NULL,
+    asunto VARCHAR(30) NOT NULL,
+    contenido VARCHAR(1000) NOT NULL,
+    fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    correo_enviado BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
 -- baneados
 CREATE TABLE baneados (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -149,7 +162,7 @@ CREATE TABLE baneados (
     motivo VARCHAR(500) NOT NULL,
     fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_fin DATETIME,
-    -- El levantamiento manual conserva la fecha de vencimiento original.
+    -- Levantamiento manual del baneo; fecha_fin conserva el vencimiento previsto.
     unban BOOLEAN NOT NULL DEFAULT FALSE,
     motivo_unban VARCHAR(500) NULL,
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id),

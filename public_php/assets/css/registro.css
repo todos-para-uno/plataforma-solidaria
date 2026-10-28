@@ -1,4 +1,10 @@
 /* Distribución del formulario y su confirmación de prueba. Los estilos compartidos están en base.css. */
+main {
+    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 .registro-interior {
     max-width: 480px;
     margin-inline: auto;

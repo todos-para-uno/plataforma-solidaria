@@ -1,0 +1,17 @@
+/* Distribución del panel de administración. Colores, fuentes y componentes vienen de base.css. */
+
+/* Estadísticas: tres columnas en escritorio y una sola en el celular. */
+.administracion-estadisticas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--e-8);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+main {
+    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}

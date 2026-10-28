@@ -50,6 +50,10 @@ $pruebas = [
             'archivo' => 'repositorios/BaneoRepository.php',
             'funcion' => 'baneoRepositoryTest',
         ],
+        'BuscadorRepository' => [
+            'archivo' => 'repositorios/BuscadorRepositoryTest.php',
+            'funcion' => 'buscadorRepositoryTest',
+        ],
         'ValidacionesRepository' => [
             'archivo' => 'repositorios/ValidacionesRepository.php',
             'funcion' => 'validacionesRepositoryTest',
@@ -63,6 +67,14 @@ $pruebas = [
         'BaneoController' => [
             'archivo' => 'controladores/BaneoControllerTest.php',
             'funcion' => 'baneoControllerTest',
+        ],
+        'BuscadorController' => [
+            'archivo' => 'controladores/BuscadorControllerTest.php',
+            'funcion' => 'buscadorControllerTest',
+        ],
+        'ContactoController' => [
+            'archivo' => 'controladores/ContactoControllerTest.php',
+            'funcion' => 'contactoControllerTest',
         ],
         'MisCampanasController' => [
             'archivo' => 'controladores/MisCampanasControllerTest.php',
@@ -79,6 +91,10 @@ $pruebas = [
         'RegistroController' => [
             'archivo' => 'controladores/RegistroControllerTest.php',
             'funcion' => 'registroControllerTest',
+        ],
+        'AdministracionController' => [
+            'archivo' => 'controladores/AdministracionControllerTest.php',
+            'funcion' => 'administracionControllerTest',
         ],
     ],
 ];

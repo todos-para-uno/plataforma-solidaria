@@ -1,4 +1,10 @@
 /* Layout de la pantalla de crear campaña. Solo acomoda; colores y componentes vienen de base.css. */
+main {
+    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 .crear-interior {
     max-width: 640px;
     margin-inline: auto;

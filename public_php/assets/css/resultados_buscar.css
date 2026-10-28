@@ -1,5 +1,14 @@
-.resultado-desc {
-    margin: var(--e-2) 0 0;
-    font-size: var(--t-chico);
-    color: var(--texto-secundario);
+.resultados-encabezado { margin-block: var(--e-12) var(--e-6); }
+.resultados-encabezado h2 { margin-bottom: var(--e-2); }
+.resultados-encabezado p { margin: 0; }
+.resultado-categoria {
+    background: var(--aviso-fondo);
+    padding: var(--e-4) var(--e-6);
+    border-bottom: 3px solid var(--sol);
+    font-weight: 700;
+    overflow-wrap: anywhere;
 }
+.resultado-campana .insignia { align-self: flex-start; }
+.resultado-campana h3 { overflow-wrap: anywhere; }
+.resultado-campana .resultado-desc { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.resultados-vacios { background: var(--aviso-fondo); }

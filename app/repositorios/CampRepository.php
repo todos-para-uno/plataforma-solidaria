@@ -35,6 +35,48 @@ final class CampRepository extends CrudRepository
         return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    /** @return array<int, Camp> */
+    public function findByEstado(EstadoCamp $estadoCamp): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM `camp` WHERE `estado` = :estadoCamp'
+        );
+        $stmt->execute(['estadoCamp' => $estadoCamp->value]);
+
+        return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    /** Campañas públicas activas que cumplen ambos filtros; sin filtros, devuelve todas. */
+    public function buscarActivas(string $texto = '', ?int $categoria = null): array
+    {
+        $condiciones = ["camp.estado = 'activa'"];
+        $parametros = [];
+
+        if ($texto !== '') {
+            // El usuario busca texto literal: % y _ no deben ampliar las coincidencias.
+            $patron = '%' . strtr($texto, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+            $condiciones[] = "(camp.nombre LIKE :nombre ESCAPE '!' OR camp.descripcion LIKE :descripcion ESCAPE '!')";
+            $parametros['nombre'] = $patron;
+            $parametros['descripcion'] = $patron;
+        }
+        if ($categoria !== null) {
+            $condiciones[] = 'camp.categoria = :categoria';
+            $parametros['categoria'] = $categoria;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT camp.id, camp.nombre, camp.descripcion, camp.monetaria, camp.estado,
+                    cat_camp.nombre AS nombre_categoria
+             FROM camp
+             INNER JOIN cat_camp ON cat_camp.id = camp.categoria
+             WHERE ' . implode(' AND ', $condiciones) . '
+             ORDER BY camp.id DESC'
+        );
+        $stmt->execute($parametros);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     /**
      * Devuelve las campañas creadas por un usuario, de la más nueva a la más vieja.
      * Cada fila trae el nombre de la categoría y la suma de sus objetivos.

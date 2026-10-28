@@ -3,6 +3,10 @@
 /* Franja del saludo: deja aire abajo para que las tarjetas del resumen se apoyen sobre su borde. */
 .mis-campanas-portada {
     padding-block: var(--e-12) var(--e-16);
+    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 .mis-campanas-portada h1 {
     margin-bottom: var(--e-2);

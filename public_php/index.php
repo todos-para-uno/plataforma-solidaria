@@ -6,9 +6,6 @@ $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $esLectura = in_array($metodo, ['GET', 'HEAD'], true);
 $vistas = [
     'inicio' => 'index.php',
-    'buscador' => 'buscador.php',
-    'resultados_buscar' => 'resultados_buscar.php',
-    'contacto' => 'contacto.php',
     'crear_campana' => 'crear_campana.php',
     'mis_donaciones' => 'mis_donaciones.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
@@ -17,7 +14,18 @@ $vistas = [
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
-$rutasConControlador = ['registro', 'ingresar', 'salir', 'mis_campanas', 'banear', 'finalizar_baneo'];
+$rutasConControlador = [
+    'buscador',
+    'resultados_buscar',
+    'registro',
+    'ingresar',
+    'salir',
+    'mis_campanas',
+    'administracion',
+    'contacto',
+    'banear',
+    'finalizar_baneo',
+];
 
 if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset($vistas[$ruta]))) {
     http_response_code(404);
@@ -27,7 +35,7 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
 }
 
 $soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo'], true);
-$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -110,6 +118,29 @@ if (in_array($ruta, ['banear', 'finalizar_baneo'], true)) {
     return;
 }
 
+if ($ruta === 'contacto') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/ContactoController.php';
+    $controlador = new ContactoController(new ContactoRepository(conectarBd()));
+    if ($metodo === 'POST') {
+        $controlador->procesarContacto($rutaBase, $rutaAssets, $usuario ?? null);
+    } else {
+        $controlador->mostrarFormulario($rutaBase, $rutaAssets, $usuario ?? null);
+    }
+    return;
+}
+
+if (in_array($ruta, ['buscador', 'resultados_buscar'], true)) {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/BuscadorController.php';
+    $pdo = conectarBd();
+    $controlador = new BuscadorController(new CampRepository($pdo), new CatCampRepository($pdo));
+    // Las búsquedas nuevas usan GET. Se conserva la lectura de formularios POST anteriores.
+    $controlador->mostrar($rutaBase, $rutaAssets, $metodo === 'POST' ? $_POST : $_GET,
+        $ruta === 'resultados_buscar', $usuarioActual);
+    return;
+}
+
 if (isset($vistas[$ruta])) {
     require __DIR__ . '/../app/vistas/' . $vistas[$ruta];
     return;
@@ -140,6 +171,28 @@ if ($ruta === 'registro') {
     } else {
         $controlador->mostrarFormulario($rutaBase, $rutaAssets);
     }
+
+    return;
+}
+
+if ($ruta === 'administracion') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/repositorios/UsuariosRepository.php';
+    require_once __DIR__ . '/../app/repositorios/CampRepository.php';
+    require_once __DIR__ . '/../app/controladores/AdministracionController.php';
+
+    $pdo = conectarBd();
+
+    $controlador = new AdministracionController(
+        new UsuariosRepository($pdo),
+        new CampRepository($pdo)
+    );
+
+    $controlador->mostrar(
+        $rutaBase,
+        $rutaAssets,
+        $usuario ?? null
+    );
 
     return;
 }

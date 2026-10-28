@@ -1,15 +1,69 @@
-.portada{
-    background-image: linear-gradient(rgba(247, 245, 240, 0.95), rgba(247, 245, 240, 0.90)), url('../imagenes/fondo3.webp');
+/* La capa clara protege el mensaje y deja visible el atardecer a la derecha. */
+.portada {
+    background-image: linear-gradient(90deg,
+        rgba(247, 245, 240, 0.97) 0%,
+        rgba(247, 245, 240, 0.93) 32%,
+        rgba(247, 245, 240, 0.76) 48%,
+        rgba(247, 245, 240, 0.12) 75%,
+        rgba(247, 245, 240, 0.03) 100%), url('../imagenes/sol.webp');
     background-size: cover;
-    background-position: center;
+    background-position: center 70%;
     background-repeat: no-repeat;
+    border-bottom: 4px solid var(--sol);
 }
-.portada-interior p{
-    margin: 0 0 0;
+.portada-interior {
+    display: flex;
+    align-items: center;
+    min-height: 410px;
 }
-.seccion-encabezado{
-    max-width: 70ch;
+.portada-mensaje { max-width: 530px; }
+.portada-marca {
+    margin-bottom: var(--e-6);
+    font-size: var(--t-chico);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
-h1{
-    margin: 0 0 0;
+.portada h1 { max-width: 16ch; margin-bottom: var(--e-6); }
+.portada .bajada { max-width: 43ch; color: var(--azul); margin: 0; }
+.portada-acciones { margin-top: var(--e-8); }
+.seccion-encabezado { max-width: 70ch; }
+
+.seccion-ayudar { background: var(--aviso-fondo); }
+.seccion-ayudar .pasos li {
+    padding: var(--e-6);
+    background: var(--papel);
+    border: 1px solid var(--sol-suave);
+    border-top: 4px solid var(--sol);
+    border-radius: var(--radio-tarjeta);
+}
+.paso-numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: var(--sol);
+    color: var(--azul);
+    border-radius: var(--radio-control);
+    margin-bottom: var(--e-6);
+}
+.seccion-crear { background: var(--azul); color: var(--papel); }
+.seccion-crear .bajada,
+.seccion-crear .pasos p { color: var(--hueso); }
+.seccion-crear .pasos li {
+    border-top-color: var(--sol);
+    padding-top: var(--e-6);
+}
+
+@media (max-width: 860px) {
+    .portada {
+        background-image: linear-gradient(90deg,
+            rgba(247, 245, 240, 0.97),
+            rgba(247, 245, 240, 0.85) 65%,
+            rgba(247, 245, 240, 0.38)), url('../imagenes/sol.webp');
+        background-position: 60% 70%;
+    }
+    .portada-interior { min-height: 360px; }
+    .portada-mensaje { max-width: 500px; }
 }

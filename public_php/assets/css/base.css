@@ -79,7 +79,8 @@ body {
     flex-direction: column;
 }
  
-main { flex: 1; padding-bottom: var(--e-16); }
+/* Las secciones ya incluyen el espacio de cierre antes del pie. */
+main { flex: 1; }
  
 h1, h2, h3 {
     font-family: var(--fuente-titulos);
@@ -237,13 +238,17 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .menu-salir:hover { color: var(--azul-hover); text-decoration: underline; }
 
-/* aria-current marca la página activa; la resaltamos con un subrayado amarillo. */
+/* aria-current conserva la identificación de la página para lectores de pantalla. */
 .menu a[aria-current="page"] {
-    text-decoration: underline;
-    text-decoration-color: var(--sol);
-    text-decoration-thickness: 4px;
-    text-underline-offset: 8px;
+    background: var(--sol-suave);
+    color: var(--azul);
+    border-radius: var(--radio-control);
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: inset 0 -3px 0 var(--sol);
 }
+.menu a[aria-current="page"]:hover { background: var(--sol); color: var(--azul); }
+
  
 .menu .boton { margin-left: var(--e-2); }
  

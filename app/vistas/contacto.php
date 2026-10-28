@@ -2,14 +2,13 @@
 /*
  * Vista de contacto: formulario para escribirle al equipo de todospara.uno.
  *
- * Integración pendiente (la hace el controlador, no esta vista):
+ * Recibe de ContactoController:
  *   - $errores: arreglo de textos con los errores del servidor.
  *   - $enviado: true si el mensaje se guardó bien; muestra la confirmación.
  *   - $nombre, $mail, $asunto y $contenido: lo que escribió la persona,
  *     para no hacerle tipear de nuevo si hubo errores.
- *   - Todavía no hay tabla para estos mensajes en database/schema.sql.
- *     El equipo tiene que decidir si se guardan en una tabla nueva o se envían por correo.
- *   - Si hay sesión, el controlador puede completar $nombre y $mail con los datos del usuario.
+ *   - $csrfToken: protección del envío del formulario.
+ *   - Si hay sesión, nombre y mail se completan con los datos del usuario.
  */
 $tituloPagina = 'Contacto';
 $paginaActual = 'contacto';
@@ -24,14 +23,8 @@ $mail = $mail ?? '';
 $asunto = $asunto ?? '';
 $contenido = $contenido ?? '';
 
-// Opciones del asunto: la clave es lo que se envía y el valor es lo que se muestra.
-$asuntos = [
-    'consulta' => 'Consulta general',
-    'campana'  => 'Problema con una campaña',
-    'donacion' => 'Problema con una donación',
-    'cuenta'   => 'Mi cuenta',
-    'denuncia' => 'Denunciar una campaña',
-];
+require_once __DIR__ . '/../modelos/Contacto.php';
+$asuntos = Contacto::ASUNTOS;
 
 require __DIR__ . '/parciales/cabecera.php';
 ?>
@@ -46,7 +39,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <div>
                 <?php if ($enviado): ?>
                     <div class="alerta alerta-exito" role="status">
-                        <p>Mensaje enviado. Te vamos a responder al correo que nos dejaste.</p>
+                        <p>Recibimos tu consulta. Te vamos a responder al correo que nos dejaste.</p>
                     </div>
                 <?php endif; ?>
 
@@ -63,6 +56,7 @@ require __DIR__ . '/parciales/cabecera.php';
 
                 <!-- Las validaciones HTML5 solo ayudan al navegador; el servidor valida todo de nuevo. -->
                 <form class="tarjeta" action="<?= escapar($rutas['contacto']) ?>" method="post">
+                    <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken ?? '') ?>">
                     <div class="campo">
                         <label for="contacto-nombre">Nombre</label>
                         <input id="contacto-nombre" name="nombre" type="text" autocomplete="name"

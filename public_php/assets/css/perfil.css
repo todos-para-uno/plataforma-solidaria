@@ -1,4 +1,11 @@
 /* Layout específico para la página de perfil */
+main {
+    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 .perfil-tarjeta {
     display: flex;
     flex-direction: column;
