@@ -86,6 +86,8 @@ CREATE TABLE camp (
     categoria INT NOT NULL,
     logrado DECIMAL(12,2) DEFAULT 0,
     descripcion TEXT,
+    -- Ruta relativa a assets/imagenes/imagenes-camp.
+    imagen VARCHAR(255) NULL,
     cbu VARCHAR(22),
     estado ENUM('activa', 'finalizada', 'suspendida') NOT NULL DEFAULT 'activa',
     id_ubicacion INT NULL UNIQUE,
@@ -147,6 +149,9 @@ CREATE TABLE baneados (
     motivo VARCHAR(500) NOT NULL,
     fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_fin DATETIME,
+    -- El levantamiento manual conserva la fecha de vencimiento original.
+    unban BOOLEAN NOT NULL DEFAULT FALSE,
+    motivo_unban VARCHAR(500) NULL,
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
     FOREIGN KEY (id_admin) REFERENCES usuarios(id)
 );

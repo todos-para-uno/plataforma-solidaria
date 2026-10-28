@@ -106,20 +106,33 @@ function baneoControllerTest(PDO $pdo): void
             $codigo === 409 && count($baneos->findByIdUsuario($usuario)) === 1,
             'Rechaza un segundo baneo vigente.'
         );
-        [$codigo] = $solicitar('finalizar_baneo', $usuario, ['id_baneo' => $idBaneo]);
+        [$codigo] = $solicitar('finalizar_baneo', $usuario, ['id_baneo' => $idBaneo, 'motivo_unban' => '  Nos equivocamos de usuario  ']);
         TestUtils::comprobar($codigo === 403 && $baneos->estaBaneado($usuario), 'Un usuario no puede quitar su propio baneo.');
         [$codigo] = $solicitar('finalizar_baneo', $admin, ['id_baneo' => $idBaneo, 'csrf_token' => null]);
         TestUtils::comprobar($codigo === 403 && $baneos->estaBaneado($usuario), 'Sin CSRF válido no se modifica el baneo.');
 
-        [$codigo] = $solicitar('finalizar_baneo', $otroAdmin, ['id_baneo' => $idBaneo]);
+        foreach ([null, '   ', str_repeat('á', 501), ['texto']] as $motivoUnban) {
+            [$codigo] = $solicitar('finalizar_baneo', $admin, ['id_baneo' => $idBaneo, 'motivo_unban' => $motivoUnban]);
+            $esperado = is_array($motivoUnban) ? 400 : 422;
+            TestUtils::comprobar(
+                $codigo === $esperado && $baneos->estaBaneado($usuario)
+                    && !$baneos->findById($idBaneo)->getUnban(),
+                'Un motivo de desbaneo inválido no levanta el baneo.'
+            );
+        }
+
+        [$codigo] = $solicitar('finalizar_baneo', $otroAdmin, ['id_baneo' => $idBaneo, 'motivo_unban' => '  Nos equivocamos de usuario  ']);
         TestUtils::comprobar(
             $codigo === 200 && !$baneos->estaBaneado($usuario)
                 && $baneos->estuvoBaneado($usuario)
-                && count($baneos->findByIdUsuario($usuario)) === 1,
+                && count($baneos->findByIdUsuario($usuario)) === 1
+                && $baneos->findById($idBaneo)->getUnban()
+                && $baneos->findById($idBaneo)->getMotivoUnban() === 'Nos equivocamos de usuario'
+                && $baneos->findById($idBaneo)->getFechaFin() === null,
             'Otro administrador puede finalizar el baneo conservando su historial.'
         );
-        [$codigo] = $solicitar('finalizar_baneo', $admin, ['id_baneo' => $idBaneo]);
-        TestUtils::comprobar($codigo === 409, 'No vuelve a finalizar un baneo vencido.');
+        [$codigo] = $solicitar('finalizar_baneo', $admin, ['id_baneo' => $idBaneo, 'motivo_unban' => '  Nos equivocamos de usuario  ']);
+        TestUtils::comprobar($codigo === 409 && $baneos->findById($idBaneo)->getMotivoUnban() === 'Nos equivocamos de usuario', 'No vuelve a levantar un baneo ni sobrescribe su motivo.');
         [$codigo] = $solicitar('finalizar_baneo', $admin, ['id_baneo' => []]);
         TestUtils::comprobar($codigo === 400, 'Rechaza un ID de baneo inválido.');
 

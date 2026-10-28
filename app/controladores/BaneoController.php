@@ -83,7 +83,18 @@ class BaneoController
             $this->responder(404, 'No existe el baneo indicado.');
             return;
         }
-        if (!$this->baneos->finalizarBaneo($idBaneo)) {
+        $motivoUnban = $_POST['motivo_unban'] ?? '';
+        if (!is_string($motivoUnban)) {
+            $this->responder(400, 'El motivo de desbaneo debe ser un texto.');
+            return;
+        }
+        try {
+            $finalizado = $this->baneos->finalizarBaneo($idBaneo, $motivoUnban);
+        } catch (InvalidArgumentException $excepcion) {
+            $this->responder(422, $excepcion->getMessage());
+            return;
+        }
+        if (!$finalizado) {
             $this->responder(409, 'El baneo no está vigente.');
             return;
         }

@@ -50,5 +50,25 @@ function baneoTest()
         TestUtils::comprobar($rechazado, 'Rechaza un motivo vacío o de más de 500 caracteres.');
     }
 
+    TestUtils::comprobar(
+        !$baneo->getUnban() && $baneo->getMotivoUnban() === null,
+        'Un baneo nuevo no está levantado ni tiene motivo de desbaneo.'
+    );
+    $levantado = new Baneo(3, 1, 'Fraude', null, null, true, '  Nos equivocamos de usuario  ');
+    TestUtils::comprobar(
+        $levantado->getUnban() && $levantado->getMotivoUnban() === 'Nos equivocamos de usuario',
+        'Reconstruye un baneo levantado y normaliza su motivo.'
+    );
+    new Baneo(3, 1, 'Fraude', null, null, true, str_repeat('á', 500));
+    foreach ([[true, null], [true, '  '], [true, str_repeat('á', 501)], [false, 'Motivo sin desbaneo']] as [$unban, $motivoUnban]) {
+        $rechazado = false;
+        try {
+            new Baneo(3, 1, 'Fraude', null, null, $unban, $motivoUnban);
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazado = true;
+        }
+        TestUtils::comprobar($rechazado, 'Rechaza datos inconsistentes o inválidos de desbaneo.');
+    }
+
     echo '<hr>';
 }

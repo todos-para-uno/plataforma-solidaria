@@ -139,12 +139,20 @@ function ingresoControllerTest(PDO $pdo): void
             'Un baneo nuevo revoca la sesión y el token antes de ejecutar el controlador solicitado.'
         );
 
-        $baneos->save(['id' => $idBaneo, 'fecha_fin' => $ayer]);
+        $baneos->finalizarBaneo((int) $idBaneo, 'Nos equivocamos de usuario');
         $_POST = ['mail' => $mail, 'pass' => $password, 'csrf_token' => Csrf::generar()];
         $controlador->procesarIngreso('.', './assets');
         TestUtils::comprobar(
             ($_SESSION['usuario_id'] ?? null) === $id,
-            'Al finalizar el baneo, el usuario puede volver a ingresar.'
+            'Al levantar manualmente un baneo permanente, el usuario puede volver a ingresar.'
+        );
+
+        http_response_code(200);
+        $abrirRuta('contacto');
+        TestUtils::comprobar(
+            http_response_code() === 200 && ($_SESSION['usuario_id'] ?? null) === $id
+                && $baneos->findById($idBaneo)->getFechaFin() === null,
+            'Un baneo levantado conserva su vencimiento y no revoca la sesión al navegar.'
         );
 
         $_POST = ['csrf_token' => $token];

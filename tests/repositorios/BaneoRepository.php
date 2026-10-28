@@ -90,6 +90,40 @@ function baneoRepositoryTest(PDO $pdo): void
             $repositorio->estaBaneado($idUsuario),
             'Un antecedente vencido no oculta otro baneo vigente.'
         );
+        TestUtils::comprobar(
+            !$repositorio->finalizarBaneo($idFuturo, 'Cancelación')
+                && !$repositorio->finalizarBaneo((int) $id, 'Ya venció'),
+            'No levanta baneos futuros ni vencidos.'
+        );
+        $rechazado = false;
+        try {
+            $repositorio->finalizarBaneo((int) $idSegundo, '   ');
+        } catch (InvalidArgumentException $e) {
+            $rechazado = true;
+        }
+        TestUtils::comprobar($rechazado && $repositorio->estaBaneado($idUsuario), 'El repositorio exige un motivo válido antes de modificar el registro.');
+        TestUtils::comprobar($repositorio->finalizarBaneo((int) $idSegundo, '  Nos equivocamos de usuario  '), 'Levanta un baneo permanente.');
+        $levantado = $repositorio->findById($idSegundo);
+        TestUtils::comprobar(
+            $levantado->getUnban() && $levantado->getFechaFin() === null
+                && $levantado->getMotivoUnban() === 'Nos equivocamos de usuario'
+                && !$repositorio->estaBaneado($idUsuario) && $repositorio->estuvoBaneado($idUsuario),
+            'Conserva vencimiento, motivo e historial del baneo permanente levantado.'
+        );
+        TestUtils::comprobar(
+            !$repositorio->finalizarBaneo((int) $idSegundo, 'Otra explicación')
+                && $repositorio->findById($idSegundo)->getMotivoUnban() === 'Nos equivocamos de usuario',
+            'Un segundo intento no sobrescribe el motivo original.'
+        );
+        $temporal = (int) $repositorio->insertarBaneo(new Baneo($idUsuario, $idAdmin, 'Temporal', $ayer, $manana));
+        $otroVigente = (int) $repositorio->insertarBaneo(new Baneo($idUsuario, $idAdmin, 'Otro vigente'));
+        $repositorio->finalizarBaneo($temporal, 'Revisión favorable');
+        TestUtils::comprobar(
+            $repositorio->findById($temporal)->getFechaFin() === $manana && $repositorio->estaBaneado($idUsuario),
+            'Conserva el vencimiento temporal y otro baneo vigente sigue bloqueando.'
+        );
+        $repositorio->finalizarBaneo($otroVigente, 'Resuelto');
+        TestUtils::comprobar(!$repositorio->estaBaneado($idUsuario), 'Sin otros baneos vigentes, el usuario deja de estar bloqueado.');
     } finally {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();

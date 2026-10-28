@@ -10,7 +10,7 @@ final class BaneoRepository extends CrudRepository
             $pdo,
             table: 'baneados',
             primaryKey: 'id',
-            fields: ['id_usuario', 'id_admin', 'motivo', 'fecha_inicio', 'fecha_fin']
+            fields: ['id_usuario', 'id_admin', 'motivo', 'fecha_inicio', 'fecha_fin', 'unban', 'motivo_unban']
         );
     }
 
@@ -21,7 +21,9 @@ final class BaneoRepository extends CrudRepository
             (int) $fila['id_admin'],
             $fila['motivo'],
             $fila['fecha_inicio'],
-            $fila['fecha_fin']
+            $fila['fecha_fin'],
+            (bool) $fila['unban'],
+            $fila['motivo_unban']
         );
         $baneo->setId((int) $fila['id']);
 
@@ -40,6 +42,8 @@ final class BaneoRepository extends CrudRepository
             'id_admin' => $baneo->getIdAdmin(),
             'motivo' => $baneo->getMotivo(),
             'fecha_fin' => $baneo->getFechaFin(),
+            'unban' => (int) $baneo->getUnban(),
+            'motivo_unban' => $baneo->getMotivoUnban(),
         ];
 
         // Si no se indicó el inicio, la base asigna CURRENT_TIMESTAMP.
@@ -55,6 +59,7 @@ final class BaneoRepository extends CrudRepository
         $stmt = $this->pdo->prepare(
             'SELECT 1 FROM `baneados`
              WHERE `id_usuario` = :idUsuario
+               AND `unban` = FALSE
                AND `fecha_inicio` <= CURRENT_TIMESTAMP
                AND (`fecha_fin` IS NULL OR `fecha_fin` > CURRENT_TIMESTAMP)
              LIMIT 1'
@@ -70,15 +75,17 @@ final class BaneoRepository extends CrudRepository
     }
 
     // Conservar el registro como antecedente y finalizarlo solo si sigue vigente.
-    public function finalizarBaneo(int $idBaneo): bool
+    public function finalizarBaneo(int $idBaneo, string $motivoUnban): bool
     {
+        $motivoUnban = Baneo::validarMotivoUnban($motivoUnban);
         $stmt = $this->pdo->prepare(
-            'UPDATE `baneados` SET `fecha_fin` = CURRENT_TIMESTAMP
+            'UPDATE `baneados` SET `unban` = TRUE, `motivo_unban` = :motivo
              WHERE `id` = :id
+               AND `unban` = FALSE
                AND `fecha_inicio` <= CURRENT_TIMESTAMP
                AND (`fecha_fin` IS NULL OR `fecha_fin` > CURRENT_TIMESTAMP)'
         );
-        $stmt->execute(['id' => $idBaneo]);
+        $stmt->execute(['id' => $idBaneo, 'motivo' => $motivoUnban]);
 
         return $stmt->rowCount() > 0;
     }
