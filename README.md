@@ -263,6 +263,8 @@ La sesión que se abre para proteger el formulario no representa por sí sola un
 
 El cierre se envía mediante un formulario POST con token CSRF. No se puede cerrar la sesión abriendo un enlace GET a `?ruta=salir`. El perfil, el guardado de documentos y las acciones propias de campañas o donaciones todavía necesitan sus controladores y comprobaciones de permisos.
 
+Un baneo vigente impide iniciar sesión y muestra **Tu cuenta se encuentra baneada** con respuesta **403**. Si el usuario ya tenía una sesión abierta, la siguiente petición a la aplicación revoca su identidad, renueva la sesión y el token CSRF, y detiene la acción solicitada con el mismo mensaje. Los baneos vencidos o que todavía no comenzaron no bloquean el acceso; un baneo sin fecha de fin se considera permanente. Por ahora, la administración de baneos desde una pantalla sigue pendiente.
+
 ## Trabajar en equipo
 
 Una **rama** es una línea de trabajo para desarrollar un cambio. Un **commit** guarda un conjunto de cambios en tu repositorio local. Un **pull request (PR)** propone integrar los commits de tu rama y permite que otra persona los revise antes de sumarlos a `main`.
