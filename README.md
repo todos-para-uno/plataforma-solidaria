@@ -30,7 +30,8 @@ Estamos en desarrollo. El objetivo es tener registro e inicio de sesión, perfil
 | Pantallas | Inicio con campañas ficticias, formulario de registro y componentes compartidos. |
 | Registro | Valida los datos en el servidor, comprueba correos duplicados y guarda el usuario con contraseña hasheada y nivel de confianza inicial. El formulario tiene protección CSRF. |
 | Ingreso y salida | Comprueba correo y contraseña, mantiene la sesión al navegar y permite cerrarla desde el menú. Ambos envíos tienen protección CSRF. |
-| Integración | Registro, ingreso y cierre de sesión están conectados. Las demás funcionalidades todavía no tienen un recorrido completo desde la web. |
+| Contacto | Valida consultas con CSRF, las guarda en `contactos` e intenta enviar el aviso con `mail()` a una dirección simulada. Funciona con o sin una cuenta. |
+| Integración | Registro, ingreso, cierre de sesión y contacto están conectados. Las demás funcionalidades todavía no tienen un recorrido completo desde la web. |
 
 **El registro ya crea una cuenta en la base de datos.** El usuario nuevo queda sin verificar y sin permisos de administrador. Registrarse no inicia sesión automáticamente: después podés entrar desde **Ingresar**. Los enlaces que apuntan a `#` representan funcionalidades pendientes.
 
@@ -101,6 +102,8 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | GET | `/index.php?ruta=ingresar` | Formulario de ingreso con token CSRF; si ya hay un usuario autenticado, redirige al inicio. |
 | POST | `/index.php?ruta=ingresar` | Comprueba las credenciales e inicia la sesión; redirige al inicio si son correctas. |
 | POST | `/index.php?ruta=salir` | Valida el token CSRF, elimina la sesión y su cookie, y redirige al inicio. No acepta GET. |
+| GET | `/index.php?ruta=contacto` | Formulario de consultas con CSRF; completa nombre y correo si hay sesión. Requiere conexión a la base. |
+| POST | `/index.php?ruta=contacto` | Valida y guarda la consulta, intenta enviar el correo y redirige al formulario con una confirmación. |
 | GET | `/index.php?ruta=mis_donaciones` | Historial con datos e imágenes de ejemplo. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
@@ -145,6 +148,8 @@ La prueba de registro requiere la base y comprueba el guardado, la contraseña h
 La prueba de ingreso también requiere la base. Comprueba las credenciales, los errores del formulario, la renovación del identificador de sesión y del token CSRF, y el cierre de sesión. Los usuarios de prueba se crean dentro de una transacción que se revierte al terminar.
 
 La prueba de Mis campañas comprueba el acceso con el usuario recuperado por el inicio de sesión, que solo se listen sus campañas y que el menú incluya un token CSRF para salir.
+
+La prueba `php tests/run_tests.php controladores ContactoController` comprueba CSRF, validaciones, guardado e hidratación, la asociación con usuarios y la conservación de consultas cuando falla el correo. Sustituye la función de envío para no enviar correos reales y revierte los datos al terminar. Requiere tener creada la tabla `contactos`.
 
 ## Entender el recorrido del código
 
@@ -252,6 +257,14 @@ Con la base preparada, abrí el formulario desde `/index.php?ruta=registro` y ve
 5. Un envío sin token CSRF válido devuelve **403** y no registra al usuario. Para enviar normalmente, abrí primero el formulario desde la aplicación.
 
 La sesión que se abre para proteger el formulario no representa por sí sola un usuario autenticado. La identidad se guarda únicamente después de un ingreso correcto. La verificación de la cuenta sigue pendiente y no impide ingresar.
+
+### Preparar y comprobar contacto
+
+Para una base nueva, importá [`database/schema.sql`](database/schema.sql) desde phpMyAdmin: ese archivo ya crea `contactos` junto con las demás tablas. Si tenías datos en una base anterior, exportalos antes de reemplazarla. La conexión de la aplicación puede tener permisos limitados a consultar y modificar registros.
+
+Abrí **Contacto**, completá una consulta con datos ficticios y enviá. El servidor valida los campos y el token CSRF, guarda una fila en `contactos` y redirige al formulario con **Recibimos tu consulta**. Recargar esa página de confirmación no repite el envío. Un formulario inválido conserva los campos y no crea registros. Si hay una sesión iniciada, la consulta se asocia al usuario recuperado de esa sesión; las visitas sin cuenta también pueden escribir. Si se elimina una cuenta, sus consultas se conservan con `id_usuario = NULL`.
+
+El aviso usa la función PHP `mail()` y el destino simulado `contacto@todosparauno.test`. La dirección de quien consulta se usa como `Reply-To`, con un remitente fijo del sitio. El dominio `.test` es de demostración: no representa un buzón real. Para probar el transporte local, configurá un capturador de correo y el `sendmail_path` de PHP, o SMTP en los entornos que lo utilicen. `mail()` necesita un transporte configurado; guardar la consulta funciona aunque el aviso falle. La columna `correo_enviado` indica si el transporte aceptó el aviso, no que alguien lo recibió.
 
 ### Comprobar el ingreso y la salida
 

@@ -56,6 +56,10 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'ContactoController' => [
+            'archivo' => 'controladores/ContactoControllerTest.php',
+            'funcion' => 'contactoControllerTest',
+        ],
         'MisCampanasController' => [
             'archivo' => 'controladores/MisCampanasControllerTest.php',
             'funcion' => 'misCampanasControllerTest',

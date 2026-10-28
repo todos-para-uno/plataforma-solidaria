@@ -139,6 +139,19 @@ CREATE TABLE mensajes (
     FOREIGN KEY (id_receptor) REFERENCES usuarios(id)
 );
 
+-- Consultas al equipo; también se permite escribir sin tener una cuenta.
+CREATE TABLE contactos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    mail VARCHAR(150) NOT NULL,
+    asunto VARCHAR(30) NOT NULL,
+    contenido VARCHAR(1000) NOT NULL,
+    fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    correo_enviado BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
 -- baneados
 CREATE TABLE baneados (
     id INT AUTO_INCREMENT PRIMARY KEY,
