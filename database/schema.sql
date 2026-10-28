@@ -163,7 +163,7 @@ CREATE TABLE baneados (
     fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_fin DATETIME,
     -- Levantamiento manual del baneo; fecha_fin conserva el vencimiento previsto.
-    unban BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_unban DATETIME NULL DEFAULT NULL,
     motivo_unban VARCHAR(500) NULL,
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
     FOREIGN KEY (id_admin) REFERENCES usuarios(id)

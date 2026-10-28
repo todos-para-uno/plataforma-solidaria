@@ -10,7 +10,7 @@ final class BaneoRepository extends CrudRepository
             $pdo,
             table: 'baneados',
             primaryKey: 'id',
-            fields: ['id_usuario', 'id_admin', 'motivo', 'fecha_inicio', 'fecha_fin', 'unban', 'motivo_unban']
+            fields: ['id_usuario', 'id_admin', 'motivo', 'fecha_inicio', 'fecha_fin', 'fecha_unban', 'motivo_unban']
         );
     }
 
@@ -22,7 +22,7 @@ final class BaneoRepository extends CrudRepository
             $fila['motivo'],
             $fila['fecha_inicio'],
             $fila['fecha_fin'],
-            (bool) $fila['unban'],
+            $fila['fecha_unban'],
             $fila['motivo_unban']
         );
         $baneo->setId((int) $fila['id']);
@@ -42,7 +42,7 @@ final class BaneoRepository extends CrudRepository
             'id_admin' => $baneo->getIdAdmin(),
             'motivo' => $baneo->getMotivo(),
             'fecha_fin' => $baneo->getFechaFin(),
-            'unban' => (int) $baneo->getUnban(),
+            'fecha_unban' => $baneo->getFechaUnban(),
             'motivo_unban' => $baneo->getMotivoUnban(),
         ];
 
@@ -59,7 +59,7 @@ final class BaneoRepository extends CrudRepository
         $stmt = $this->pdo->prepare(
             'SELECT 1 FROM `baneados`
              WHERE `id_usuario` = :idUsuario
-               AND `unban` = FALSE
+               AND `fecha_unban` IS NULL
                AND `fecha_inicio` <= CURRENT_TIMESTAMP
                AND (`fecha_fin` IS NULL OR `fecha_fin` > CURRENT_TIMESTAMP)
              LIMIT 1'
@@ -79,9 +79,9 @@ final class BaneoRepository extends CrudRepository
     {
         $motivoUnban = Baneo::validarMotivoUnban($motivoUnban);
         $stmt = $this->pdo->prepare(
-            'UPDATE `baneados` SET `unban` = TRUE, `motivo_unban` = :motivo
+            'UPDATE `baneados` SET `fecha_unban` = CURRENT_TIMESTAMP, `motivo_unban` = :motivo
              WHERE `id` = :id
-               AND `unban` = FALSE
+               AND `fecha_unban` IS NULL
                AND `fecha_inicio` <= CURRENT_TIMESTAMP
                AND (`fecha_fin` IS NULL OR `fecha_fin` > CURRENT_TIMESTAMP)'
         );

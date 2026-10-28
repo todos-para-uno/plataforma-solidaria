@@ -44,6 +44,7 @@ function baneoRepositoryTest(PDO $pdo): void
                 && $recuperado->getMotivo() === 'Fraude'
                 && $recuperado->getFechaInicio() !== null
                 && $recuperado->getFechaFin() === null
+                && $recuperado->getFechaUnban() === null
                 && $repositorio->estaBaneado($idUsuario)
                 && $repositorio->estuvoBaneado($idUsuario),
             'Guarda e hidrata un baneo permanente con inicio asignado por la base.'
@@ -102,18 +103,23 @@ function baneoRepositoryTest(PDO $pdo): void
             $rechazado = true;
         }
         TestUtils::comprobar($rechazado && $repositorio->estaBaneado($idUsuario), 'El repositorio exige un motivo válido antes de modificar el registro.');
+        $antesDesbaneo = $repositorio->fechaActual();
         TestUtils::comprobar($repositorio->finalizarBaneo((int) $idSegundo, '  Nos equivocamos de usuario  '), 'Levanta un baneo permanente.');
         $levantado = $repositorio->findById($idSegundo);
         TestUtils::comprobar(
-            $levantado->getUnban() && $levantado->getFechaFin() === null
+            $levantado->getFechaUnban() !== null
+                && $levantado->getFechaUnban() >= $antesDesbaneo
+                && $levantado->getFechaUnban() <= $repositorio->fechaActual()
+                && $levantado->getFechaFin() === null
                 && $levantado->getMotivoUnban() === 'Nos equivocamos de usuario'
                 && !$repositorio->estaBaneado($idUsuario) && $repositorio->estuvoBaneado($idUsuario),
-            'Conserva vencimiento, motivo e historial del baneo permanente levantado.'
+            'Guarda la fecha y hora actuales y conserva vencimiento, motivo e historial del baneo permanente levantado.'
         );
         TestUtils::comprobar(
             !$repositorio->finalizarBaneo((int) $idSegundo, 'Otra explicación')
+                && $repositorio->findById($idSegundo)->getFechaUnban() === $levantado->getFechaUnban()
                 && $repositorio->findById($idSegundo)->getMotivoUnban() === 'Nos equivocamos de usuario',
-            'Un segundo intento no sobrescribe el motivo original.'
+            'Un segundo intento no sobrescribe la fecha ni el motivo original.'
         );
         $temporal = (int) $repositorio->insertarBaneo(new Baneo($idUsuario, $idAdmin, 'Temporal', $ayer, $manana));
         $otroVigente = (int) $repositorio->insertarBaneo(new Baneo($idUsuario, $idAdmin, 'Otro vigente'));
@@ -121,6 +127,13 @@ function baneoRepositoryTest(PDO $pdo): void
         TestUtils::comprobar(
             $repositorio->findById($temporal)->getFechaFin() === $manana && $repositorio->estaBaneado($idUsuario),
             'Conserva el vencimiento temporal y otro baneo vigente sigue bloqueando.'
+        );
+        $historico = (int) $repositorio->insertarBaneo(new Baneo(
+            $idAdmin, $idUsuario, 'Histórico', $ayer, null, $ayer, 'Revisión anterior'
+        ));
+        TestUtils::comprobar(
+            $repositorio->findById($historico)->getFechaUnban() === $ayer && !$repositorio->estaBaneado($idAdmin),
+            'Inserta e hidrata la fecha exacta de un desbaneo histórico sin bloquear al usuario.'
         );
         $repositorio->finalizarBaneo($otroVigente, 'Resuelto');
         TestUtils::comprobar(!$repositorio->estaBaneado($idUsuario), 'Sin otros baneos vigentes, el usuario deja de estar bloqueado.');

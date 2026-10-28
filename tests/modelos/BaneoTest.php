@@ -51,19 +51,19 @@ function baneoTest()
     }
 
     TestUtils::comprobar(
-        !$baneo->getUnban() && $baneo->getMotivoUnban() === null,
+        $baneo->getFechaUnban() === null && $baneo->getMotivoUnban() === null,
         'Un baneo nuevo no está levantado ni tiene motivo de desbaneo.'
     );
-    $levantado = new Baneo(3, 1, 'Fraude', null, null, true, '  Nos equivocamos de usuario  ');
+    $levantado = new Baneo(3, 1, 'Fraude', null, null, '2026-10-28 14:00:00', '  Nos equivocamos de usuario  ');
     TestUtils::comprobar(
-        $levantado->getUnban() && $levantado->getMotivoUnban() === 'Nos equivocamos de usuario',
-        'Reconstruye un baneo levantado y normaliza su motivo.'
+        $levantado->getFechaUnban() === '2026-10-28 14:00:00' && $levantado->getMotivoUnban() === 'Nos equivocamos de usuario',
+        'Conserva la fecha y hora del desbaneo y normaliza su motivo.'
     );
-    new Baneo(3, 1, 'Fraude', null, null, true, str_repeat('á', 500));
-    foreach ([[true, null], [true, '  '], [true, str_repeat('á', 501)], [false, 'Motivo sin desbaneo']] as [$unban, $motivoUnban]) {
+    new Baneo(3, 1, 'Fraude', null, null, '2026-10-28 14:00:00', str_repeat('á', 500));
+    foreach ([['2026-10-28 14:00:00', null], ['2026-10-28 14:00:00', '  '], ['2026-10-28 14:00:00', str_repeat('á', 501)], [null, 'Motivo sin desbaneo'], ['', 'Motivo'], ['2026-02-30 14:00:00', 'Motivo'], ['2026-10-28', 'Motivo']] as [$fecha_unban, $motivoUnban]) {
         $rechazado = false;
         try {
-            new Baneo(3, 1, 'Fraude', null, null, $unban, $motivoUnban);
+            new Baneo(3, 1, 'Fraude', null, null, $fecha_unban, $motivoUnban);
         } catch (InvalidArgumentException $excepcion) {
             $rechazado = true;
         }

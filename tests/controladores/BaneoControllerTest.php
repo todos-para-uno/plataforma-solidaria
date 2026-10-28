@@ -116,17 +116,20 @@ function baneoControllerTest(PDO $pdo): void
             $esperado = is_array($motivoUnban) ? 400 : 422;
             TestUtils::comprobar(
                 $codigo === $esperado && $baneos->estaBaneado($usuario)
-                    && !$baneos->findById($idBaneo)->getUnban(),
+                    && $baneos->findById($idBaneo)->getFechaUnban() === null,
                 'Un motivo de desbaneo inválido no levanta el baneo.'
             );
         }
 
+        $antesDesbaneo = $baneos->fechaActual();
         [$codigo] = $solicitar('finalizar_baneo', $otroAdmin, ['id_baneo' => $idBaneo, 'motivo_unban' => '  Nos equivocamos de usuario  ']);
         TestUtils::comprobar(
             $codigo === 200 && !$baneos->estaBaneado($usuario)
                 && $baneos->estuvoBaneado($usuario)
                 && count($baneos->findByIdUsuario($usuario)) === 1
-                && $baneos->findById($idBaneo)->getUnban()
+                && $baneos->findById($idBaneo)->getFechaUnban() !== null
+                && $baneos->findById($idBaneo)->getFechaUnban() >= $antesDesbaneo
+                && $baneos->findById($idBaneo)->getFechaUnban() <= $baneos->fechaActual()
                 && $baneos->findById($idBaneo)->getMotivoUnban() === 'Nos equivocamos de usuario'
                 && $baneos->findById($idBaneo)->getFechaFin() === null,
             'Otro administrador puede finalizar el baneo conservando su historial.'

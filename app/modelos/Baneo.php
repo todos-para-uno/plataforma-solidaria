@@ -8,7 +8,7 @@ class Baneo extends RegistroDb
     private string $motivo;
     private ?string $fecha_inicio;
     private ?string $fecha_fin;
-    private bool $unban;
+    private ?string $fecha_unban;
     private ?string $motivo_unban;
 
     public function __construct(
@@ -17,7 +17,7 @@ class Baneo extends RegistroDb
         string $motivo,
         ?string $fecha_inicio = null,
         ?string $fecha_fin = null,
-        bool $unban = false,
+        ?string $fecha_unban = null,
         ?string $motivo_unban = null
     ) {
         if ($id_usuario < 1 || $id_admin < 1) {
@@ -34,11 +34,17 @@ class Baneo extends RegistroDb
         $this->motivo = $motivo;
         $this->fecha_inicio = $fecha_inicio;
         $this->fecha_fin = $fecha_fin;
-        if (!$unban && $motivo_unban !== null) {
+        if ($fecha_unban === null && $motivo_unban !== null) {
             throw new InvalidArgumentException('Un baneo sin levantar no puede tener motivo de desbaneo.');
         }
-        $this->unban = $unban;
-        $this->motivo_unban = $unban ? self::validarMotivoUnban($motivo_unban ?? '') : null;
+        if ($fecha_unban !== null) {
+            $fecha = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $fecha_unban);
+            if ($fecha === false || $fecha->format('Y-m-d H:i:s') !== $fecha_unban) {
+                throw new InvalidArgumentException('La fecha de desbaneo debe usar AAAA-MM-DD HH:MM:SS y ser válida.');
+            }
+        }
+        $this->fecha_unban = $fecha_unban;
+        $this->motivo_unban = $fecha_unban !== null ? self::validarMotivoUnban($motivo_unban ?? '') : null;
     }
 
     public function getIdUsuario(): int
@@ -66,9 +72,9 @@ class Baneo extends RegistroDb
         return $this->fecha_fin;
     }
 
-    public function getUnban(): bool
+    public function getFechaUnban(): ?string
     {
-        return $this->unban;
+        return $this->fecha_unban;
     }
 
     public function getMotivoUnban(): ?string
