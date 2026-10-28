@@ -7,7 +7,7 @@
 $tituloPagina  = 'Mis donaciones — todospara.uno';
 $paginaActual  = 'mis-donaciones'; // O la clave correspondiente en rutas.php
 $usuarioActual = $usuarioActual ?? null; 
-$estilosPagina = [];   // Utiliza exclusivamente base.css
+$estilosPagina = ['mis_donaciones.css'];
 
 // Nota técnica: $donaciones es provisto por el controlador realizando un JOIN 
 // entre la tabla 'donacion' y la tabla 'camp'.

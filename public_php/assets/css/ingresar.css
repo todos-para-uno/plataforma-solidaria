@@ -1,4 +1,10 @@
 /* Layout de la pantalla de ingreso. Solo acomoda; colores y componentes vienen de base.css. */
+.seccion{
+    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.80)), url('../imagenes/oip.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 .ingresar-interior {
     max-width: 480px;
     margin-inline: auto;

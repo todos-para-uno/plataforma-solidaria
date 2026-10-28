@@ -10,12 +10,10 @@ $usuarioActual = $usuarioActual ?? null;
 $estilosPagina = ['inicio.css', 'index.css']; // Se cargan en este orden, después de base.css.
 
 $campanas = [
-    ['titulo' => 'Una mesa para compartir', 'categoria' => 'Alimentos', 'autor' => 'Ana Pérez', 'nivel' => 'azul',
-     'logrado' => 150000, 'objetivo' => 250000, 'monetaria' => true],
-    ['titulo' => 'Mochilas llenas de futuro', 'categoria' => 'Educación', 'autor' => 'Luis Gómez', 'nivel' => 'celeste',
-     'logrado' => 30, 'objetivo' => 60, 'monetaria' => false, 'insumo' => 'kits escolares'],
-    ['titulo' => 'Abriguemos juntos', 'categoria' => 'Comunidad', 'autor' => 'Carla Ruiz', 'nivel' => 'violeta',
-     'logrado' => 80, 'objetivo' => 100, 'monetaria' => false, 'insumo' => 'prendas'],
+    ['titulo' => 'Una mesa para compartir', 'estado' => 'Activa', 'descripcion' => 'Ayudanos a recaudar dinero para nuestro comedor!'],
+    ['titulo' => 'Mochilas llenas de futuro', 'estado' => 'Activa', 'descripcion' => 'Estamos buscando recolectar suficientes kits escolares 
+    para comenzar el año. Entra a nuestra pagina para saber como ayudar!'],
+    ['titulo' => 'Abriguemos juntos', 'estado' => 'Activa', 'descripcion' => 'Recolectando prendas para ayudar a quienes más las necesitan.'],
 ];
 $nombresNivel = ['blanco' => 'Blanco', 'celeste' => 'Celeste', 'azul' => 'Azul', 'violeta' => 'Violeta'];
 
@@ -68,27 +66,17 @@ require __DIR__ . '/parciales/cabecera.php';
             <h2 id="titulo-campanas">Mira algunas de las campañas ya creadas</h2>
         </div>
         <div class="grilla-campanas">
-            <?php foreach ($campanas as $c): $pct = porcentajeProgreso($c['logrado'], $c['objetivo']); ?>
+            <?php foreach ($campanas as $c):  ?>
                 <article class="tarjeta campana">
                     <div class="campana-imagen" role="img" aria-label="Foto de la campaña (pendiente)"></div>
                     <div class="campana-cuerpo">
-                        <div class="campana-datos">
-                            <span class="insignia"><?= escapar($c['categoria']) ?></span>
-                            <span class="insignia"><?= $c['monetaria'] ? 'Dinero' : 'Insumos' ?></span>
-                        </div>
                         <h3><a href="#"><?= escapar($c['titulo']) ?></a></h3>
-                        <p class="campana-autor">Creada por <?= escapar($c['autor']) ?>
-                            <span class="insignia nivel-<?= $c['nivel'] ?>"><?= $nombresNivel[$c['nivel']] ?></span></p>
+                        <p class="texto-secundario">
+                            Estado: <strong><?= escapar($c['estado']) ?></strong>
+                        </p>
                         <div>
-                            <div class="progreso" role="progressbar" aria-valuenow="<?= $pct ?>" aria-valuemin="0" aria-valuemax="100" aria-label="Progreso de <?= escapar($c['titulo']) ?>">
-                                <span class="progreso-relleno" style="width: <?= $pct ?>%"></span>
-                            </div>
-                            <p class="progreso-cifras">
-                                <?php if ($c['monetaria']): ?>
-                                    <strong><?= formatearPesos($c['logrado']) ?></strong> de <?= formatearPesos($c['objetivo']) ?> (<?= $pct ?>%)
-                                <?php else: ?>
-                                    <strong><?= (int) $c['logrado'] ?></strong> de <?= (int) $c['objetivo'] ?> <?= escapar($c['insumo']) ?> (<?= $pct ?>%)
-                                <?php endif; ?>
+                            <p class="resultado-desc">
+                                    <?= escapar($c['descripcion']) ?>
                             </p>
                         </div>
                         <a class="boton boton-donar boton-ancho" href="#">Donar</a>
