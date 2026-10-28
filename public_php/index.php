@@ -91,7 +91,7 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
 
     if (in_array($ruta, ['ingresar', 'salir'], true)) {
         require_once __DIR__ . '/../app/controladores/IngresoController.php';
-        $controlador = new IngresoController($usuarios, $baneos);
+        $controlador = new IngresoController($usuarios, $baneos, new EstadoAutenticacionRepository(conectarBd()));
         if ($ruta === 'salir') {
             $controlador->cerrarSesion($rutaBase);
         } elseif ($usuarioActual !== null) {
