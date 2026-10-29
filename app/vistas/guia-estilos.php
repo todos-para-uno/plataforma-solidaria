@@ -27,8 +27,9 @@ $campanasEjemplo = [
 ];
 $colores = [
     ['variable' => 'azul', 'hex' => '#153a6b', 'uso' => 'Marca, texto, botón principal'],
-    ['variable' => 'corazon', 'hex' => '#b8472b', 'uso' => 'Solo para donar'],
-    ['variable' => 'sol', 'hex' => '#f4b223', 'uso' => 'Resaltado y progreso'],
+    ['variable' => 'verde', 'hex' => '#2f6b3f', 'uso' => 'Categorías, progreso y botones secundarios'],
+    ['variable' => 'terracota', 'hex' => '#b8472b', 'uso' => 'Donaciones y acentos cálidos'],
+    ['variable' => 'sol', 'hex' => '#f4b223', 'uso' => 'Sombras, separadores, foco y resaltado de botones'],
     ['variable' => 'hueso', 'hex' => '#f7f5f0', 'uso' => 'Fondo de página'],
     ['variable' => 'papel', 'hex' => '#fffefa', 'uso' => 'Tarjetas y secciones alternadas'],
     ['variable' => 'grafito', 'hex' => '#4d4b46', 'uso' => 'Trazo de bordes'],
@@ -74,7 +75,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <a class="boton boton-donar" href="#">Donar</a>
             <button class="boton" type="button" disabled>Guardando…</button>
         </div>
-        <p class="texto-secundario">Un solo botón principal por pantalla. El rojo corazón es exclusivo de donar.</p>
+        <p class="texto-secundario">Azul para la acción principal, verde para las acciones secundarias y terracota para donar. El dorado resalta los botones al pasar el cursor o usar el teclado. Los íconos combinan terracota y dorado.</p>
     </section>
  
     <section class="guia-seccion guia-dos" aria-labelledby="g-form">

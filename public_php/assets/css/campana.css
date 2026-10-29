@@ -47,7 +47,7 @@ main {
 }
 
 .detalle-progreso-contenedor {
-    background: var(--hueso);
+    background: var(--verde-suave);
     padding: var(--e-6);
     border: 1px solid var(--linea);
     border-radius: var(--radio-control);
@@ -141,7 +141,8 @@ main {
 }
 
 .modal-cerrar:hover {
-    color: var(--corazon);
+    background: var(--sol);
+    color: var(--azul);
 }
 
 .modal-acciones {

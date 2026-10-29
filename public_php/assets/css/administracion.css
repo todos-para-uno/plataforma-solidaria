@@ -16,7 +16,7 @@ main {
     background-repeat: no-repeat;
 }
 /* Gestión de usuarios: controles y acciones accesibles también en pantallas pequeñas. */
-.admin-panel { margin-top: 2rem; padding: 1.25rem; background: #fff; border: 1px solid #d8d8d8; border-radius: .75rem; }
+.admin-panel { margin-top: 2rem; padding: 1.25rem; background: var(--papel); border: 1px solid var(--linea); border-top: 3px solid var(--verde); border-radius: var(--radio-tarjeta); }
 /* Pestañas integradas: botones semánticos sin aspecto tradicional. */
 .admin-tabs {
     display: flex;
@@ -50,7 +50,7 @@ main {
 
 .admin-tabs [role="tab"]:hover {
     color: var(--azul);
-    background: var(--hueso);
+    background: var(--aviso-fondo);
 }
 
 .admin-tabs [role="tab"][aria-selected="true"] {
@@ -61,7 +61,7 @@ main {
 }
 
 .admin-tabs [role="tab"]:focus-visible {
-    outline: 2px solid var(--azul);
+    outline: 2px solid var(--sol);
     outline-offset: -4px;
 }
 
@@ -73,40 +73,40 @@ main {
 
 .admin-controles { display:flex; flex-wrap:wrap; gap:1rem; align-items:end; margin-bottom:1rem; }
 .admin-controles label { display:grid; gap:.35rem; flex:1 1 240px; }
-.admin-controles input,.admin-controles select,#admin-dialogo input { padding:.6rem; border:1px solid #aaa; border-radius:.35rem; max-width:100%; }
+.admin-controles input,.admin-controles select,#admin-dialogo input { padding:.6rem; border:1px solid var(--linea); border-radius:.35rem; max-width:100%; }
 .admin-controles label:last-child { flex:0 1 180px; }
 .admin-lista { min-height: 340px; }
-.admin-fila { padding:.8rem 0; border-bottom:1px solid #ddd; }
+.admin-fila { padding:.8rem 0; border-bottom:1px solid var(--linea); }
 .admin-fila > button { display:flex; align-items:center; justify-content:space-between; gap:1rem; width:100%; padding:.4rem; text-align:left; background:transparent; border:0; cursor:pointer; font:inherit; }
 .admin-fila small { display:block; overflow-wrap:anywhere; }
-.admin-detalles { padding:.8rem; background:#f7f7f5; border-radius:.4rem; }
+.admin-detalles { padding:.8rem; background:var(--verde-suave); border-radius:.4rem; }
 .admin-detalles dl { display:grid; grid-template-columns:minmax(90px,auto) 1fr; gap:.3rem .8rem; margin:0 0 .8rem; }
 .admin-detalles dd { margin:0; overflow-wrap:anywhere; }
 .admin-acciones { display:flex; flex-wrap:wrap; gap:.5rem; }
 .admin-acciones button,.admin-paginacion button,.admin-dialogo-acciones button { padding:.55rem .8rem; cursor:pointer; }
 .admin-paginacion { display:flex; justify-content:center; align-items:center; gap:1rem; padding:1rem 0 0; }
-#admin-dialogo { width:min(95vw,460px); border:1px solid #aaa; border-radius:.6rem; padding:1.5rem; }
+#admin-dialogo { width:min(95vw,460px); border:1px solid var(--linea); border-radius:.6rem; padding:1.5rem; }
 #admin-dialogo::backdrop { background:rgba(0,0,0,.55); }
 #admin-formulario { display:grid; gap:.8rem; }
 #admin-formulario label { display:grid; gap:.3rem; }
 .admin-dialogo-acciones { display:flex; justify-content:end; gap:.6rem; }
-#admin-dialogo-error { color:#9d2424; }
+#admin-dialogo-error { color:var(--error); }
 @media(max-width:540px) { .admin-panel {padding:.75rem;} .admin-controles label:last-child {flex:1 1 100%;} .admin-paginacion {gap:.4rem;} }
 
 /* Diálogo de baneo: conserva el estilo de los diálogos administrativos. */
-#admin-baneo-dialogo { width:min(95vw,480px); border:1px solid #aaa; border-radius:.6rem; padding:1.5rem; }
+#admin-baneo-dialogo { width:min(95vw,480px); border:1px solid var(--linea); border-radius:.6rem; padding:1.5rem; }
 #admin-baneo-dialogo::backdrop { background:rgba(0,0,0,.55); }
 #admin-baneo-formulario { display:grid; gap:.8rem; }
 #admin-baneo-formulario label { display:grid; gap:.3rem; }
-#admin-baneo-formulario input,#admin-baneo-formulario textarea { padding:.6rem; border:1px solid #aaa; border-radius:.35rem; max-width:100%; width:100%; box-sizing:border-box; font:inherit; }
-#admin-baneo-error { color:#9d2424; }
+#admin-baneo-formulario input,#admin-baneo-formulario textarea { padding:.6rem; border:1px solid var(--linea); border-radius:.35rem; max-width:100%; width:100%; box-sizing:border-box; font:inherit; }
+#admin-baneo-error { color:var(--error); }
 
 /* Consultas de actividad, sin mezclar cantidades de insumos con importes. */
 .admin-actividad-resumen { margin: .5rem 0; font-weight: 600; }
-#admin-actividad-dialogo { width: min(95vw, 740px); max-height: 85vh; overflow-y: auto; border: 1px solid #aaa; border-radius: .6rem; padding: 1.5rem; }
+#admin-actividad-dialogo { width: min(95vw, 740px); max-height: 85vh; overflow-y: auto; border: 1px solid var(--linea); border-radius: .6rem; padding: 1.5rem; }
 #admin-actividad-dialogo::backdrop { background: rgba(0,0,0,.55); }
 .admin-actividad-lista { list-style: none; padding: 0; display: grid; gap: .75rem; }
-.admin-actividad-lista li { border: 1px solid #ddd; padding: .8rem; border-radius: .4rem; overflow-wrap: anywhere; }
+.admin-actividad-lista li { border: 1px solid var(--linea); padding: .8rem; border-radius: .4rem; overflow-wrap: anywhere; }
 .admin-actividad-lista dl { display: grid; grid-template-columns: minmax(100px,auto) 1fr; gap: .25rem .75rem; margin: .6rem 0 0; }
 .admin-actividad-lista dd { margin: 0; }
 
@@ -115,10 +115,35 @@ main {
 .admin-progreso-encabezado { display:flex; justify-content:space-between; gap:.75rem; align-items:center; margin-bottom:.4rem; }
 .admin-progreso-pista { height:.85rem; background:var(--hueso); border:1px solid var(--linea); border-radius:999px; overflow:hidden; }
 /* La barra crece al renderizar el modal, salvo preferencia de movimiento reducido. */
-.admin-progreso-relleno { height:100%; width:var(--admin-progreso-final,0%); background:var(--sol); border-radius:999px; transform-origin:left center; animation:admin-progreso-entrada .85s ease-out both; }
+.admin-progreso-relleno { height:100%; width:var(--admin-progreso-final,0%); background:var(--verde); border-radius:999px; transform-origin:left center; animation:admin-progreso-entrada .85s ease-out both; }
 @keyframes admin-progreso-entrada { from { transform:scaleX(0); } to { transform:scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .admin-progreso-relleno { animation:none; } }
 .admin-panel [role="tabpanel"][hidden] { display:none; }
 .admin-progreso small { display:block; margin-top:.4rem; }
 .admin-actividad-id { display:block; margin-top:.8rem; color:var(--grafito); font-size:.8rem; }
 @media(max-width:540px) { .admin-actividad-lista dl { grid-template-columns:1fr; } .admin-actividad-lista dt { font-weight:600; } }
+
+/* Los controles administrativos usan los mismos fondos y acentos que el sitio. */
+:is(#admin-dialogo, #admin-baneo-dialogo, #admin-actividad-dialogo) {
+    background: var(--papel);
+    color: var(--azul);
+    border-top: 4px solid var(--sol);
+}
+.admin-acciones button, .admin-paginacion button, .admin-dialogo-acciones button {
+    background: var(--verde-suave);
+    color: var(--verde);
+    border: 1px solid var(--verde);
+    border-radius: var(--radio-control);
+    font: inherit;
+    font-weight: 600;
+    min-height: 44px;
+}
+.admin-acciones button:hover, .admin-paginacion button:hover, .admin-dialogo-acciones button:hover {
+    background: var(--sol);
+    color: var(--azul);
+}
+.admin-dialogo-acciones button[type="submit"] { background: var(--azul); color: var(--papel); border-color: var(--azul); }
+.admin-dialogo-acciones button[type="submit"]:hover { background: var(--sol); color: var(--azul); }
+.admin-paginacion button:disabled { background: var(--hueso); color: var(--texto-secundario); border-color: var(--linea); cursor: not-allowed; }
+
+.admin-fila > button:hover { background: var(--aviso-fondo); color: var(--azul); }

@@ -23,6 +23,7 @@ main {
  
 .contacto-ayuda h2 {
     font-size: var(--t-h3);
+    color: var(--verde);
 }
  
 @media (max-width: 860px) {

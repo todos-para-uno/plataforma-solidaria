@@ -40,7 +40,7 @@ main {
     align-items: center;
     justify-content: center;
     min-height: 200px;
-    color: var(--azul);
+    color: var(--terracota);
 }
 .ayuda-ilustracion svg { display: block; width: 176px; height: 176px; }
 .ayuda-ilustracion .trazo-acento { stroke: var(--sol); }
@@ -71,3 +71,5 @@ main {
     .ayuda-ilustracion svg { width: 140px; height: 140px; }
     .ayuda-contacto-interior { flex-direction: column; align-items: flex-start; }
 }
+
+.ayuda-etiqueta { color: var(--verde); }

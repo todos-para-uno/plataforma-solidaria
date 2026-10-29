@@ -13,9 +13,14 @@
     /* Colores de la marca, tomados del logo */
     --azul: #153a6b;          /* marca, texto principal, botón primario */
     --azul-hover: #24508a;
-    --corazon: #b8472b;       /* reservado para las acciones de donar */
+    --verde: #2f6b3f;         /* categorías, progreso y acciones secundarias */
+    --verde-hover: #245331;
+    --verde-suave: #e8f2e6;
+    --terracota: #b8472b;     /* donaciones y acentos cálidos */
+    --terracota-suave: #fff1e9;
+    --corazon: var(--terracota); /* alias para los botones de donar */
     --corazon-hover: #9c3a21;
-    --sol: #f4b223;           /* resaltados, barra de progreso */
+    --sol: #f4b223;           /* resaltados, separadores y detalles de progreso */
     --sol-suave: #ecd89f;     /* sombra de las tarjetas */
  
     /* Fondos y líneas */
@@ -28,7 +33,7 @@
     /* Estados */
     --error: #923d29;      --error-fondo: #fff1e9;
     --aviso: #51462d;      --aviso-fondo: #f8f0db;
-    --exito: #2f6b3f;      --exito-fondo: #e8f2e6;
+    --exito: var(--verde); --exito-fondo: var(--verde-suave);
  
     /* Niveles de confianza del usuario (tabla validaciones) */
     --nivel-blanco: #ffffff;
@@ -96,11 +101,11 @@ h3 { font-size: var(--t-h3); }
 p { margin: 0 0 var(--e-4); max-width: 68ch; text-wrap: pretty; }
  
 a { color: var(--azul); text-underline-offset: 4px; }
-a:hover { color: var(--azul-hover); }
+a:hover { color: var(--terracota); }
  
 img { display: block; max-width: 100%; height: auto; }
  
-:focus-visible { outline: 3px solid var(--azul); outline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--sol); outline-offset: 3px; }
  
 [hidden] { display: none !important; }
  
@@ -125,7 +130,7 @@ img { display: block; max-width: 100%; height: auto; }
  
 /* 3. Cabecera y menú
    ------------------------------------------------------------------------ */
-.cabecera { border-bottom: 1px solid var(--linea); background: var(--hueso); }
+.cabecera { border-top: 4px solid var(--verde); border-bottom: 1px solid var(--linea); background: var(--hueso); }
  
 .cabecera-interior {
     display: flex;
@@ -179,12 +184,12 @@ img { display: block; max-width: 100%; height: auto; }
     text-decoration: none;
     font-weight: 600;
 }
-.menu a:hover { text-decoration: underline; }
+.menu a:hover { background: var(--aviso-fondo); text-decoration: underline; }
 .menu a { white-space: nowrap; }
  
 /* Los botones dentro del menú conservan su aspecto de botón */
 .menu a.boton { padding-inline: var(--e-4); color: #fff; text-decoration: none; }
-.menu a.boton:hover { color: #fff; }
+.menu a.boton:hover { background: var(--sol); color: var(--azul); }
  
 /* Desplegable del usuario con sesión iniciada */
 .menu-usuario { position: relative; }
@@ -199,8 +204,10 @@ img { display: block; max-width: 100%; height: auto; }
     list-style: none;
     white-space: nowrap;
 }
+.menu-boton:hover, .menu-usuario summary:hover { background: var(--sol); color: var(--azul); }
 .menu-usuario summary::-webkit-details-marker { display: none; }
 .menu-usuario summary::after {
+    color: var(--terracota);
     content: "";
     width: 0.45em; height: 0.45em;
     border: solid currentColor;
@@ -236,11 +243,11 @@ img { display: block; max-width: 100%; height: auto; }
     font: inherit;
     cursor: pointer;
 }
-.menu-salir:hover { color: var(--azul-hover); text-decoration: underline; }
+.menu-salir:hover { background: var(--sol); color: var(--azul); text-decoration: underline; }
 
 /* aria-current conserva la identificación de la página para lectores de pantalla. */
 .menu a[aria-current="page"] {
-    background: var(--sol-suave);
+    background: var(--aviso-fondo);
     color: var(--azul);
     border-radius: var(--radio-control);
     font-weight: 700;
@@ -293,6 +300,7 @@ img { display: block; max-width: 100%; height: auto; }
 /* 4. Pie: azul marino, cierra la página
    ------------------------------------------------------------------------ */
 .pie {
+    border-top: 4px solid var(--sol);
     background: var(--azul);
     color: var(--hueso);
     font-size: 0.9375rem;
@@ -345,6 +353,17 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .seccion-encabezado { max-width: 60ch; margin-bottom: var(--e-12); }
 .seccion-encabezado p { margin-bottom: 0; }
+/* Firma de la paleta: un detalle pequeño que se repite entre pantallas. */
+.seccion-encabezado::before {
+    content: "";
+    display: block;
+    width: 84px;
+    height: 4px;
+    margin-bottom: var(--e-4);
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--verde) 0 50%, var(--terracota) 50% 75%, var(--sol) 75%);
+}
+
  
 @media (max-width: 760px) {
     .seccion { padding-block: var(--e-12); }
@@ -370,13 +389,13 @@ img { display: block; max-width: 100%; height: auto; }
     text-decoration: none;
     cursor: pointer;
 }
-.boton:hover { background: var(--azul-hover); color: #fff; }
+.boton:hover { background: var(--sol); color: var(--azul); }
  
-.boton-secundario { background: var(--papel); color: var(--azul); }
-.boton-secundario:hover { background: var(--hueso); color: var(--azul); }
+.boton-secundario { background: var(--verde-suave); color: var(--verde); border-color: var(--verde); }
+.boton-secundario:hover { background: var(--sol); color: var(--azul); border-color: var(--grafito); }
  
 .boton-donar { background: var(--corazon); }
-.boton-donar:hover { background: var(--corazon-hover); }
+.boton-donar:hover { background: var(--sol); color: var(--azul); }
  
 .boton-chico { min-height: 40px; padding: var(--e-2) var(--e-4); }
 .boton-ancho { width: 100%; }
@@ -418,6 +437,8 @@ img { display: block; max-width: 100%; height: auto; }
     font: inherit;
 }
 .campo textarea { min-height: 120px; resize: vertical; }
+.campo :is(input, select, textarea):focus-visible { border-color: var(--verde); }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
  
 .campo [aria-invalid="true"] { border-color: var(--error); }
  
@@ -461,17 +482,17 @@ img { display: block; max-width: 100%; height: auto; }
     align-items: center;
     gap: var(--e-1);
     padding: 0.125rem 0.625rem;
-    border: 1px solid var(--grafito);
+    border: 1px solid var(--verde);
     border-radius: 999px;
-    background: var(--papel);
-    color: var(--azul);
+    background: var(--verde-suave);
+    color: var(--verde);
     font-size: var(--t-chico);
     font-weight: 600;
     white-space: nowrap;
 }
  
 /* Niveles de confianza: Blanco, Celeste, Azul, Violeta */
-.nivel-blanco  { background: var(--nivel-blanco); }
+.nivel-blanco  { background: var(--nivel-blanco); color: var(--azul); border-color: var(--grafito); }
 .nivel-celeste { background: var(--nivel-celeste-fondo); color: var(--nivel-celeste); border-color: var(--nivel-celeste); }
 .nivel-azul    { background: var(--nivel-azul-fondo); color: var(--nivel-azul); border-color: var(--azul); }
 .nivel-violeta { background: var(--nivel-violeta-fondo); color: var(--nivel-violeta); border-color: var(--nivel-violeta); }
@@ -488,12 +509,12 @@ img { display: block; max-width: 100%; height: auto; }
 .progreso-relleno {
     display: block;
     height: 100%;
-    background: var(--sol);
-    border-right: 1px solid var(--grafito);
+    background: var(--verde);
+    border-right: 2px solid var(--sol);
 }
  
 .progreso-cifras { margin: var(--e-2) 0 0; font-size: 0.9375rem; color: var(--texto-secundario); }
-.progreso-cifras strong { color: var(--azul); }
+.progreso-cifras strong { color: var(--verde); }
  
 /* 11. Tarjeta de campaña
    ------------------------------------------------------------------------ */
@@ -538,6 +559,7 @@ img { display: block; max-width: 100%; height: auto; }
     gap: var(--e-1);
 }
 .dato-cifra {
+    color: var(--verde);
     font-family: var(--fuente-titulos);
     font-size: var(--t-h3);
     line-height: 1.15;

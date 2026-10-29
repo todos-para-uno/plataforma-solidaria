@@ -17,7 +17,8 @@
     border-radius: var(--radio-control);
 }
 .guia-color-azul { background: var(--azul); }
-.guia-color-corazon { background: var(--corazon); }
+.guia-color-corazon, .guia-color-terracota { background: var(--terracota); }
+.guia-color-verde { background: var(--verde); }
 .guia-color-sol { background: var(--sol); }
 .guia-color-hueso { background: var(--hueso); }
 .guia-color-papel { background: var(--papel); }
