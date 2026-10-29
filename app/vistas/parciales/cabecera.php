@@ -73,14 +73,6 @@ $estilosPagina = $estilosPagina ?? [];
                     <li><a class="boton boton-chico" href="<?= escapar($rutas['registro']) ?>"<?= marcarActual('registro', $paginaActual) ?>>Crear cuenta</a></li>
                 <?php else: ?>
                     <li>
-                        <a href="<?= escapar($rutas['mensajes']) ?>"<?= marcarActual('mensajes', $paginaActual) ?>>
-                            Mensajes
-                            <?php if (($usuarioActual['mensajesSinLeer'] ?? 0) > 0): ?>
-                                <span class="contador"><?= (int) $usuarioActual['mensajesSinLeer'] ?><span class="solo-lectores"> sin leer</span></span>
-                            <?php endif; ?>
-                        </a>
-                    </li>
-                    <li>
                         <!-- El navegador permite abrir este menú con <details>, incluso sin JavaScript. -->
                         <details class="menu-usuario">
                             <summary><?= escapar($usuarioActual['nombre']) ?></summary>

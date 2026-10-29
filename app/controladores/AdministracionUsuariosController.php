@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../repositorios/UsuariosRepository.php';
 require_once __DIR__ . '/../repositorios/EstadoAutenticacionRepository.php';
 require_once __DIR__ . '/../seguridad/Csrf.php';
+require_once __DIR__ . '/../repositorios/AdministracionActividadRepository.php';
 
 /** Endpoints administrativos. Los permisos se verifican en cada petición. */
 final class AdministracionUsuariosController
@@ -39,6 +40,35 @@ final class AdministracionUsuariosController
             return;
         }
         $this->respuesta(200, ['usuarios' => $this->usuarios->buscarAdministracion($termino, $limite, ($pagina - 1) * $limite)]);
+    }
+
+    /** Actividad de un usuario, consultada solo cuando el administrador la solicita. */
+    public function actividad(): void
+    {
+        if (!$this->autorizar(false)) return;
+        $id = filter_var($_GET['id_usuario'] ?? null, FILTER_VALIDATE_INT);
+        $tipo = $_GET['tipo'] ?? null;
+        if ($id === false || $id === null || $id < 1 || !is_string($tipo) ||
+            !in_array($tipo, ['resumen', 'campanas', 'donaciones'], true)) {
+            $this->respuesta(422, ['error' => 'Parámetros de actividad inválidos.']);
+            return;
+        }
+        if ($this->usuarios->findById($id) === null) {
+            $this->respuesta(404, ['error' => 'Usuario inexistente.']);
+            return;
+        }
+        try {
+            $repositorio = new AdministracionActividadRepository($this->pdo);
+            $datos = match ($tipo) {
+                'resumen' => $repositorio->resumen($id),
+                'campanas' => $repositorio->campanas($id),
+                'donaciones' => $repositorio->donaciones($id),
+            };
+            $this->respuesta(200, ['datos' => $datos]);
+        } catch (Throwable $e) {
+            error_log('Error al consultar actividad administrativa: ' . $e->getMessage());
+            $this->respuesta(500, ['error' => 'No se pudo consultar la actividad.']);
+        }
     }
 
     public function password(bool $desbloquear): void
