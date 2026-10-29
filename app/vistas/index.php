@@ -4,11 +4,29 @@
  * Las campañas de este arreglo son ficticias; todavía no se consultan en la base.
  */
 
+require_once __DIR__ . '/../../config/conexion.php';
+require_once __DIR__ . '/../repositorios/CampRepository.php';
+require_once __DIR__ . '/../repositorios/CatCampRepository.php';
+require_once __DIR__ . '/../controladores/BuscadorController.php';
+
+$pdo = conectarBD();
+
+// Instanciamos los repositorios con la conexión PDO
+$campRepository = new CampRepository($pdo);
+$catCampRepository = new CatCampRepository($pdo);
+
+// Instanciamos el controlador que maneja la lógica de búsqueda
+$buscadorController = new BuscadorController($campRepository, $catCampRepository);
+
+// Obtenemos las campañas activas desde la base de datos (por ejemplo, limitando a 3 para la home)
+$todasLasActivas = $campRepository->buscarActivas();
+$campanas = array_slice($todasLasActivas, 0, 3); // Tomamos solo tres campañas
+
 $tituloPagina  = 'Todospara.uno — Campañas solidarias';
 $paginaActual  = 'inicio';
 $usuarioActual = $usuarioActual ?? null;
 $estilosPagina = ['inicio.css', 'index.css']; // Se cargan en este orden, después de base.css.
-
+/*
 $campanas = [
     ['titulo' => 'Una mesa para compartir', 'estado' => 'Activa', 'descripcion' => 'Ayudanos a recaudar dinero para nuestro comedor!',
      'imagen' => 'donaciones-mesa-compartir.webp', 'imagen_alt' => 'Escena ficticia de voluntarios compartiendo una comida con una vecina en un comedor comunitario.', 'ancho' => 960, 'alto' => 640],
@@ -19,7 +37,7 @@ $campanas = [
      'imagen' => 'donaciones-abriguemos-juntos.webp', 'imagen_alt' => 'Guantes, gorro de lana y prendas de abrigo.', 'ancho' => 751, 'alto' => 500],
 ];
 $nombresNivel = ['blanco' => 'Blanco', 'celeste' => 'Celeste', 'azul' => 'Azul', 'violeta' => 'Violeta'];
-
+*/
 require __DIR__ . '/parciales/cabecera.php';
 ?>
 
@@ -65,33 +83,39 @@ require __DIR__ . '/parciales/cabecera.php';
 <section class="seccion seccion-papel" id="campanas" aria-labelledby="titulo-campanas">
     <div class="contenedor">
         <div class="seccion-encabezado">
-            <h2 id="titulo-campanas">Mira algunas de las campañas ya creadas</h2>
+            <h2 id="titulo-campanas">Mirá algunas de las campañas ya creadas</h2>
         </div>
         <div class="grilla-campanas">
-            <?php foreach ($campanas as $c):  ?>
-                <article class="tarjeta campana">
-                    <img class="campana-imagen"
-                         src="<?= escapar($rutaAssets) ?>/imagenes/<?= escapar($c['imagen']) ?>"
-                         alt="<?= escapar($c['imagen_alt']) ?>"
-                         width="<?= (int) $c['ancho'] ?>" height="<?= (int) $c['alto'] ?>"
-                         loading="lazy" decoding="async">
-                    <div class="campana-cuerpo">
-                        <h3><a href="#"><?= escapar($c['titulo']) ?></a></h3>
-                        <p class="texto-secundario">
-                            Estado: <strong><?= escapar($c['estado']) ?></strong>
-                        </p>
-                        <div>
-                            <p class="resultado-desc">
-                                    <?= escapar($c['descripcion']) ?>
+            <?php if (empty($campanas)): ?>
+                <p class="texto-secundario">Todavía no hay campañas activas cargadas en la base de datos.</p>
+            <?php else: ?>
+                <?php foreach ($campanas as $c): ?>
+                    <article class="tarjeta campana">
+                        <!-- Imagen representativa o contenedor visual alineado con resultados_buscar.php -->
+                        <div class="campana-imagen" role="img" aria-label="Foto de la campaña"></div>
+                        <div class="campana-cuerpo">
+                            <div class="campana-datos">
+                                <span class="insignia"><?= escapar($c['nombre_categoria']) ?></span>
+                                <span class="insignia"><?= $c['monetaria'] ? 'Dinero' : 'Insumos' ?></span>
+                            </div>
+                            <h3><a href="#"><?= escapar($c['nombre']) ?></a></h3>
+                            <p class="texto-secundario">
+                                Estado: <strong>Activa</strong>
                             </p>
+                            <div>
+                                <p class="resultado-desc">
+                                    <?= escapar(trim($c['descripcion'] ?? '') !== '' ? $c['descripcion'] : 'Esta campaña todavía no tiene una descripción detallada.') ?>
+                                </p>
+                            </div>
+                            <a class="boton boton-donar boton-ancho" href="index.php?ruta=campana&id=<?= (int) $c['id'] ?>">Donar a esta campaña</a>
                         </div>
-                        <a class="boton boton-donar boton-ancho" href="#">Donar</a>
-                    </div>
-                </article>
-            <?php endforeach; ?>
+                    </article>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </section>
+
 
 
 <?php require __DIR__ . '/parciales/pie.php'; ?>
