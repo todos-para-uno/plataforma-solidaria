@@ -35,3 +35,12 @@ main {
 @media (max-width: 760px) {
     .buscador-filtros { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
+
+/* Animación de zoom y sombra al pasar el cursor (hover), igual a las tarjetas de crear campaña. */
+.buscador-formulario {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.buscador-formulario:hover {
+    transform: scale(1.015);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
