@@ -1,0 +1,579 @@
+/* ==========================================================================
+   todospara.uno — hoja de estilos compartida
+   La cabecera carga este archivo antes que las hojas de cada pantalla.
+   Reutilizá sus variables y componentes para mantener los estilos en común.
+   Si agregás uno compartido, sumá un ejemplo en app/vistas/guia-estilos.php.
+   Las decisiones de diseño se documentan en DESIGN.md, la referencia interna
+   que usamos el equipo y los modelos de IA.
+   ========================================================================== */
+ 
+/* 1. Variables compartidas: colores, fuentes, tamaños y espacios
+   ------------------------------------------------------------------------ */
+:root {
+    /* Colores de la marca, tomados del logo */
+    --azul: #153a6b;          /* marca, texto principal, botón primario */
+    --azul-hover: #24508a;
+    --corazon: #b8472b;       /* reservado para las acciones de donar */
+    --corazon-hover: #9c3a21;
+    --sol: #f4b223;           /* resaltados, barra de progreso */
+    --sol-suave: #ecd89f;     /* sombra de las tarjetas */
+ 
+    /* Fondos y líneas */
+    --hueso: #f7f5f0;         /* fondo de la página */
+    --papel: #fffefa;         /* fondo de tarjetas y campos */
+    --grafito: #4d4b46;       /* borde "a lápiz" de tarjetas y botones */
+    --linea: #ccc7bc;         /* divisores finos */
+    --texto-secundario: #595d64;
+ 
+    /* Estados */
+    --error: #923d29;      --error-fondo: #fff1e9;
+    --aviso: #51462d;      --aviso-fondo: #f8f0db;
+    --exito: #2f6b3f;      --exito-fondo: #e8f2e6;
+ 
+    /* Niveles de confianza del usuario (tabla validaciones) */
+    --nivel-blanco: #ffffff;
+    --nivel-celeste: #1f5f8b;  --nivel-celeste-fondo: #e3f0f9;
+    --nivel-azul: #ffffff;     --nivel-azul-fondo: var(--azul);
+    --nivel-violeta: #5a3d8a;  --nivel-violeta-fondo: #efe9f7;
+ 
+    /* Tipografía: sin descargas, funciona sin internet */
+    --fuente-titulos: Georgia, "Times New Roman", serif;
+    --fuente-texto: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+ 
+    /* Tamaños compartidos para mantener la misma jerarquía entre pantallas */
+    --t-chico: 0.8125rem;   /* 13px: ayudas, notas */
+    --t-base: 1rem;         /* 16px: texto */
+    --t-medio: 1.125rem;    /* 18px: bajadas */
+    --t-h3: 1.375rem;       /* 22px */
+    --t-h2: 2rem;           /* 32px */
+    --t-h1: clamp(2.25rem, 4.5vw, 3.5rem);
+ 
+    /* Espaciado (múltiplos de 4px) */
+    --e-1: 0.25rem;  --e-2: 0.5rem;  --e-3: 0.75rem; --e-4: 1rem;
+    --e-6: 1.5rem;   --e-8: 2rem;    --e-12: 3rem;   --e-16: 4rem;
+ 
+    /* El trazo "a lápiz": bordes de distinto grosor y curvas irregulares */
+    --trazo: 1px 2px 2px 1px;
+    --radio-tarjeta: 12px 16px 11px 15px / 15px 11px 17px 12px;
+    --radio-control: 5px 7px 6px 4px;
+    --sombra-tarjeta: 7px 7px 0 var(--sol-suave);
+ 
+    --ancho-max: 1080px;
+}
+ 
+/* 2. Base
+   ------------------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+ 
+html { -webkit-text-size-adjust: 100%; }
+ 
+body {
+    margin: 0;
+    background: var(--hueso);
+    color: var(--azul);
+    font-family: var(--fuente-texto);
+    font-size: var(--t-base);
+    line-height: 1.55;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+ 
+/* Las secciones ya incluyen el espacio de cierre antes del pie. */
+main { flex: 1; }
+ 
+h1, h2, h3 {
+    font-family: var(--fuente-titulos);
+    font-weight: normal;
+    line-height: 1.15;
+    margin: 0 0 var(--e-4);
+    text-wrap: balance;
+}
+h1 { font-size: var(--t-h1); letter-spacing: -0.02em; }
+h2 { font-size: var(--t-h2); }
+h3 { font-size: var(--t-h3); }
+ 
+p { margin: 0 0 var(--e-4); max-width: 68ch; text-wrap: pretty; }
+ 
+a { color: var(--azul); text-underline-offset: 4px; }
+a:hover { color: var(--azul-hover); }
+ 
+img { display: block; max-width: 100%; height: auto; }
+ 
+:focus-visible { outline: 3px solid var(--azul); outline-offset: 3px; }
+ 
+[hidden] { display: none !important; }
+ 
+.contenedor {
+    width: min(var(--ancho-max), calc(100% - 2 * var(--e-8)));
+    margin-inline: auto;
+}
+ 
+.texto-secundario { color: var(--texto-secundario); }
+.bajada { font-size: var(--t-medio); color: var(--texto-secundario); }
+ 
+.solo-lectores {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+}
+ 
+.saltar-contenido {
+    position: absolute; left: var(--e-4); top: -6rem; z-index: 100;
+    padding: var(--e-3) var(--e-4); background: var(--papel);
+}
+.saltar-contenido:focus { top: var(--e-4); }
+ 
+/* 3. Cabecera y menú
+   ------------------------------------------------------------------------ */
+.cabecera { border-bottom: 1px solid var(--linea); background: var(--hueso); }
+ 
+.cabecera-interior {
+    display: flex;
+    align-items: center;
+    gap: var(--e-4);
+    min-height: 84px;
+}
+ 
+.cabecera-logo { flex-shrink: 0; }
+.cabecera-logo img { width: 190px; }
+ 
+.menu-boton {
+    display: none;
+    margin-left: auto;
+    min-height: 44px;
+    padding: var(--e-2) var(--e-4);
+    border: solid var(--grafito);
+    border-width: var(--trazo);
+    border-radius: var(--radio-control);
+    background: var(--papel);
+    color: var(--azul);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+ 
+.menu {
+    display: flex;
+    align-items: center;
+    gap: var(--e-4);
+    flex: 1;
+}
+ 
+.menu-principal,
+.menu-cuenta {
+    display: flex;
+    align-items: center;
+    gap: var(--e-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.menu-cuenta { margin-left: auto; }
+ 
+.menu a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: var(--e-3);
+    color: var(--azul);
+    text-decoration: none;
+    font-weight: 600;
+}
+.menu a:hover { text-decoration: underline; }
+.menu a { white-space: nowrap; }
+ 
+/* Los botones dentro del menú conservan su aspecto de botón */
+.menu a.boton { padding-inline: var(--e-4); color: #fff; text-decoration: none; }
+.menu a.boton:hover { color: #fff; }
+ 
+/* Desplegable del usuario con sesión iniciada */
+.menu-usuario { position: relative; }
+.menu-usuario summary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--e-2);
+    min-height: 44px;
+    padding-inline: var(--e-3);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    white-space: nowrap;
+}
+.menu-usuario summary::-webkit-details-marker { display: none; }
+.menu-usuario summary::after {
+    content: "";
+    width: 0.45em; height: 0.45em;
+    border: solid currentColor;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-25%) rotate(45deg);
+}
+.menu-usuario[open] summary::after { transform: translateY(15%) rotate(-135deg); }
+.menu-usuario ul {
+    position: absolute;
+    right: 0;
+    top: calc(100% + var(--e-2));
+    z-index: 20;
+    min-width: 200px;
+    margin: 0;
+    padding: var(--e-2);
+    list-style: none;
+    background: var(--papel);
+    border: solid var(--grafito);
+    border-width: var(--trazo);
+    border-radius: var(--radio-control);
+    box-shadow: 5px 5px 0 var(--sol-suave);
+}
+.menu-usuario ul a { display: flex; width: 100%; }
+.menu-salir {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: var(--e-2) var(--e-3);
+    border: 0;
+    background: none;
+    color: var(--azul);
+    font: inherit;
+    cursor: pointer;
+}
+.menu-salir:hover { color: var(--azul-hover); text-decoration: underline; }
+
+/* aria-current conserva la identificación de la página para lectores de pantalla. */
+.menu a[aria-current="page"] {
+    background: var(--sol-suave);
+    color: var(--azul);
+    border-radius: var(--radio-control);
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: inset 0 -3px 0 var(--sol);
+}
+.menu a[aria-current="page"]:hover { background: var(--sol); color: var(--azul); }
+
+ 
+.menu .boton { margin-left: var(--e-2); }
+ 
+.contador {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.4em;
+    height: 1.4em;
+    margin-left: var(--e-1);
+    padding-inline: 0.3em;
+    border-radius: 999px;
+    background: var(--sol);
+    color: var(--azul);
+    font-size: var(--t-chico);
+}
+ 
+@media (max-width: 1080px) {
+    .js .menu-boton { display: inline-flex; align-items: center; }
+    .cabecera-interior { flex-wrap: wrap; min-height: 72px; }
+    .cabecera-logo img { width: 170px; }
+    .menu {
+        flex-basis: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding-bottom: var(--e-4);
+    }
+    .js .menu:not(.abierto) { display: none; }
+    .menu-principal, .menu-cuenta {
+        flex-direction: column;
+        align-items: stretch;
+        margin-left: 0;
+    }
+    .menu-cuenta { border-top: 1px solid var(--linea); margin-top: var(--e-2); padding-top: var(--e-2); }
+    .menu a { padding-inline: 0; }
+    .menu-salir { padding-inline: 0; }
+    .menu .boton { margin: var(--e-2) 0 0; justify-content: center; }
+    .menu-usuario summary { padding-inline: 0; }
+    .menu-usuario ul { position: static; background: none; box-shadow: none; border: 0; border-left: 2px solid var(--linea); border-radius: 0; padding: 0 0 0 var(--e-4); }
+}
+ 
+/* 4. Pie: azul marino, cierra la página
+   ------------------------------------------------------------------------ */
+.pie {
+    background: var(--azul);
+    color: var(--hueso);
+    font-size: 0.9375rem;
+}
+ 
+.pie-interior {
+    display: grid;
+    grid-template-columns: 1.4fr repeat(3, 1fr);
+    gap: var(--e-8);
+    padding-block: var(--e-16) var(--e-8);
+}
+ 
+.pie-marca img { width: 180px; margin-bottom: var(--e-4); }
+.pie-marca p { margin: 0; max-width: 30ch; color: var(--hueso); }
+ 
+.pie h2 {
+    margin-bottom: var(--e-3);
+    font-family: var(--fuente-texto);
+    font-size: var(--t-base);
+    font-weight: 700;
+    color: var(--sol);
+}
+ 
+.pie ul { margin: 0; padding: 0; list-style: none; }
+.pie li a {
+    display: inline-flex; align-items: center; min-height: 36px;
+    color: var(--hueso); text-decoration: none;
+}
+.pie li a:hover { color: var(--sol); text-decoration: underline; }
+.pie :focus-visible { outline-color: var(--sol); }
+ 
+.pie-legal {
+    padding-block: var(--e-4) var(--e-8);
+    border-top: 1px solid rgba(247, 245, 240, 0.25);
+    font-size: var(--t-chico);
+}
+.pie-legal p { margin: 0; max-width: none; color: #c9d3e0; }
+ 
+@media (max-width: 760px) {
+    .pie-interior { grid-template-columns: 1fr 1fr; padding-block: var(--e-12) var(--e-6); }
+    .pie-marca { grid-column: 1 / -1; }
+}
+ 
+/* 4b. Secciones de página: separación vertical y fondos alternados
+   ------------------------------------------------------------------------ */
+.seccion { padding-block: var(--e-16) calc(var(--e-16) + var(--e-4)); }
+.seccion-papel {
+    background: var(--papel);
+    border-block: 1px solid var(--linea);
+}
+.seccion-encabezado { max-width: 60ch; margin-bottom: var(--e-12); }
+.seccion-encabezado p { margin-bottom: 0; }
+ 
+@media (max-width: 760px) {
+    .seccion { padding-block: var(--e-12); }
+    .seccion-encabezado { margin-bottom: var(--e-8); }
+}
+ 
+/* 5. Botones
+   ------------------------------------------------------------------------ */
+.boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--e-2);
+    min-height: 48px;
+    padding: var(--e-3) var(--e-6);
+    border: solid var(--grafito);
+    border-width: var(--trazo);
+    border-radius: var(--radio-control);
+    background: var(--azul);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+.boton:hover { background: var(--azul-hover); color: #fff; }
+ 
+.boton-secundario { background: var(--papel); color: var(--azul); }
+.boton-secundario:hover { background: var(--hueso); color: var(--azul); }
+ 
+.boton-donar { background: var(--corazon); }
+.boton-donar:hover { background: var(--corazon-hover); }
+ 
+.boton-chico { min-height: 40px; padding: var(--e-2) var(--e-4); }
+.boton-ancho { width: 100%; }
+ 
+.boton:disabled, .boton[aria-disabled="true"] {
+    background: #656972; color: #fff; cursor: not-allowed;
+}
+ 
+/* 6. Formularios
+   ------------------------------------------------------------------------ */
+.campo { margin-bottom: var(--e-4); }
+ 
+.campo label {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+ 
+.campo-ayuda {
+    display: block;
+    margin-top: var(--e-1);
+    color: var(--texto-secundario);
+    font-size: var(--t-chico);
+}
+ 
+.campo input,
+.campo select,
+.campo textarea {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #807c73;
+    border-bottom-width: 2px;
+    border-radius: var(--radio-control);
+    background: #fff;
+    color: var(--azul);
+    font: inherit;
+}
+.campo textarea { min-height: 120px; resize: vertical; }
+
+/* Animación de zoom y sombra al pasar el cursor (hover), igual a las tarjetas de crear campaña. */
+.campo input,
+.campo select,
+.campo textarea {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.campo input:hover,
+.campo select:hover,
+.campo textarea:hover {
+    transform: scale(1.015);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+/* En crear campaña ya se anima la tarjeta entera: evitamos el doble zoom. */
+.crear-tarjeta .campo input:hover,
+.crear-tarjeta .campo select:hover,
+.crear-tarjeta .campo textarea:hover {
+    transform: none;
+    box-shadow: none;
+}
+ 
+.campo [aria-invalid="true"] { border-color: var(--error); }
+ 
+.campo-error {
+    display: block;
+    margin-top: var(--e-1);
+    color: var(--error);
+    font-size: var(--t-chico);
+    font-weight: 600;
+}
+ 
+/* 7. Tarjetas
+   ------------------------------------------------------------------------ */
+.tarjeta {
+    padding: var(--e-8);
+    background: var(--papel);
+    border: solid var(--grafito);
+    border-width: var(--trazo);
+    border-radius: var(--radio-tarjeta);
+    box-shadow: var(--sombra-tarjeta);
+}
+ 
+/* 8. Mensajes del sistema
+   ------------------------------------------------------------------------ */
+.alerta {
+    margin-block: var(--e-4);
+    padding: var(--e-3) var(--e-4);
+    border-left: 3px solid;
+    border-radius: 4px;
+    font-size: 0.9375rem;
+}
+.alerta p:last-child, .alerta ul:last-child { margin-bottom: 0; }
+.alerta-aviso { border-color: var(--sol); background: var(--aviso-fondo); color: var(--aviso); }
+.alerta-error { border-color: var(--error); background: var(--error-fondo); color: var(--error); }
+.alerta-exito { border-color: var(--exito); background: var(--exito-fondo); color: var(--exito); }
+ 
+/* 9. Insignias
+   ------------------------------------------------------------------------ */
+.insignia {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--e-1);
+    padding: 0.125rem 0.625rem;
+    border: 1px solid var(--grafito);
+    border-radius: 999px;
+    background: var(--papel);
+    color: var(--azul);
+    font-size: var(--t-chico);
+    font-weight: 600;
+    white-space: nowrap;
+}
+ 
+/* Niveles de confianza: Blanco, Celeste, Azul, Violeta */
+.nivel-blanco  { background: var(--nivel-blanco); }
+.nivel-celeste { background: var(--nivel-celeste-fondo); color: var(--nivel-celeste); border-color: var(--nivel-celeste); }
+.nivel-azul    { background: var(--nivel-azul-fondo); color: var(--nivel-azul); border-color: var(--azul); }
+.nivel-violeta { background: var(--nivel-violeta-fondo); color: var(--nivel-violeta); border-color: var(--nivel-violeta); }
+ 
+/* 10. Progreso de una campaña
+   ------------------------------------------------------------------------ */
+.progreso {
+    height: 14px;
+    border: 1px solid var(--grafito);
+    border-radius: 7px 9px 8px 6px;
+    background: var(--hueso);
+    overflow: hidden;
+}
+.progreso-relleno {
+    display: block;
+    height: 100%;
+    background: var(--sol);
+    border-right: 1px solid var(--grafito);
+}
+ 
+.progreso-cifras { margin: var(--e-2) 0 0; font-size: 0.9375rem; color: var(--texto-secundario); }
+.progreso-cifras strong { color: var(--azul); }
+ 
+/* 11. Tarjeta de campaña
+   ------------------------------------------------------------------------ */
+.campana {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+}
+.campana-imagen {
+    aspect-ratio: 16 / 10;
+    width: 100%;
+    object-fit: cover;
+    background: var(--sol-suave);
+    border-bottom: 1px solid var(--grafito);
+}
+.campana-cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--e-3);
+    flex: 1;
+    padding: var(--e-6);
+}
+.campana-cuerpo h3 { margin: 0; }
+.campana-cuerpo h3 a { text-decoration: none; }
+.campana-cuerpo h3 a:hover { text-decoration: underline; }
+.campana-datos { display: flex; flex-wrap: wrap; gap: var(--e-2); align-items: center; }
+.campana-autor { margin: 0; font-size: 0.9375rem; color: var(--texto-secundario); }
+.campana-cuerpo .boton { margin-top: auto; }
+ 
+.grilla-campanas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--e-8);
+}
+ 
+/* 12. Dato de resumen: una cifra destacada y qué mide. Va dentro de una .tarjeta.
+   ------------------------------------------------------------------------ */
+.dato {
+    display: flex;
+    flex-direction: column;
+    gap: var(--e-1);
+}
+.dato-cifra {
+    font-family: var(--fuente-titulos);
+    font-size: var(--t-h3);
+    line-height: 1.15;
+    overflow-wrap: anywhere; /* un monto largo no rompe el ancho en el celular */
+}
+.dato-etiqueta {
+    font-size: var(--t-chico);
+    color: var(--texto-secundario);
+}
+ 
+@media (max-width: 480px) {
+    .contenedor { width: calc(100% - 2 * var(--e-6)); }
+    .tarjeta { padding: var(--e-6) var(--e-4); box-shadow: 5px 5px 0 var(--sol-suave); }
+    .campana { padding: 0; }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
