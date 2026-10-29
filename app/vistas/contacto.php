@@ -55,7 +55,7 @@ require __DIR__ . '/parciales/cabecera.php';
                 <?php endif; ?>
 
                 <!-- Las validaciones HTML5 solo ayudan al navegador; el servidor valida todo de nuevo. -->
-                <form class="tarjeta" action="<?= escapar($rutas['contacto']) ?>" method="post">
+                <form class="tarjeta contacto-formulario" action="<?= escapar($rutas['contacto']) ?>" method="post">
                     <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken ?? '') ?>">
                     <div class="campo">
                         <label for="contacto-nombre">Nombre</label>
