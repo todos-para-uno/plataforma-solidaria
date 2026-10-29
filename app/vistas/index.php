@@ -4,14 +4,16 @@
  * Las campañas de este arreglo son ficticias; todavía no se consultan en la base.
  */
 
-require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../repositorios/CampRepository.php';
 require_once __DIR__ . '/../repositorios/CatCampRepository.php';
 require_once __DIR__ . '/../controladores/BuscadorController.php';
 
+$pdo = conectarBD();
+
 // Instanciamos los repositorios con la conexión PDO
-$campRepository = new CampRepository($conexion);
-$catCampRepository = new CatCampRepository($conexion);
+$campRepository = new CampRepository($pdo);
+$catCampRepository = new CatCampRepository($pdo);
 
 // Instanciamos el controlador que maneja la lógica de búsqueda
 $buscadorController = new BuscadorController($campRepository, $catCampRepository);
