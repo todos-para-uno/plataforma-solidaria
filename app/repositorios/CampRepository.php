@@ -35,22 +35,14 @@ final class CampRepository extends CrudRepository
         return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    /** @return array<int, Camp> */
-    public function findByEstado(EstadoCamp $estadoCamp): array
+    /**
+     * @return list<Camp>
+     * Los filtros de texto y categoría se combinan con el estado en la base de datos.
+     */
+    public function findByEstado(EstadoCamp $estadoCamp, string $texto = '', ?int $categoria = null): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT * FROM `camp` WHERE `estado` = :estadoCamp'
-        );
-        $stmt->execute(['estadoCamp' => $estadoCamp->value]);
-
-        return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
-    /** Campañas públicas activas que cumplen ambos filtros; sin filtros, devuelve todas. */
-    public function buscarActivas(string $texto = '', ?int $categoria = null): array
-    {
-        $condiciones = ["camp.estado = 'activa'"];
-        $parametros = [];
+        $condiciones = ['camp.estado = :estado'];
+        $parametros = ['estado' => $estadoCamp->value];
 
         if ($texto !== '') {
             // El usuario busca texto literal: % y _ no deben ampliar las coincidencias.
@@ -65,16 +57,19 @@ final class CampRepository extends CrudRepository
         }
 
         $stmt = $this->pdo->prepare(
-            'SELECT camp.id, camp.nombre, camp.descripcion, camp.monetaria, camp.estado,
-                    cat_camp.nombre AS nombre_categoria
-             FROM camp
-             INNER JOIN cat_camp ON cat_camp.id = camp.categoria
+            'SELECT camp.* FROM camp
              WHERE ' . implode(' AND ', $condiciones) . '
              ORDER BY camp.id DESC'
         );
         $stmt->execute($parametros);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    /** @return list<Camp> */
+    public function buscarActivas(string $texto = '', ?int $categoria = null): array
+    {
+        return $this->findByEstado(EstadoCamp::Activa, $texto, $categoria);
     }
 
     /**

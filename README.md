@@ -106,6 +106,8 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | POST | `/index.php?ruta=finalizar_baneo` | Un administrador finaliza un baneo vigente sin borrar su historial; requiere sesión y token CSRF. Devuelve JSON. |
 | GET | `/index.php?ruta=contacto` | Formulario de consultas con CSRF; completa nombre y correo si hay sesión. Requiere conexión a la base. |
 | POST | `/index.php?ruta=contacto` | Valida y guarda la consulta, intenta enviar el correo y redirige al formulario con una confirmación. |
+| GET | `/index.php?ruta=resultados_buscar&buscar=texto&id_categoria_campana=1` | Busca campañas activas por texto y categoría; ambos filtros son opcionales. |
+| GET | `/index.php?ruta=campana&id=123` | Detalle público de la campaña activa identificada por su ID. Devuelve 400 si el ID es inválido y 404 si no existe o no está activa. |
 | GET | `/index.php?ruta=mis_donaciones` | Historial con datos e imágenes de ejemplo. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
@@ -181,6 +183,27 @@ Formulario → public_php/index.php → RegistroController
 ```
 
 El controlador comprueba los datos y crea la entidad con `Usuario::crear()`. **Crear un objeto `Usuario` no lo guarda en la base**: el guardado lo realiza `UsuariosRepository::insertarUsuario()`, que prepara los campos y llama a `CrudRepository::save()`. No se pasa `$_POST` completo al repositorio. Si hay errores de validación, se vuelve a mostrar el formulario con el nombre y correo ingresados, sin volver a mostrar las contraseñas.
+
+### Del buscador al detalle de una campaña
+
+`BuscadorController` usa `CampRepository::findByEstado(EstadoCamp::Activa, $texto, $categoria)`.
+El resultado es una lista de objetos `Camp`: las vistas acceden a los datos con métodos como
+`getNombre()` y `getId()`. Los filtros se aplican juntos en SQL antes de hidratar las entidades.
+`buscarActivas()` delega en ese mismo método y también devuelve objetos.
+
+Cada tarjeta es un enlace GET al punto de entrada público, con `ruta=campana&id=123`.
+Solo se envía el identificador; `CampanaController` lo valida y vuelve a consultar la base.
+La URL no contiene rutas a archivos de `app/`, y cambiar el ID no permite consultar campañas
+suspendidas o finalizadas. El detalle muestra la campaña, su creador, categoría y objetivos reales.
+La acción de donar permanece deshabilitada hasta implementar su procesamiento.
+
+Pruebas específicas (requieren la base local de pruebas):
+
+```bash
+php tests/run_tests.php repositorios BuscadorRepository
+php tests/run_tests.php controladores BuscadorController
+php tests/run_tests.php controladores CampanaController
+```
 
 ## Trabajar en las vistas
 

@@ -35,13 +35,15 @@ require __DIR__ . '/parciales/cabecera.php';
                 <div class="grilla-campanas">
                     <?php foreach ($resultados as $resultado): ?>
                         <article class="tarjeta campana resultado-campana">
-                            <div class="resultado-categoria"><?= escapar($resultado['nombre_categoria']) ?></div>
-                            <div class="campana-cuerpo">
-                                <span class="insignia"><?= $resultado['monetaria'] ? 'Dinero' : 'Insumos' ?></span>
-                                <h3><?= escapar($resultado['nombre']) ?></h3>
-                                <p class="texto-secundario">Estado: <strong>Activa</strong></p>
-                                <p class="resultado-desc"><?= escapar(trim($resultado['descripcion'] ?? '') !== '' ? $resultado['descripcion'] : 'Esta campaña todavía no tiene una descripción.') ?></p>
-                            </div>
+                            <a class="resultado-enlace" href="<?= escapar($rutas['campana'] . '&id=' . $resultado->getId()) ?>">
+                                <div class="resultado-categoria"><?= escapar($nombresCategorias[$resultado->getCategoria()] ?? 'Sin categoría') ?></div>
+                                <div class="campana-cuerpo">
+                                    <span class="insignia"><?= $resultado->getMonetaria() ? 'Dinero' : 'Insumos' ?></span>
+                                    <h3><?= escapar($resultado->getNombre()) ?></h3>
+                                    <p class="texto-secundario">Estado: <strong>Activa</strong></p>
+                                    <p class="resultado-desc"><?= escapar(trim($resultado->getDescripcion() ?? '') !== '' ? $resultado->getDescripcion() : 'Esta campaña todavía no tiene una descripción.') ?></p>
+                                </div>
+                            </a>
                         </article>
                     <?php endforeach; ?>
                 </div>
