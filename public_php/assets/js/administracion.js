@@ -10,6 +10,29 @@
   let page = 1, expanded = null, rows = [], controller = null, debounce = null, action = '';
   const api = root.dataset.api;
   const csrf = root.dataset.csrf;
+  // Pestañas internas del administrador, independientes de la navegación principal.
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  function activateTab(tab) {
+    tabs.forEach(candidate => {
+      const selected = candidate === tab;
+      candidate.setAttribute('aria-selected', String(selected));
+      candidate.tabIndex = selected ? 0 : -1;
+      const panel = byId(candidate.getAttribute('aria-controls'));
+      if (panel) panel.hidden = !selected;
+    });
+  }
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => activateTab(tab));
+    tab.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+        : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      activateTab(tabs[nextIndex]);
+      tabs[nextIndex].focus();
+    });
+  });
+  if (tabs.length) activateTab(tabs.find(tab => tab.getAttribute('aria-selected') === 'true') || tabs[0]);
   const create = (tag, value, className) => {
     const element = document.createElement(tag);
     if (value !== undefined) element.textContent = String(value ?? '—');
@@ -125,6 +148,40 @@
       else activityStatus.textContent = error.message;
     }
   }
+  // Formatos de visualización: nunca se mezclan dinero y unidades de insumos.
+  const ars = new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:2,maximumFractionDigits:2});
+  const units = new Intl.NumberFormat('es-AR',{maximumFractionDigits:2});
+  const numberOrNull = value => (value === null || value === undefined || value === '' || !Number.isFinite(Number(value))) ? null : Number(value);
+  function amount(value, monetary) {
+    const number = numberOrNull(value);
+    if (number === null) return 'No informado';
+    return monetary ? ars.format(number) : `${units.format(number)} ${number === 1 ? 'unidad' : 'unidades'}`;
+  }
+  function localDate(value) {
+    if (typeof value !== 'string') return 'No informada';
+    const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::\d{2})?/.exec(value);
+    return match ? `${match[3]}/${match[2]}/${match[1]} ${match[4]}:${match[5]}` : value;
+  }
+  function progress(item, monetary) {
+    const objective = numberOrNull(item.objetivo);
+    const achieved = numberOrNull(monetary ? item.logrado : item.parcial);
+    if (objective === null || objective <= 0 || achieved === null) return null;
+    const percent = Math.max(0, achieved / objective * 100);
+    const box = create('div',undefined,'admin-progreso');
+    const heading = create('div',undefined,'admin-progreso-encabezado');
+    heading.append(create('span','Avance de la campaña'),create('strong',`${units.format(percent)} %`));
+    const track = create('div',undefined,'admin-progreso-pista');
+    track.setAttribute('role','progressbar');
+    track.setAttribute('aria-label','Progreso de la campaña');
+    track.setAttribute('aria-valuemin','0');
+    track.setAttribute('aria-valuemax','100');
+    track.setAttribute('aria-valuenow',String(Math.min(100,Math.round(percent))));
+    const fill = create('div',undefined,'admin-progreso-relleno');
+    fill.style.setProperty('--admin-progreso-final', `${Math.min(100,percent)}%`);
+    track.append(fill);
+    box.append(heading,track,create('small',`${amount(achieved,monetary)} de ${amount(objective,monetary)}`));
+    return box;
+  }
   function renderActivity(type, entries) {
     activityContent.replaceChildren();
     if (!entries.length) {
@@ -137,22 +194,26 @@
       li.append(create('strong',type === 'campanas' ? item.nombre : item.campana_nombre));
       const dl = create('dl');
       if (type === 'campanas') {
-        detail(dl,'ID',item.id);
-        detail(dl,'Estado',item.estado);
+        detail(dl,'Estado',item.estado ? String(item.estado).charAt(0).toUpperCase() + String(item.estado).slice(1) : 'No informado');
         detail(dl,'Tipo',Number(item.monetaria) ? 'Monetaria' : 'Insumos');
         detail(dl,'Categoría',item.nombre_categoria);
-        detail(dl,'Objetivo',item.objetivo);
-        detail(dl,'Progreso',Number(item.monetaria) ? item.logrado : item.parcial);
+        detail(dl,'Objetivo',amount(item.objetivo,Boolean(Number(item.monetaria))));
+        detail(dl,'Progreso',amount(Number(item.monetaria) ? item.logrado : item.parcial,Boolean(Number(item.monetaria))));
       } else {
-        detail(dl,'ID',item.id);
         detail(dl,'Campaña ID',item.id_camp);
         detail(dl,'Tipo',Number(item.monetaria) ? 'Monetaria' : 'Insumos');
-        detail(dl,'Cantidad',item.cantidad);
-        detail(dl,'Fecha',item.fecha_hora);
+        detail(dl,Number(item.monetaria) ? 'Importe' : 'Cantidad',amount(item.cantidad,Boolean(Number(item.monetaria))));
+        detail(dl,'Fecha',localDate(item.fecha_hora));
         if (item.categoria_insumo) detail(dl,'Categoría de insumo',item.categoria_insumo);
         if (item.subcategoria_insumo) detail(dl,'Subcategoría',item.subcategoria_insumo);
       }
-      li.append(dl); list.append(li);
+      li.append(dl);
+      if (type === 'campanas') {
+        const bar = progress(item,Boolean(Number(item.monetaria)));
+        if (bar) li.append(bar);
+      }
+      li.append(create('small',type === 'campanas' ? `Campaña ID: ${item.id}` : `Donación ID: ${item.id}`,'admin-actividad-id'));
+      list.append(li);
     }
     activityContent.append(list);
   }
@@ -236,11 +297,5 @@
   limit.addEventListener('change',()=>{page=1;fetchRows();});
   previous.addEventListener('click',()=>{if(page>1){page--;fetchRows();}});
   next.addEventListener('click',()=>{page++;fetchRows();});
-  const tabs = [byId('tab-usuarios'),byId('tab-mensajes')];
-  tabs.forEach((tab,index)=>tab.addEventListener('click',()=>{
-    tabs.forEach((item,i)=>item.setAttribute('aria-selected',String(i===index)));
-    byId('panel-usuarios').hidden = index!==0;
-    byId('panel-mensajes').hidden = index!==1;
-  }));
   fetchRows();
 })();

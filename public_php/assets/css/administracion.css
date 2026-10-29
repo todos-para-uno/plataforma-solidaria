@@ -17,9 +17,60 @@ main {
 }
 /* Gestión de usuarios: controles y acciones accesibles también en pantallas pequeñas. */
 .admin-panel { margin-top: 2rem; padding: 1.25rem; background: #fff; border: 1px solid #d8d8d8; border-radius: .75rem; }
-.admin-tabs { display:flex; gap:.5rem; border-bottom:1px solid #ddd; margin-bottom:1.25rem; }
-.admin-tabs button { padding:.7rem 1rem; border:0; border-bottom:3px solid transparent; background:transparent; cursor:pointer; font:inherit; }
-.admin-tabs button[aria-selected="true"] { border-bottom-color:#25745e; font-weight:700; }
+/* Pestañas integradas: botones semánticos sin aspecto tradicional. */
+.admin-tabs {
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--linea);
+    overflow-x: auto;
+}
+
+.admin-tabs [role="tab"] {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: 0 0 auto;
+    margin: 0 0 -1px;
+    padding: .8rem 1.15rem;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--grafito);
+    font: inherit;
+    font-weight: 500;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: color .18s ease,
+                border-color .18s ease,
+                background-color .18s ease;
+}
+
+.admin-tabs [role="tab"]:hover {
+    color: var(--azul);
+    background: var(--hueso);
+}
+
+.admin-tabs [role="tab"][aria-selected="true"] {
+    color: var(--azul);
+    border-bottom-color: var(--sol);
+    font-weight: 700;
+    background: transparent;
+}
+
+.admin-tabs [role="tab"]:focus-visible {
+    outline: 2px solid var(--azul);
+    outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-tabs [role="tab"] {
+        transition: none;
+    }
+}
+
 .admin-controles { display:flex; flex-wrap:wrap; gap:1rem; align-items:end; margin-bottom:1rem; }
 .admin-controles label { display:grid; gap:.35rem; flex:1 1 240px; }
 .admin-controles input,.admin-controles select,#admin-dialogo input { padding:.6rem; border:1px solid #aaa; border-radius:.35rem; max-width:100%; }
@@ -58,3 +109,16 @@ main {
 .admin-actividad-lista li { border: 1px solid #ddd; padding: .8rem; border-radius: .4rem; overflow-wrap: anywhere; }
 .admin-actividad-lista dl { display: grid; grid-template-columns: minmax(100px,auto) 1fr; gap: .25rem .75rem; margin: .6rem 0 0; }
 .admin-actividad-lista dd { margin: 0; }
+
+/* Progreso de campañas: colores reutilizados de base.css. */
+.admin-progreso { margin-top:1rem; color:var(--azul); }
+.admin-progreso-encabezado { display:flex; justify-content:space-between; gap:.75rem; align-items:center; margin-bottom:.4rem; }
+.admin-progreso-pista { height:.85rem; background:var(--hueso); border:1px solid var(--linea); border-radius:999px; overflow:hidden; }
+/* La barra crece al renderizar el modal, salvo preferencia de movimiento reducido. */
+.admin-progreso-relleno { height:100%; width:var(--admin-progreso-final,0%); background:var(--sol); border-radius:999px; transform-origin:left center; animation:admin-progreso-entrada .85s ease-out both; }
+@keyframes admin-progreso-entrada { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .admin-progreso-relleno { animation:none; } }
+.admin-panel [role="tabpanel"][hidden] { display:none; }
+.admin-progreso small { display:block; margin-top:.4rem; }
+.admin-actividad-id { display:block; margin-top:.8rem; color:var(--grafito); font-size:.8rem; }
+@media(max-width:540px) { .admin-actividad-lista dl { grid-template-columns:1fr; } .admin-actividad-lista dt { font-weight:600; } }
