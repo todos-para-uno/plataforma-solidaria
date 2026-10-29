@@ -55,7 +55,9 @@
     border-top-color: var(--sol);
     padding-top: var(--e-6);
 }
-
+p{
+    overflow-wrap: anywhere;
+}
 @media (max-width: 860px) {
     .portada {
         background-image: linear-gradient(90deg,
