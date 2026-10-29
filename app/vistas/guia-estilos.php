@@ -75,7 +75,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <a class="boton boton-donar" href="#">Donar</a>
             <button class="boton" type="button" disabled>Guardando…</button>
         </div>
-        <p class="texto-secundario">Azul para la acción principal, verde para las acciones secundarias y terracota para donar. El dorado resalta los botones al pasar el cursor o usar el teclado. Los íconos combinan terracota y dorado.</p>
+        <p class="texto-secundario">Azul para la acción principal, verde para las acciones secundarias y terracota para donar. El dorado resalta los botones al pasar el cursor o usar el teclado. Los íconos son azules, con detalles dorados.</p>
     </section>
  
     <section class="guia-seccion guia-dos" aria-labelledby="g-form">

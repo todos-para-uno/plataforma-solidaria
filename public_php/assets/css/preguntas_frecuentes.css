@@ -40,7 +40,7 @@ main {
     align-items: center;
     justify-content: center;
     min-height: 200px;
-    color: var(--terracota);
+    color: var(--azul);
 }
 .ayuda-ilustracion svg { display: block; width: 176px; height: 176px; }
 .ayuda-ilustracion .trazo-acento { stroke: var(--sol); }

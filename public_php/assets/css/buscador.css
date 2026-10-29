@@ -15,7 +15,7 @@
 .buscador-icono {
     position: absolute;
     left: 0.75rem;
-    color: var(--terracota);
+    color: var(--azul);
     pointer-events: none; /* Permite hacer clic a través del SVG hacia el input */
 }
 main {

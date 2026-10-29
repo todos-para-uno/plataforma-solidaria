@@ -207,7 +207,7 @@ img { display: block; max-width: 100%; height: auto; }
 .menu-boton:hover, .menu-usuario summary:hover { background: var(--sol); color: var(--azul); }
 .menu-usuario summary::-webkit-details-marker { display: none; }
 .menu-usuario summary::after {
-    color: var(--terracota);
+    color: var(--azul);
     content: "";
     width: 0.45em; height: 0.45em;
     border: solid currentColor;
