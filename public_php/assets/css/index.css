@@ -73,5 +73,5 @@ p{
 /* Los tres pasos repiten los acentos de la marca en ambas secciones. */
 .pasos li:nth-child(1) { --paso-acento: var(--sol); --paso-texto: var(--azul); }
 .pasos li:nth-child(2) { --paso-acento: var(--terracota); }
-.pasos li:nth-child(3) { --paso-acento: var(--sol); --paso-texto: var(--azul); }
+.pasos li:nth-child(3) { --paso-acento: var(--verde); --paso-texto: var(--papel); }
 .portada-marca { color: var(--verde); }

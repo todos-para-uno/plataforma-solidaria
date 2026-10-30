@@ -28,7 +28,7 @@
     --papel: #fffefa;         /* fondo de tarjetas y campos */
     --grafito: #4d4b46;       /* borde "a lápiz" de tarjetas y botones */
     --linea: #ccc7bc;         /* divisores finos */
-    --texto-secundario: #595d64;
+    --texto-secundario: #454b54; /* más definido sin competir con los títulos */
  
     /* Estados */
     --error: #923d29;      --error-fondo: #fff1e9;

@@ -21,6 +21,11 @@ main {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
  
+/* El peso del texto refuerza la lectura sobre la fotografía sin cubrirla. */
+.contacto-ayuda p {
+    font-weight: 500;
+}
+
 .contacto-ayuda h2 {
     font-size: var(--t-h3);
     color: var(--verde);
