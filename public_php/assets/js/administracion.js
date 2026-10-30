@@ -6,8 +6,10 @@
   const list = byId('admin-lista'), status = byId('admin-estado');
   const search = byId('admin-busqueda'), limit = byId('admin-limite');
   const previous = byId('admin-anterior'), next = byId('admin-siguiente');
+  const first = byId('admin-primera'), last = byId('admin-ultima');
+  const backFive = byId('admin-salto-atras'), forwardFive = byId('admin-salto-adelante');
   const dialog = byId('admin-dialogo'), form = byId('admin-formulario');
-  let page = 1, expanded = null, rows = [], controller = null, debounce = null, action = '';
+  let page = 1, totalPages = 1, expanded = null, rows = [], controller = null, debounce = null, action = '';
   const api = root.dataset.api;
   const csrf = root.dataset.csrf;
   // Pestañas internas del administrador, independientes de la navegación principal.
@@ -39,6 +41,23 @@
     if (className) element.className = className;
     return element;
   };
+  function renderPagination() {
+    byId('admin-pagina').textContent = `Página ${page} de ${totalPages}`;
+    previous.disabled = page <= 1;
+    next.disabled = page >= totalPages;
+    for (const button of [first,last]) button.hidden = totalPages <= 2;
+    first.disabled = page <= 1;
+    last.disabled = page >= totalPages;
+    for (const button of [backFive,forwardFive]) button.hidden = totalPages <= 10;
+    backFive.disabled = page <= 1;
+    forwardFive.disabled = page >= totalPages;
+  }
+  function goToPage(target) {
+    const destination = Math.max(1, Math.min(totalPages, target));
+    if (destination === page) return;
+    page = destination;
+    fetchRows();
+  }
   async function fetchRows() {
     if (controller) controller.abort();
     controller = new AbortController();
@@ -49,18 +68,20 @@
       const response = await fetch(`${api}?${params}`, {credentials:'same-origin', signal:controller.signal,headers:{Accept:'application/json'}});
       const data = await response.json();
       if (!response.ok) throw Error(data.error || 'No se pudo cargar el listado.');
+      const total = Number(data.total);
+      if (!Number.isSafeInteger(total) || total < 0) throw Error('Total de usuarios inválido.');
+      totalPages = Math.max(1, Math.ceil(total / Number(limit.value)));
+      // Si se borraron usuarios mientras navegábamos, regresar a la última página existente.
+      if (page > totalPages) { page = totalPages; await fetchRows(); return; }
       rows = Array.isArray(data.usuarios) ? data.usuarios : [];
       expanded = null;
       render();
-      status.textContent = rows.length ? `${rows.length} usuario(s) en esta página.` : 'No se encontraron usuarios.';
-      // El endpoint actual no devuelve un total: una página llena podría tener una siguiente.
-      next.disabled = rows.length < Number(limit.value);
-      previous.disabled = page === 1;
-      byId('admin-pagina').textContent = `Página ${page}`;
+      status.textContent = rows.length ? `${rows.length} usuario(s) en esta página · ${total} en total.` : 'No se encontraron usuarios.';
+      renderPagination();
     } catch (error) {
       if (error.name === 'AbortError') return;
       status.textContent = error.message;
-      previous.disabled = next.disabled = true;
+      [first,backFive,previous,next,forwardFive,last].forEach(button => { button.disabled = true; });
     }
   }
   function detail(dl, name, value) {
@@ -276,13 +297,73 @@
     box.append(heading,track,create('small',`${amount(achieved,monetary)} de ${amount(objective,monetary)}`));
     return box;
   }
+  // Lista compacta: la apertura y el cierre usan la misma transición CSS.
+  function donationRow(item) {
+    const monetary = Boolean(Number(item.monetaria));
+    const li = create('li',undefined,'admin-donacion-item');
+    const toggle = create('button',undefined,'admin-donacion-cabecera');
+    toggle.type = 'button';
+    toggle.setAttribute('aria-expanded','false');
+
+    const symbol = create('span',monetary ? '$' : '▣','admin-donacion-icono');
+    symbol.setAttribute('aria-hidden','true');
+    const summary = create('span',undefined,'admin-donacion-resumen');
+    summary.append(
+      create('strong',item.campana_nombre || 'Campaña sin nombre'),
+      (() => {
+        const meta = create('span',undefined,'admin-donacion-meta');
+        meta.append(create('small',localDate(item.fecha_hora)),
+          create('span',monetary ? 'Monetaria' : 'Insumos','admin-donacion-tipo'));
+        return meta;
+      })()
+    );
+    const right = create('span',undefined,'admin-donacion-derecha');
+    right.append(create('strong',amount(item.cantidad,monetary)),
+      create('span','⌄','admin-donacion-flecha'));
+    toggle.append(symbol,summary,right);
+
+    const details = create('div',undefined,'admin-donacion-desplegable');
+    const inner = create('div',undefined,'admin-donacion-interior');
+    const dl = create('dl');
+    detail(dl,'Campaña ID',item.id_camp);
+    if (item.categoria_insumo) detail(dl,'Categoría',item.categoria_insumo);
+    if (item.subcategoria_insumo) detail(dl,'Subcategoría',item.subcategoria_insumo);
+    detail(dl,'Donación ID',item.id);
+    inner.append(dl);
+    details.append(inner);
+    toggle.addEventListener('click',()=>{
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded',String(open));
+      li.classList.toggle('admin-donacion-abierta',open);
+    });
+    li.append(toggle,details);
+    return li;
+  }
   function renderActivity(type, entries) {
     activityContent.replaceChildren();
     if (!entries.length) {
-      activityContent.append(create('p',type === 'campanas' ? 'Este usuario todavía no creó campañas.' : 'Este usuario todavía no realizó donaciones.'));
+      if (type === 'donaciones') {
+        const empty = create('div',undefined,'admin-donaciones-vacio');
+        const symbol = create('span','♡','admin-donaciones-vacio-icono');
+        symbol.setAttribute('aria-hidden','true');
+        empty.append(symbol,create('p','Este usuario todavía no realizó donaciones.'));
+        activityContent.append(empty);
+      } else {
+        const empty = create('div',undefined,'admin-donaciones-vacio');
+        const symbol = create('span','▤','admin-donaciones-vacio-icono');
+        symbol.setAttribute('aria-hidden','true');
+        empty.append(symbol,create('p','Este usuario todavía no creó campañas.'));
+        activityContent.append(empty);
+      }
       return;
     }
     const list = create('ul',undefined,'admin-actividad-lista');
+    if (type === 'donaciones') {
+      list.classList.add('admin-donaciones-lista');
+      for (const item of entries) list.append(donationRow(item));
+      activityContent.append(list);
+      return;
+    }
     for (const item of entries) {
       const li = create('li');
       li.append(create('strong',type === 'campanas' ? item.nombre : item.campana_nombre));
@@ -390,7 +471,11 @@
   [dialog,banDialog,activityDialog].forEach(setupModalClosing);
   search.addEventListener('input',()=> { clearTimeout(debounce); debounce=setTimeout(()=>{page=1;fetchRows();},300); });
   limit.addEventListener('change',()=>{page=1;fetchRows();});
-  previous.addEventListener('click',()=>{if(page>1){page--;fetchRows();}});
-  next.addEventListener('click',()=>{page++;fetchRows();});
+  previous.addEventListener('click',()=>goToPage(page-1));
+  next.addEventListener('click',()=>goToPage(page+1));
+  first.addEventListener('click',()=>goToPage(1));
+  last.addEventListener('click',()=>goToPage(totalPages));
+  backFive.addEventListener('click',()=>goToPage(page-5));
+  forwardFive.addEventListener('click',()=>goToPage(page+5));
   fetchRows();
 })();

@@ -147,6 +147,18 @@ final class UsuariosRepository extends CrudRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Total de usuarios coincidentes; aplica los mismos filtros que buscarAdministracion. */
+    public function contarAdministracion(string $termino): int
+    {
+        $patron = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower(trim($termino), 'UTF-8')) . '%';
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM usuarios u
+             WHERE LOWER(u.nombre) LIKE :nombre ESCAPE '!' OR LOWER(u.mail) LIKE :mail ESCAPE '!'"
+        );
+        $stmt->execute(['nombre' => $patron, 'mail' => $patron]);
+        return (int) $stmt->fetchColumn();
+    }
+
     public function actualizarHashPassword(int $idUsuario, string $hash): void
     {
         $stmt = $this->pdo->prepare('UPDATE usuarios SET pass = :hash WHERE id = :id');
