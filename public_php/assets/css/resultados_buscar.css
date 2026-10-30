@@ -2,8 +2,8 @@
 .resultados-encabezado h2 { margin-bottom: var(--e-2); }
 .resultados-encabezado p { margin: 0; }
 .resultado-categoria {
-    background: var(--verde-suave);
-    color: var(--verde);
+    background: var(--azul);
+    color: var(--hueso);
     padding: var(--e-4) var(--e-6);
     border-bottom: 3px solid var(--sol);
     font-weight: 700;
@@ -14,6 +14,13 @@
 .resultado-campana .resultado-desc { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
 .resultados-vacios { background: var(--aviso-fondo); }
 
+/* Enlace de toda la tarjeta, con resaltado estático y sin subrayado. */
 .resultado-enlace { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
-.resultado-enlace:hover h3 { text-decoration: underline; }
-.resultado-enlace:focus-visible { outline: 3px solid var(--sol); outline-offset: 4px; }
+.resultado-enlace:focus-visible { outline: 3px solid var(--sol); outline-offset: -3px; }
+.resultado-campana .resultado-enlace:is(:hover, :focus-visible) {
+    color: #102e55;
+    text-decoration: none;
+}
+.resultado-campana .resultado-enlace:is(:hover, :focus-visible) h3 {
+    text-decoration: none;
+}

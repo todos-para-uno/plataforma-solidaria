@@ -540,10 +540,30 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
 }
 .campana-cuerpo h3 { margin: 0; }
 .campana-cuerpo h3 a { text-decoration: none; }
-.campana-cuerpo h3 a:hover { text-decoration: underline; }
+.campana-cuerpo h3 a:hover { color: var(--azul); text-decoration: none; }
 .campana-datos { display: flex; flex-wrap: wrap; gap: var(--e-2); align-items: center; }
 .campana-autor { margin: 0; font-size: 0.9375rem; color: var(--texto-secundario); }
 .campana-cuerpo .boton { margin-top: auto; }
+
+/* Resaltado estático de la tarjeta: también se muestra al navegar con teclado. */
+.grilla-campanas > .campana {
+    transition: none;
+    animation: none;
+}
+.grilla-campanas > .campana:is(:hover, :focus-within) {
+    background: #f0eee6;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 2px var(--azul), var(--sombra-tarjeta);
+    color: #102e55;
+}
+.grilla-campanas > .campana:is(:hover, :focus-within) h3 a {
+    color: #102e55;
+    text-decoration: none;
+}
+.grilla-campanas > .campana:is(:hover, :focus-within) .texto-secundario {
+    color: #3b4149;
+}
+
  
 .grilla-campanas {
     display: grid;
