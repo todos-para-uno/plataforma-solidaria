@@ -3,14 +3,14 @@ require_once __DIR__ . '/RegistroDb.php';
 class Objetivos extends RegistroDb
 {
     private int $id_camp;
-    private int $id_categoria_insumos;
-    private int $id_sub_categoria_insumos;
+    private ?int $id_categoria_insumos;
+    private ?int $id_sub_categoria_insumos;
     private float $objetivo;
 
     public function __construct(
-        int $miId_camp, 
-        int $miId_categoria_insumos, 
-        int $miId_sub_categoria_insumos, 
+        int $miId_camp,
+        ?int $miId_categoria_insumos,
+        ?int $miId_sub_categoria_insumos,
         float $miObjetivo,
         ?int $miId = null
     ){
@@ -31,19 +31,19 @@ class Objetivos extends RegistroDb
     {
         return $this->id_camp;
     }
-    public function setId_categoria_insumos(int $miId_categoria_insumos): void
+    public function setId_categoria_insumos(?int $miId_categoria_insumos): void
     {
         $this->id_categoria_insumos = $miId_categoria_insumos;
     }
-    public function getId_categoria_insumos(): int
+    public function getId_categoria_insumos(): ?int
     {
         return $this->id_categoria_insumos;
     }
-    public function setId_sub_categoria_insumos(int $miId_sub_categoria_insumos): void
+    public function setId_sub_categoria_insumos(?int $miId_sub_categoria_insumos): void
     {
         $this->id_sub_categoria_insumos = $miId_sub_categoria_insumos;
     }
-    public function getId_sub_categoria_insumos(): int
+    public function getId_sub_categoria_insumos(): ?int
     {
         return $this->id_sub_categoria_insumos;
     }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Página de inicio que carga public_php/index.php.
- * Las campañas de este arreglo son ficticias; todavía no se consultan en la base.
+ * Muestra hasta tres campañas activas obtenidas como entidades desde la base.
  */
 
 require_once __DIR__ . '/../../config/conexion.php';
@@ -19,7 +19,8 @@ $catCampRepository = new CatCampRepository($pdo);
 $buscadorController = new BuscadorController($campRepository, $catCampRepository);
 
 // Obtenemos las campañas activas desde la base de datos (por ejemplo, limitando a 3 para la home)
-$todasLasActivas = $campRepository->buscarActivas();
+$todasLasActivas = $campRepository->findByEstado(EstadoCamp::Activa);
+$nombresCategorias = array_column($catCampRepository->listarParaBuscador(), 'nombre', 'id');
 $campanas = array_slice($todasLasActivas, 0, 3); // Tomamos solo tres campañas
 
 $tituloPagina  = 'Todospara.uno — Campañas solidarias';
@@ -95,19 +96,19 @@ require __DIR__ . '/parciales/cabecera.php';
                         <div class="campana-imagen" role="img" aria-label="Foto de la campaña"></div>
                         <div class="campana-cuerpo">
                             <div class="campana-datos">
-                                <span class="insignia"><?= escapar($c['nombre_categoria']) ?></span>
-                                <span class="insignia"><?= $c['monetaria'] ? 'Dinero' : 'Insumos' ?></span>
+                                <span class="insignia"><?= escapar($nombresCategorias[$c->getCategoria()] ?? 'Sin categoría') ?></span>
+                                <span class="insignia"><?= $c->getMonetaria() ? 'Dinero' : 'Insumos' ?></span>
                             </div>
-                            <h3><a href="#"><?= escapar($c['nombre']) ?></a></h3>
+                            <h3><a href="<?= escapar($rutas['campana'] . '&id=' . $c->getId()) ?>"><?= escapar($c->getNombre()) ?></a></h3>
                             <p class="texto-secundario">
                                 Estado: <strong>Activa</strong>
                             </p>
                             <div>
                                 <p class="resultado-desc">
-                                    <?= escapar(trim($c['descripcion'] ?? '') !== '' ? $c['descripcion'] : 'Esta campaña todavía no tiene una descripción detallada.') ?>
+                                    <?= escapar(trim($c->getDescripcion() ?? '') !== '' ? $c->getDescripcion() : 'Esta campaña todavía no tiene una descripción detallada.') ?>
                                 </p>
                             </div>
-                            <a class="boton boton-donar boton-ancho" href="index.php?ruta=campana&id=<?= (int) $c['id'] ?>">Donar a esta campaña</a>
+                            <a class="boton boton-donar boton-ancho" href="<?= escapar($rutas['campana'] . '&id=' . $c->getId()) ?>">Donar a esta campaña</a>
                         </div>
                     </article>
                 <?php endforeach; ?>
