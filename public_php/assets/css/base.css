@@ -184,12 +184,17 @@ img { display: block; max-width: 100%; height: auto; }
     text-decoration: none;
     font-weight: 600;
 }
-.menu a:hover { background: var(--aviso-fondo); text-decoration: underline; }
+.menu a:is(:hover, :focus-visible) {
+    background: var(--sol);
+    color: var(--azul);
+    border-radius: var(--radio-control);
+    text-decoration: none;
+}
 .menu a { white-space: nowrap; }
  
 /* Los botones dentro del menú conservan su aspecto de botón */
 .menu a.boton { padding-inline: var(--e-4); color: #fff; text-decoration: none; }
-.menu a.boton:hover { background: var(--sol); color: var(--azul); }
+.menu a.boton:is(:hover, :focus-visible) { background: var(--sol); color: var(--azul); }
  
 /* Desplegable del usuario con sesión iniciada */
 .menu-usuario { position: relative; }
@@ -204,7 +209,7 @@ img { display: block; max-width: 100%; height: auto; }
     list-style: none;
     white-space: nowrap;
 }
-.menu-boton:hover, .menu-usuario summary:hover { background: var(--sol); color: var(--azul); }
+.menu-boton:is(:hover, :focus-visible), .menu-usuario summary:is(:hover, :focus-visible) { background: var(--sol); color: var(--azul); }
 .menu-usuario summary::-webkit-details-marker { display: none; }
 .menu-usuario summary::after {
     color: var(--azul);
@@ -243,7 +248,7 @@ img { display: block; max-width: 100%; height: auto; }
     font: inherit;
     cursor: pointer;
 }
-.menu-salir:hover { background: var(--sol); color: var(--azul); text-decoration: underline; }
+.menu-salir:is(:hover, :focus-visible) { background: var(--sol); color: var(--azul); border-radius: var(--radio-control); text-decoration: none; }
 
 /* aria-current conserva la identificación de la página para lectores de pantalla. */
 .menu a[aria-current="page"] {
@@ -328,8 +333,14 @@ img { display: block; max-width: 100%; height: auto; }
 .pie li a {
     display: inline-flex; align-items: center; min-height: 36px;
     color: var(--hueso); text-decoration: none;
+    padding-inline: var(--e-2);
+    border-radius: var(--radio-control);
 }
-.pie li a:hover { color: var(--sol); text-decoration: underline; }
+.pie li a:is(:hover, :focus-visible) {
+    background: var(--sol);
+    color: var(--azul);
+    text-decoration: none;
+}
 .pie :focus-visible { outline-color: var(--sol); }
  
 .pie-legal {
