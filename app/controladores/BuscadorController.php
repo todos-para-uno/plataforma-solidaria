@@ -18,6 +18,7 @@ class BuscadorController
         ?array $usuarioActual = null
     ): void {
         $categoriasCampanas = $this->categorias->listarParaBuscador();
+        $nombresCategorias = array_column($categoriasCampanas, 'nombre', 'id');
         $errores = [];
         $buscar = '';
         $idCategoria = null;
@@ -48,7 +49,7 @@ class BuscadorController
         if ($errores !== []) {
             http_response_code(422);
         } elseif ($mostrarResultados) {
-            $resultados = $this->campanas->buscarActivas($buscar, $idCategoria);
+            $resultados = $this->campanas->findByEstado(EstadoCamp::Activa, $buscar, $idCategoria);
         }
 
         $csrfToken = Csrf::generar();

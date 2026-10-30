@@ -15,6 +15,7 @@ $vistas = [
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
 $rutasConControlador = [
+    'campana',
     'buscador',
     'resultados_buscar',
     'registro',
@@ -143,6 +144,19 @@ if ($ruta === 'contacto') {
     } else {
         $controlador->mostrarFormulario($rutaBase, $rutaAssets, $usuario ?? null);
     }
+    return;
+}
+
+if ($ruta === 'campana') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/CampanaController.php';
+    $pdo = conectarBd();
+    $controlador = new CampanaController(
+        new CampRepository($pdo), new CatCampRepository($pdo),
+        new UsuariosRepository($pdo), new ValidacionesRepository($pdo),
+        new ObjetivosRepository($pdo)
+    );
+    $controlador->mostrar($rutaBase, $rutaAssets, $_GET['id'] ?? null, $usuarioActual);
     return;
 }
 

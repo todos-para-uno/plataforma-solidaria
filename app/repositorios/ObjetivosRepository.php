@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/CrudRepository.php';
+require_once __DIR__ . '/../modelos/Objetivo.php';
 final class ObjetivosRepository extends CrudRepository
 {
     public function __construct(PDO $pdo)
@@ -11,6 +12,32 @@ final class ObjetivosRepository extends CrudRepository
             fields: ['id_camp', 'id_categoria_insumos', 'id_sub_categoria_insumos', 
             'objetivo']
         );
+    }
+
+    protected function hidratar(array $fila): Objetivos
+    {
+        return new Objetivos(
+            (int) $fila['id_camp'],
+            isset($fila['id_categoria_insumos']) ? (int) $fila['id_categoria_insumos'] : null,
+            isset($fila['id_sub_categoria_insumos']) ? (int) $fila['id_sub_categoria_insumos'] : null,
+            (float) $fila['objetivo'],
+            (int) $fila['id']
+        );
+    }
+
+    /** Datos de presentación de los objetivos, incluidos sus nombres de insumos. */
+    public function buscarDetallePorCampana(int $idCamp): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT objetivos.*, categoria_insumos.nombre AS categoria_insumos_nombre,
+                    sub_categoria_insumos.nombre AS subcategoria_nombre
+             FROM objetivos
+             LEFT JOIN categoria_insumos ON categoria_insumos.id = objetivos.id_categoria_insumos
+             LEFT JOIN sub_categoria_insumos ON sub_categoria_insumos.id = objetivos.id_sub_categoria_insumos
+             WHERE objetivos.id_camp = :id ORDER BY objetivos.id'
+        );
+        $stmt->execute(['id' => $idCamp]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function findByIdCamp(int $idCamp): array
