@@ -29,12 +29,12 @@
 .portada-acciones { margin-top: var(--e-8); }
 .seccion-encabezado { max-width: 70ch; }
 
-.seccion-ayudar { background: var(--aviso-fondo); }
+.seccion-ayudar { background: var(--verde-suave); }
 .seccion-ayudar .pasos li {
     padding: var(--e-6);
     background: var(--papel);
     border: 1px solid var(--sol-suave);
-    border-top: 4px solid var(--sol);
+    border-top: 4px solid var(--paso-acento, var(--verde));
     border-radius: var(--radio-tarjeta);
 }
 .paso-numero {
@@ -43,8 +43,8 @@
     justify-content: center;
     width: 56px;
     height: 56px;
-    background: var(--sol);
-    color: var(--azul);
+    background: var(--paso-acento, var(--verde));
+    color: var(--paso-texto, var(--papel));
     border-radius: var(--radio-control);
     margin-bottom: var(--e-6);
 }
@@ -52,7 +52,7 @@
 .seccion-crear .bajada,
 .seccion-crear .pasos p { color: var(--hueso); }
 .seccion-crear .pasos li {
-    border-top-color: var(--sol);
+    border-top-color: var(--paso-acento, var(--verde));
     padding-top: var(--e-6);
 }
 p{
@@ -69,3 +69,9 @@ p{
     .portada-interior { min-height: 360px; }
     .portada-mensaje { max-width: 500px; }
 }
+
+/* Los tres pasos repiten los acentos de la marca en ambas secciones. */
+.pasos li:nth-child(1) { --paso-acento: var(--sol); --paso-texto: var(--azul); }
+.pasos li:nth-child(2) { --paso-acento: var(--terracota); }
+.pasos li:nth-child(3) { --paso-acento: var(--verde); --paso-texto: var(--papel); }
+.portada-marca { color: var(--verde); }

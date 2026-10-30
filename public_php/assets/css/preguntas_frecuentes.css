@@ -71,3 +71,5 @@ main {
     .ayuda-ilustracion svg { width: 140px; height: 140px; }
     .ayuda-contacto-interior { flex-direction: column; align-items: flex-start; }
 }
+
+.ayuda-etiqueta { color: var(--verde); }
