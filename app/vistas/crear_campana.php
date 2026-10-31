@@ -59,6 +59,14 @@ require __DIR__ . '/parciales/cabecera.php';
                 </div>
             <?php endif; ?>
 
+            <?php if ($usuarioActual !== null): ?>
+                <aside class="alerta alerta-aviso">
+                    <p>Para recibir dinero, conectá tu cuenta de Mercado Pago. Las campañas de insumos no necesitan esta conexión.</p>
+                    <a class="boton boton-secundario boton-chico" href="<?= escapar($rutas['mercadopago']) ?>" target="_blank" rel="noopener">Conectar Mercado Pago (otra pestaña)</a>
+                    <p class="campo-ayuda">La conexión se abre aparte para conservar lo que completes en este formulario.</p>
+                </aside>
+            <?php endif; ?>
+
             <form class="crear-formulario" action="<?= escapar($rutas['crear_campana']) ?>" method="post">
 
                 <!-- Información básica -->

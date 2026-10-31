@@ -7,14 +7,15 @@ $esLectura = in_array($metodo, ['GET', 'HEAD'], true);
 $vistas = [
     'inicio' => 'index.php',
     'crear_campana' => 'crear_campana.php',
-    'mis_donaciones' => 'mis_donaciones.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
     'perfil' => 'perfil.php'
     
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
+$rutasMercadoPago = ['mercadopago', 'mp_conectar', 'mp_retorno', 'mp_webhook', 'donar', 'pago_resultado', 'mp_verificar', 'mis_donaciones'];
 $rutasConControlador = [
+    ...$rutasMercadoPago,
     'campana',
     'buscador',
     'resultados_buscar',
@@ -39,8 +40,8 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear'], true);
-$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto'], true);
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'mp_conectar', 'mp_webhook', 'mp_verificar'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'donar'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -52,6 +53,25 @@ if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metod
 header('Content-Type: text/html; charset=UTF-8');
 $rutaBase = '.';
 $rutaAssets = './assets';
+
+// Las notificaciones externas no dependen de cookies, sesión ni CSRF de un usuario.
+if ($ruta === 'mp_webhook') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../config/mercadopago.php';
+    require_once __DIR__ . '/../app/controladores/MercadoPagoController.php';
+    try {
+        $configMp = configuracionMercadoPago();
+        $pdo = conectarBd();
+        $repoMp = new MercadoPagoRepository($pdo);
+        $servicioMp = new MercadoPagoServicio($repoMp, new MercadoPagoCliente(), $configMp);
+        (new MercadoPagoController($repoMp, $servicioMp, $configMp, new BaneoRepository($pdo)))->webhook();
+    } catch (Throwable $e) {
+        http_response_code(503);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo '{"recibido":false}';
+    }
+    return;
+}
 
 require_once __DIR__ . '/../app/seguridad/Csrf.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -109,6 +129,24 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         }
         return;
     }
+}
+
+if (in_array($ruta, $rutasMercadoPago, true)) {
+    if ($metodo === 'HEAD' && $ruta === 'mp_retorno') {
+        http_response_code(405);
+        header('Allow: GET');
+        return;
+    }
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../config/mercadopago.php';
+    require_once __DIR__ . '/../app/controladores/MercadoPagoController.php';
+    $configMp = configuracionMercadoPago();
+    $pdo = conectarBd();
+    $repoMp = new MercadoPagoRepository($pdo);
+    $servicioMp = new MercadoPagoServicio($repoMp, new MercadoPagoCliente(), $configMp);
+    (new MercadoPagoController($repoMp, $servicioMp, $configMp, new BaneoRepository($pdo)))
+        ->atender($ruta, $usuario ?? null, $rutaBase, $rutaAssets);
+    return;
 }
 
 if (in_array($ruta, ['admin_usuarios', 'admin_actividad', 'admin_password', 'admin_desbloquear'], true)) {

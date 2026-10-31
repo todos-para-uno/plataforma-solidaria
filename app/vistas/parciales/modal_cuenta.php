@@ -141,6 +141,13 @@ if (!is_array($dispositivos)) { $dispositivos = []; }
             <p class="campo-ayuda">Próximamente.</p>
           </div>
         </div>
+        <div class="fila-cuenta">
+          <span class="fila-cuenta__etiqueta">Donaciones</span>
+          <div class="fila-cuenta__valor">
+            <a class="boton boton-secundario boton-chico" href="<?= escapar($rutaCuentaMp) ?>">Gestionar Mercado Pago</a>
+            <p class="campo-ayuda">Conectá tu cuenta para recibir aportes de tus campañas.</p>
+          </div>
+        </div>
       </section>
 
       <!-- ===== SEGURIDAD ===== -->

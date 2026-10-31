@@ -4,6 +4,7 @@
 ob_start();
 $pruebas = [
     'modelos' => [
+        'MercadoPagoSeguridad' => ['archivo' => 'modelos/MercadoPagoSeguridadTest.php', 'funcion' => 'mercadoPagoSeguridadTest'],
         'Baneo' => [
             'archivo' => 'modelos/BaneoTest.php',
             'funcion' => 'baneoTest',
@@ -68,6 +69,7 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'MercadoPagoController' => ['archivo' => 'controladores/MercadoPagoControllerTest.php', 'funcion' => 'mercadoPagoControllerTest'],
         'CampanaController' => [
             'archivo' => 'controladores/CampanaControllerTest.php',
             'funcion' => 'campanaControllerTest',

@@ -5,30 +5,12 @@
  */
 
 $tituloPagina  = 'Mis donaciones — todospara.uno';
-$paginaActual  = 'mis-donaciones'; // O la clave correspondiente en rutas.php
+$paginaActual  = 'mis_donaciones';
 $usuarioActual = $usuarioActual ?? null; 
 $estilosPagina = ['mis_donaciones.css'];
 
-// Nota técnica: $donaciones es provisto por el controlador realizando un JOIN 
-// entre la tabla 'donacion' y la tabla 'camp'.
-$donaciones = $donaciones ?? [
-    [
-        'campaña_nombre' => 'Una mesa para compartir',
-        'imagen'         => 'donaciones-mesa-compartir.webp',
-        'imagen_alt'     => 'Escena ficticia de voluntarios compartiendo una comida con una vecina en un comedor comunitario.',
-        'monetaria'      => true,
-        'cantidad'       => 15000,
-        'fecha_hora'     => '2026-06-10 14:30:00'
-    ],
-    [
-        'campaña_nombre' => 'Mochilas llenas de futuro',
-        'imagen'         => 'donaciones-mochilas-futuro.webp',
-        'imagen_alt'     => 'Escena ficticia de una voluntaria entregando una mochila con útiles a una niña acompañada por su mamá.',
-        'monetaria'      => false,
-        'cantidad'       => 5, // Representa unidades o insumos aportados
-        'fecha_hora'     => '2026-06-05 10:15:00'
-    ]
-];
+$donaciones = $donaciones ?? [];
+require_once __DIR__ . '/parciales/estados_pago.php';
 
 require __DIR__ . '/parciales/cabecera.php';
 ?>
@@ -66,7 +48,11 @@ require __DIR__ . '/parciales/cabecera.php';
                                     <?= $donacion['monetaria'] ? 'Dinero' : 'Insumos' ?>
                                 </span>
                             </div>
-                            <h3><a href="#"><?= escapar($donacion['campaña_nombre']) ?></a></h3>
+                            <h3><?php if ($donacion['campana_estado'] === 'activa'): ?><a href="<?= escapar($rutas['campana'] . '&id=' . $donacion['id_camp']) ?>"><?= escapar($donacion['campaña_nombre']) ?></a><?php else: ?><?= escapar($donacion['campaña_nombre']) ?><?php endif; ?></h3>
+                            <p><?= escapar(estadoPago($donacion['estado'], $donacion['detalle'])) ?></p>
+                            <?php if ($donacion['referencia'] !== null): ?>
+                                <p><a href="<?= escapar($rutaBase . '/index.php?ruta=pago_resultado&referencia=' . $donacion['referencia']) ?>">Consultar el aporte</a></p>
+                            <?php endif; ?>
                                 
                             <p class="texto-secundario">
                                 Aporte realizado: 
