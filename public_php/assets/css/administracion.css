@@ -147,3 +147,178 @@ main {
 .admin-paginacion button:disabled { background: var(--hueso); color: var(--texto-secundario); border-color: var(--linea); cursor: not-allowed; }
 
 .admin-fila > button:hover { background: var(--aviso-fondo); color: var(--azul); }
+
+/* Detalle de usuario: consultas separadas de acciones administrativas. */
+.admin-actividad-seccion h4,.admin-gestion-cuenta h4 { margin:0 0 .8rem; color:var(--azul); font-size:1rem; }
+.admin-actividad-tarjetas { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
+.admin-actividad-tarjeta { display:flex; flex-direction:column; align-items:flex-start; gap:.6rem; min-width:0; padding:1rem; text-align:left; font:inherit; color:var(--azul); background:var(--hueso); border:1px solid var(--linea); border-radius:.55rem; cursor:pointer; transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease; }
+.admin-actividad-tarjeta:hover { border-color:var(--sol); box-shadow:0 2px 9px rgba(0,0,0,.09); transform:translateY(-2px); }
+.admin-actividad-tarjeta:focus-visible { outline:2px solid var(--azul); outline-offset:3px; }
+.admin-actividad-tarjeta-titulo { font-weight:600; }
+.admin-actividad-tarjeta-cantidad { font-size:2rem; line-height:1.1; font-variant-numeric:tabular-nums; }
+.admin-actividad-tarjeta-enlace { font-size:.85rem; text-decoration:underline; text-underline-offset:3px; }
+.admin-gestion-cuenta { margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--linea); }
+.admin-gestion-cuenta .admin-acciones button { border:1px solid var(--linea); border-radius:.35rem; background:var(--hueso); color:var(--azul); }
+.admin-gestion-cuenta .admin-acciones .admin-accion-sensible { border-color:var(--error); color:var(--error); }
+@media(max-width:540px) { .admin-actividad-tarjetas { grid-template-columns:1fr; } }
+@media(prefers-reduced-motion:reduce) { .admin-actividad-tarjeta { transition:none; } .admin-actividad-tarjeta:hover { transform:none; } }
+
+
+/* Refinamiento del detalle: datos de cuenta compactos y agrupados. */
+.admin-detalles {
+    padding: 1rem;
+    background: var(--verde-suave);
+    border: 1px solid var(--linea);
+    animation: admin-detalle-entrada .28s ease-out both;
+    transform-origin: top center;
+}
+.admin-detalles dl {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 .9rem;
+    margin: 0 0 1rem;
+}
+.admin-detalles dl dt {
+    grid-row: auto;
+    font-size: .78rem;
+    color: var(--texto-secundario);
+    font-weight: 600;
+    margin-top: .65rem;
+}
+.admin-detalles dl dd {
+    font-size: .95rem;
+    font-weight: 500;
+    padding: .1rem 0 .55rem;
+    border-bottom: 1px solid var(--linea);
+}
+/* Cada par dt/dd comparte una celda visual, sin cambiar el HTML existente. */
+.admin-detalles dl dt:nth-of-type(3n + 1),
+.admin-detalles dl dd:nth-of-type(3n + 1) { grid-column: 1; }
+.admin-detalles dl dt:nth-of-type(3n + 2),
+.admin-detalles dl dd:nth-of-type(3n + 2) { grid-column: 2; }
+.admin-detalles dl dt:nth-of-type(3n),
+.admin-detalles dl dd:nth-of-type(3n) { grid-column: 3; }
+.admin-detalles dl dt:nth-of-type(-n + 3) { grid-row: 1; }
+.admin-detalles dl dd:nth-of-type(-n + 3) { grid-row: 2; }
+.admin-detalles dl dt:nth-of-type(n + 4) { grid-row: 3; }
+.admin-detalles dl dd:nth-of-type(n + 4) { grid-row: 4; }
+.admin-actividad-tarjeta { gap: .35rem; padding: .8rem 1rem; }
+.admin-actividad-tarjeta-cantidad { font-size: 1.65rem; }
+.admin-gestion-cuenta { margin-top: 1rem; padding-top: .8rem; }
+
+@keyframes admin-detalle-entrada {
+    from { opacity: 0; transform: translateY(-8px) scaleY(.98); }
+    to { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+/* Transición de apertura para los tres diálogos nativos. */
+:is(#admin-dialogo, #admin-baneo-dialogo, #admin-actividad-dialogo)[open] {
+    animation: admin-modal-entrada .24s cubic-bezier(.2,.7,.2,1) both;
+}
+:is(#admin-dialogo, #admin-baneo-dialogo, #admin-actividad-dialogo)[open]::backdrop {
+    animation: admin-fondo-entrada .24s ease-out both;
+}
+@keyframes admin-modal-entrada {
+    from { opacity: 0; transform: translateY(12px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes admin-fondo-entrada { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 760px) {
+    .admin-detalles dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-detalles dl dt, .admin-detalles dl dd { grid-column: auto !important; grid-row: auto !important; }
+    .admin-detalles dl dt:nth-of-type(odd), .admin-detalles dl dd:nth-of-type(odd) { grid-column: 1 !important; }
+    .admin-detalles dl dt:nth-of-type(even), .admin-detalles dl dd:nth-of-type(even) { grid-column: 2 !important; }
+    .admin-detalles dl dt:nth-of-type(-n + 2) { grid-row: 1 !important; }
+    .admin-detalles dl dd:nth-of-type(-n + 2) { grid-row: 2 !important; }
+    .admin-detalles dl dt:nth-of-type(n + 3):nth-of-type(-n + 4) { grid-row: 3 !important; }
+    .admin-detalles dl dd:nth-of-type(n + 3):nth-of-type(-n + 4) { grid-row: 4 !important; }
+    .admin-detalles dl dt:nth-of-type(n + 5) { grid-row: 5 !important; }
+    .admin-detalles dl dd:nth-of-type(n + 5) { grid-row: 6 !important; }
+}
+@media (max-width: 480px) {
+    .admin-detalles dl { display: block; }
+    .admin-detalles dl dt { margin-top: .5rem; }
+    .admin-detalles dl dd { padding-bottom: .35rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .admin-detalles,
+    :is(#admin-dialogo, #admin-baneo-dialogo, #admin-actividad-dialogo)[open],
+    :is(#admin-dialogo, #admin-baneo-dialogo, #admin-actividad-dialogo)[open]::backdrop {
+        animation: none;
+    }
+}
+
+
+/* Indicadores compactos de estado y nivel de validación. */
+.admin-indicador-booleano {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border: 2px solid var(--texto-secundario);
+    border-radius: 50%;
+    box-sizing: border-box;
+    font-size: .88rem;
+    line-height: 1;
+    font-weight: 800;
+    vertical-align: middle;
+}
+.admin-indicador-booleano.es-si { border-color: var(--verde); color: var(--verde); }
+.admin-validacion-muestra {
+    display: inline-block;
+    width: 3.4rem;
+    height: 1.25rem;
+    border: 1px solid var(--texto-secundario);
+    border-radius: .4rem;
+    vertical-align: middle;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+
+/* Donaciones: filas resumidas y detalles desplegables animados. */
+.admin-donaciones-lista { max-height:min(58vh,560px); overflow-y:auto; padding-right:.25rem; align-content:start; }
+.admin-donaciones-lista .admin-donacion-item { padding:0; overflow:hidden; border-radius:.55rem; }
+.admin-donacion-cabecera { display:flex; align-items:center; gap:.8rem; width:100%; padding:.85rem; border:0; background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; }
+.admin-donacion-cabecera:hover { background:var(--hueso); }
+.admin-donacion-cabecera:focus-visible { outline:2px solid var(--azul); outline-offset:-3px; }
+.admin-donacion-icono { display:grid; place-items:center; flex:0 0 2.5rem; height:2.5rem; background:var(--hueso); border-radius:.5rem; font-weight:700; color:var(--azul); }
+.admin-donacion-resumen { display:grid; gap:.2rem; flex:1 1 auto; min-width:0; }
+.admin-donacion-resumen strong { overflow-wrap:anywhere; }
+.admin-donacion-resumen small { color:var(--grafito); }
+.admin-donacion-derecha { display:flex; align-items:center; justify-content:end; gap:.7rem; flex:0 0 auto; }
+.admin-donacion-flecha { display:inline-block; font-size:1.3rem; transition:transform .26s ease; }
+.admin-donacion-abierta .admin-donacion-flecha { transform:rotate(180deg); }
+.admin-donacion-desplegable { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows .28s ease,opacity .28s ease; }
+.admin-donacion-abierta .admin-donacion-desplegable { grid-template-rows:1fr; opacity:1; }
+.admin-donacion-interior { min-height:0; overflow:hidden; }
+.admin-donaciones-lista .admin-donacion-interior dl { margin:0; padding:.8rem 1rem 1rem; background:var(--hueso); display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem 1rem; }
+.admin-donaciones-lista .admin-donacion-interior dt { font-size:.8rem; color:var(--grafito); }
+.admin-donaciones-lista .admin-donacion-interior dd { margin:0; }
+@media(max-width:540px) {
+  .admin-donacion-cabecera { gap:.5rem; padding:.7rem; }
+  .admin-donacion-icono { flex-basis:2rem; height:2rem; }
+  .admin-donacion-derecha { flex-direction:column; align-items:end; gap:0; }
+  .admin-donaciones-lista .admin-donacion-interior dl { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(prefers-reduced-motion:reduce) {
+  .admin-donacion-desplegable,.admin-donacion-flecha { transition:none; }
+}
+
+/* Refinamiento visual de la lista compacta. */
+.admin-donacion-cabecera { padding:.65rem .8rem; gap:.65rem; }
+.admin-donacion-icono { flex-basis:2.15rem; height:2.15rem; }
+.admin-donacion-meta { display:flex; align-items:center; flex-wrap:wrap; gap:.35rem .55rem; }
+.admin-donacion-tipo { display:inline-block; padding:.12rem .48rem; border:1px solid var(--linea); border-radius:999px; font-size:.74rem; line-height:1.35; }
+.admin-donacion-derecha strong { font-variant-numeric:tabular-nums; }
+.admin-donaciones-vacio { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; padding:1.8rem 1rem; text-align:center; color:var(--texto-secundario); }
+.admin-donaciones-vacio p { margin:0; }
+.admin-donaciones-vacio-icono { display:grid; place-items:center; width:2.8rem; height:2.8rem; border:1px solid var(--linea); border-radius:50%; font-size:1.5rem; }
+@media(max-width:540px) { .admin-donacion-cabecera { padding:.6rem; gap:.5rem; } }
+
+/* Paginador progresivo: conserva controles cómodos en pantallas pequeñas. */
+.admin-paginacion { flex-direction:column; gap:.65rem; }
+.admin-paginacion-botones { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:.4rem; }
+.admin-paginacion-botones button[hidden] { display:none; }
+.admin-paginacion-botones button { min-width:44px; }
+#admin-pagina { font-weight:600; font-variant-numeric:tabular-nums; }

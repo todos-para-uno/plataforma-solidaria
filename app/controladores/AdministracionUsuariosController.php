@@ -39,7 +39,11 @@ final class AdministracionUsuariosController
             $this->respuesta(422, ['error' => 'Parámetros de búsqueda inválidos.']);
             return;
         }
-        $this->respuesta(200, ['usuarios' => $this->usuarios->buscarAdministracion($termino, $limite, ($pagina - 1) * $limite)]);
+        $total = $this->usuarios->contarAdministracion($termino);
+        $this->respuesta(200, [
+            'usuarios' => $this->usuarios->buscarAdministracion($termino, $limite, ($pagina - 1) * $limite),
+            'total' => $total,
+        ]);
     }
 
     /** Actividad de un usuario, consultada solo cuando el administrador la solicita. */

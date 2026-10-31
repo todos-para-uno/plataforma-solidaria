@@ -54,9 +54,15 @@ require __DIR__ . '/parciales/cabecera.php';
                 <p id="admin-estado" role="status" aria-live="polite">Cargando usuarios…</p>
                 <div id="admin-lista" class="admin-lista" aria-label="Listado de usuarios"></div>
                 <nav class="admin-paginacion" aria-label="Páginas de usuarios">
-                    <button type="button" id="admin-anterior">Anterior</button>
-                    <span id="admin-pagina">Página 1</span>
-                    <button type="button" id="admin-siguiente">Siguiente</button>
+                    <span id="admin-pagina" aria-live="polite">Página 1 de 1</span>
+                    <div class="admin-paginacion-botones">
+                        <button type="button" id="admin-primera" title="Primera página" aria-label="Primera página" hidden>«</button>
+                        <button type="button" id="admin-salto-atras" title="Retroceder cinco páginas" aria-label="Retroceder cinco páginas" hidden>−5</button>
+                        <button type="button" id="admin-anterior">Anterior</button>
+                        <button type="button" id="admin-siguiente">Siguiente</button>
+                        <button type="button" id="admin-salto-adelante" title="Avanzar cinco páginas" aria-label="Avanzar cinco páginas" hidden>+5</button>
+                        <button type="button" id="admin-ultima" title="Última página" aria-label="Última página" hidden>»</button>
+                    </div>
                 </nav>
             </div>
             <div id="panel-mensajes" role="tabpanel" aria-labelledby="tab-mensajes" hidden>

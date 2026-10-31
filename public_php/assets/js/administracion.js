@@ -6,8 +6,10 @@
   const list = byId('admin-lista'), status = byId('admin-estado');
   const search = byId('admin-busqueda'), limit = byId('admin-limite');
   const previous = byId('admin-anterior'), next = byId('admin-siguiente');
+  const first = byId('admin-primera'), last = byId('admin-ultima');
+  const backFive = byId('admin-salto-atras'), forwardFive = byId('admin-salto-adelante');
   const dialog = byId('admin-dialogo'), form = byId('admin-formulario');
-  let page = 1, expanded = null, rows = [], controller = null, debounce = null, action = '';
+  let page = 1, totalPages = 1, expanded = null, rows = [], controller = null, debounce = null, action = '';
   const api = root.dataset.api;
   const csrf = root.dataset.csrf;
   // Pestañas internas del administrador, independientes de la navegación principal.
@@ -39,6 +41,23 @@
     if (className) element.className = className;
     return element;
   };
+  function renderPagination() {
+    byId('admin-pagina').textContent = `Página ${page} de ${totalPages}`;
+    previous.disabled = page <= 1;
+    next.disabled = page >= totalPages;
+    for (const button of [first,last]) button.hidden = totalPages <= 2;
+    first.disabled = page <= 1;
+    last.disabled = page >= totalPages;
+    for (const button of [backFive,forwardFive]) button.hidden = totalPages <= 10;
+    backFive.disabled = page <= 1;
+    forwardFive.disabled = page >= totalPages;
+  }
+  function goToPage(target) {
+    const destination = Math.max(1, Math.min(totalPages, target));
+    if (destination === page) return;
+    page = destination;
+    fetchRows();
+  }
   async function fetchRows() {
     if (controller) controller.abort();
     controller = new AbortController();
@@ -49,22 +68,98 @@
       const response = await fetch(`${api}?${params}`, {credentials:'same-origin', signal:controller.signal,headers:{Accept:'application/json'}});
       const data = await response.json();
       if (!response.ok) throw Error(data.error || 'No se pudo cargar el listado.');
+      const total = Number(data.total);
+      if (!Number.isSafeInteger(total) || total < 0) throw Error('Total de usuarios inválido.');
+      totalPages = Math.max(1, Math.ceil(total / Number(limit.value)));
+      // Si se borraron usuarios mientras navegábamos, regresar a la última página existente.
+      if (page > totalPages) { page = totalPages; await fetchRows(); return; }
       rows = Array.isArray(data.usuarios) ? data.usuarios : [];
       expanded = null;
       render();
-      status.textContent = rows.length ? `${rows.length} usuario(s) en esta página.` : 'No se encontraron usuarios.';
-      // El endpoint actual no devuelve un total: una página llena podría tener una siguiente.
-      next.disabled = rows.length < Number(limit.value);
-      previous.disabled = page === 1;
-      byId('admin-pagina').textContent = `Página ${page}`;
+      status.textContent = rows.length ? `${rows.length} usuario(s) en esta página · ${total} en total.` : 'No se encontraron usuarios.';
+      renderPagination();
     } catch (error) {
       if (error.name === 'AbortError') return;
       status.textContent = error.message;
-      previous.disabled = next.disabled = true;
+      [first,backFive,previous,next,forwardFive,last].forEach(button => { button.disabled = true; });
     }
   }
   function detail(dl, name, value) {
     dl.append(create('dt',name),create('dd',value));
+  }
+  // Los iconos conservan un nombre accesible aunque no se muestre Sí/No.
+  function booleanDetail(dl, name, enabled) {
+    const dt = create('dt',name);
+    const dd = create('dd');
+    const indicator = create('span',enabled ? '✓' : '',
+      `admin-indicador-booleano ${enabled ? 'es-si' : 'es-no'}`);
+    indicator.setAttribute('role','img');
+    indicator.setAttribute('aria-label',enabled ? 'Sí' : 'No');
+    dd.append(indicator);
+    dl.append(dt,dd);
+  }
+  const validationColors = {
+    blanco: '#ffffff', celeste: '#83d5f5', azul: '#3479ce', violeta: '#8d5ac9'
+  };
+  function validationDetail(dl, user) {
+    const name = String(user.validacion_nombre || '').trim();
+    const dt = create('dt','Validación');
+    const dd = create('dd');
+    const color = validationColors[name.toLocaleLowerCase('es-AR')];
+    if (color) {
+      const swatch = create('span',undefined,'admin-validacion-muestra');
+      swatch.style.backgroundColor = color;
+      swatch.setAttribute('role','img');
+      swatch.setAttribute('aria-label',`Validación: ${name}`);
+      swatch.title = `Validación: ${name}`;
+      dd.append(swatch);
+    } else {
+      dd.append(create('span',name || `Nivel ${user.id_validacion}`));
+    }
+    dl.append(dt,dd);
+  }
+  const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const closeDuration = 220;
+  // La animación termina antes de retirar el contenido o cerrar el diálogo.
+  function animateOut(element, keyframes, done) {
+    if (reduceMotion() || typeof element.animate !== 'function') { done(); return; }
+    const animation = element.animate(keyframes,{duration:closeDuration,easing:'ease-in',fill:'forwards'});
+    // fill:'forwards' conserva opacity:0 incluso después de cerrar el diálogo.
+    // Cancelamos el efecto una vez cerrado para permitir futuras aperturas.
+    animation.finished.then(
+      () => { done(); animation.cancel(); },
+      () => { done(); animation.cancel(); }
+    );
+  }
+  const closingDialogs = new WeakSet();
+  function closeModal(modal) {
+    if (!modal.open || closingDialogs.has(modal)) return;
+    closingDialogs.add(modal);
+    animateOut(modal,[{opacity:1,transform:'translateY(0) scale(1)'},
+      {opacity:0,transform:'translateY(10px) scale(.98)'}],()=>{
+        modal.close();
+        closingDialogs.delete(modal);
+      });
+  }
+  function setupModalClosing(modal) {
+    modal.addEventListener('cancel',event=>{
+      event.preventDefault();
+      closeModal(modal);
+    });
+  }
+  let closingDetail = false;
+  function toggleDetail(userId) {
+    if (closingDetail) return;
+    if (expanded !== userId) { expanded = userId; render(); return; }
+    const box = list.querySelector('.admin-detalles');
+    if (!box) { expanded = null; render(); return; }
+    closingDetail = true;
+    animateOut(box,[{opacity:1,transform:'translateY(0) scaleY(1)'},
+      {opacity:0,transform:'translateY(-7px) scaleY(.98)'}],()=>{
+        expanded = null;
+        closingDetail = false;
+        render();
+      });
   }
   function render() {
     list.replaceChildren();
@@ -76,31 +171,43 @@
       const identity = create('span');
       identity.append(create('strong',user.nombre),create('small',user.mail));
       trigger.append(identity,create('span',expanded === user.id ? 'Cerrar −' : 'Detalles +'));
-      trigger.addEventListener('click',() => { expanded = expanded === user.id ? null : user.id; render(); });
+      trigger.addEventListener('click',() => toggleDetail(user.id));
       row.append(trigger);
       if (expanded === user.id) {
         const box = create('div',undefined,'admin-detalles');
         const dl = create('dl');
+        booleanDetail(dl,'Verificado',Boolean(Number(user.verificado)));
+        booleanDetail(dl,'Administrador',Boolean(Number(user.admin)));
+        validationDetail(dl,user);
         detail(dl,'Teléfono',user.telefono || 'No informado');
-        detail(dl,'Administrador',Number(user.admin) ? 'Sí' : 'No');
-        detail(dl,'Validación',user.validacion_nombre || `Nivel ${user.id_validacion}`);
-        detail(dl,'Verificado',Number(user.verificado) ? 'Sí' : 'No');
         detail(dl,'Baneo',Number(user.baneado) ? 'Vigente' : 'Sin baneo vigente');
         detail(dl,'Bloqueo',Number(user.bloqueado) ? 'Bloqueada' : 'Sin bloqueo vigente');
         box.append(dl);
-        const activity = create('div',undefined,'admin-actividad-resumen');
-        activity.textContent = 'Cargando actividad…';
-        box.append(activity);
-        const activityActions = create('div',undefined,'admin-acciones');
-        for (const [type,label] of [['campanas','Ver campañas'],['donaciones','Ver donaciones']]) {
-          const button = create('button',label);
+        const section = create('section',undefined,'admin-actividad-seccion');
+        section.append(create('h4','Resumen de actividad'));
+        const cards = create('div',undefined,'admin-actividad-tarjetas');
+        const counters = {};
+        for (const [type,title,subtitle] of [
+          ['campanas','Campañas creadas','Consultar campañas'],
+          ['donaciones','Donaciones realizadas','Consultar donaciones']
+        ]) {
+          const button = create('button',undefined,'admin-actividad-tarjeta');
           button.type = 'button';
+          button.setAttribute('aria-label',`Ver ${title.toLowerCase()} de ${user.nombre}`);
+          const label = create('span',title,'admin-actividad-tarjeta-titulo');
+          const count = create('strong','…','admin-actividad-tarjeta-cantidad');
+          const actionLabel = create('span',`${subtitle} →`,'admin-actividad-tarjeta-enlace');
+          button.append(label,count,actionLabel);
           button.addEventListener('click',()=>openActivity(user,type));
-          activityActions.append(button);
+          cards.append(button);
+          counters[type] = count;
         }
-        box.append(activityActions);
-        requestActivity(user,'resumen',activity);
+        section.append(cards);
+        box.append(section);
+        requestActivity(user,'resumen',counters);
         if (!Number(user.admin)) {
+          const management = create('section',undefined,'admin-gestion-cuenta');
+          management.append(create('h4','Gestión de cuenta'));
           const actions = create('div',undefined,'admin-acciones');
           const reset = create('button','Restablecer contraseña');
           reset.type = 'button';
@@ -114,9 +221,11 @@
           }
           const banButton = create('button', Number(user.baneado) ? 'Finalizar baneo' : 'Banear usuario');
           banButton.type = 'button';
+          banButton.classList.add('admin-accion-sensible');
           banButton.addEventListener('click', () => openBanDialog(user));
           actions.append(banButton);
-          box.append(actions);
+          management.append(actions);
+          box.append(management);
         }
         row.append(box);
       }
@@ -129,7 +238,7 @@
   let activityRequest = 0, summaryRequest = 0;
   async function requestActivity(user, type, target) {
     const requestId = type === 'resumen' ? ++summaryRequest : ++activityRequest;
-    if (target) target.textContent = 'Cargando…';
+    if (type === 'resumen' && target) Object.values(target).forEach(node => { node.textContent = '…'; });
     const params = new URLSearchParams({ruta:'admin_actividad',id_usuario:String(user.id),tipo:type});
     try {
       const response = await fetch(`${api}?${params}`, {credentials:'same-origin',headers:{Accept:'application/json'}});
@@ -137,14 +246,20 @@
       if (!response.ok) throw Error(result.error || 'No se pudo cargar la actividad.');
       if (requestId !== (type === 'resumen' ? summaryRequest : activityRequest)) return;
       if (type === 'resumen') {
-        if (target && target.isConnected) target.textContent = `Campañas creadas: ${result.datos.campanas} · Donaciones realizadas: ${result.datos.donaciones}`;
+        if (target) for (const key of ['campanas','donaciones']) {
+          if (target[key]?.isConnected) target[key].textContent = String(result.datos[key] ?? '—');
+        }
       } else {
         activityStatus.textContent = '';
         renderActivity(type, Array.isArray(result.datos) ? result.datos : []);
       }
     } catch (error) {
       if (requestId !== (type === 'resumen' ? summaryRequest : activityRequest)) return;
-      if (type === 'resumen') { if (target && target.isConnected) target.textContent = error.message; }
+      if (type === 'resumen') {
+        if (target) for (const node of Object.values(target)) {
+          if (node.isConnected) { node.textContent = '—'; node.title = error.message; }
+        }
+      }
       else activityStatus.textContent = error.message;
     }
   }
@@ -182,13 +297,73 @@
     box.append(heading,track,create('small',`${amount(achieved,monetary)} de ${amount(objective,monetary)}`));
     return box;
   }
+  // Lista compacta: la apertura y el cierre usan la misma transición CSS.
+  function donationRow(item) {
+    const monetary = Boolean(Number(item.monetaria));
+    const li = create('li',undefined,'admin-donacion-item');
+    const toggle = create('button',undefined,'admin-donacion-cabecera');
+    toggle.type = 'button';
+    toggle.setAttribute('aria-expanded','false');
+
+    const symbol = create('span',monetary ? '$' : '▣','admin-donacion-icono');
+    symbol.setAttribute('aria-hidden','true');
+    const summary = create('span',undefined,'admin-donacion-resumen');
+    summary.append(
+      create('strong',item.campana_nombre || 'Campaña sin nombre'),
+      (() => {
+        const meta = create('span',undefined,'admin-donacion-meta');
+        meta.append(create('small',localDate(item.fecha_hora)),
+          create('span',monetary ? 'Monetaria' : 'Insumos','admin-donacion-tipo'));
+        return meta;
+      })()
+    );
+    const right = create('span',undefined,'admin-donacion-derecha');
+    right.append(create('strong',amount(item.cantidad,monetary)),
+      create('span','⌄','admin-donacion-flecha'));
+    toggle.append(symbol,summary,right);
+
+    const details = create('div',undefined,'admin-donacion-desplegable');
+    const inner = create('div',undefined,'admin-donacion-interior');
+    const dl = create('dl');
+    detail(dl,'Campaña ID',item.id_camp);
+    if (item.categoria_insumo) detail(dl,'Categoría',item.categoria_insumo);
+    if (item.subcategoria_insumo) detail(dl,'Subcategoría',item.subcategoria_insumo);
+    detail(dl,'Donación ID',item.id);
+    inner.append(dl);
+    details.append(inner);
+    toggle.addEventListener('click',()=>{
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded',String(open));
+      li.classList.toggle('admin-donacion-abierta',open);
+    });
+    li.append(toggle,details);
+    return li;
+  }
   function renderActivity(type, entries) {
     activityContent.replaceChildren();
     if (!entries.length) {
-      activityContent.append(create('p',type === 'campanas' ? 'Este usuario todavía no creó campañas.' : 'Este usuario todavía no realizó donaciones.'));
+      if (type === 'donaciones') {
+        const empty = create('div',undefined,'admin-donaciones-vacio');
+        const symbol = create('span','♡','admin-donaciones-vacio-icono');
+        symbol.setAttribute('aria-hidden','true');
+        empty.append(symbol,create('p','Este usuario todavía no realizó donaciones.'));
+        activityContent.append(empty);
+      } else {
+        const empty = create('div',undefined,'admin-donaciones-vacio');
+        const symbol = create('span','▤','admin-donaciones-vacio-icono');
+        symbol.setAttribute('aria-hidden','true');
+        empty.append(symbol,create('p','Este usuario todavía no creó campañas.'));
+        activityContent.append(empty);
+      }
       return;
     }
     const list = create('ul',undefined,'admin-actividad-lista');
+    if (type === 'donaciones') {
+      list.classList.add('admin-donaciones-lista');
+      for (const item of entries) list.append(donationRow(item));
+      activityContent.append(list);
+      return;
+    }
     for (const item of entries) {
       const li = create('li');
       li.append(create('strong',type === 'campanas' ? item.nombre : item.campana_nombre));
@@ -224,7 +399,7 @@
     activityDialog.showModal();
     requestActivity(user,type);
   }
-  byId('admin-actividad-cerrar').addEventListener('click',()=>activityDialog.close());
+  byId('admin-actividad-cerrar').addEventListener('click',()=>closeModal(activityDialog));
   function openDialog(user, unlock) {
     action = unlock ? 'admin_desbloquear' : 'admin_password';
     form.reset();
@@ -244,7 +419,7 @@
       const response = await fetch(`${api}?ruta=${action}`,{method:'POST',body:payload,credentials:'same-origin',headers:{Accept:'application/json'}});
       const data = await response.json();
       if (!response.ok) throw Error(data.error || 'No se pudo completar la operación.');
-      dialog.close();
+      closeModal(dialog);
       status.textContent = data.mensaje || 'Operación completada.';
       await fetchRows();
     } catch(error) { byId('admin-dialogo-error').textContent = error.message; }
@@ -285,17 +460,22 @@
       });
       const data = await response.json();
       if (!response.ok) throw Error(data.mensaje || data.error || 'No se pudo gestionar el baneo.');
-      banDialog.close();
+      closeModal(banDialog);
       await fetchRows();
       status.textContent = data.mensaje || 'Baneo actualizado.';
     } catch (error) { byId('admin-baneo-error').textContent = error.message; }
     finally { submit.disabled = false; }
   });
-  byId('admin-baneo-cancelar').addEventListener('click', () => banDialog.close());
-  byId('admin-cancelar').addEventListener('click',()=>dialog.close());
+  byId('admin-baneo-cancelar').addEventListener('click', () => closeModal(banDialog));
+  byId('admin-cancelar').addEventListener('click',()=>closeModal(dialog));
+  [dialog,banDialog,activityDialog].forEach(setupModalClosing);
   search.addEventListener('input',()=> { clearTimeout(debounce); debounce=setTimeout(()=>{page=1;fetchRows();},300); });
   limit.addEventListener('change',()=>{page=1;fetchRows();});
-  previous.addEventListener('click',()=>{if(page>1){page--;fetchRows();}});
-  next.addEventListener('click',()=>{page++;fetchRows();});
+  previous.addEventListener('click',()=>goToPage(page-1));
+  next.addEventListener('click',()=>goToPage(page+1));
+  first.addEventListener('click',()=>goToPage(1));
+  last.addEventListener('click',()=>goToPage(totalPages));
+  backFive.addEventListener('click',()=>goToPage(page-5));
+  forwardFive.addEventListener('click',()=>goToPage(page+5));
   fetchRows();
 })();
