@@ -89,6 +89,7 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         } else {
             $usuarioActual = [
                 'nombre' => $usuario->getNombre(),
+                'mail' => $usuario->getEmail(),
                 'admin' => $usuario->getAdmin(),
             ];
         }

@@ -41,5 +41,13 @@
         <p>Proyecto académico del Grupo 4, Tecnicatura Universitaria en Programación (UTN), <?= date('Y') ?>.</p>
     </div>
 </footer>
+<?php
+if ($usuarioActual !== null) {
+    // Aislar las variables del parcial de los formularios y datos de la página.
+    (static function ($usuario): void {
+        require __DIR__ . '/modal_cuenta.php';
+    })($cuentaParaModal);
+}
+?>
 </body>
 </html>

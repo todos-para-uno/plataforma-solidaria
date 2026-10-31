@@ -30,6 +30,7 @@ $paginaActual = $paginaActual ?? null;
 $usuarioActual = $usuarioActual ?? null;
 $rutaAssets = $rutaAssets ?? '../../public_php/assets';
 $estilosPagina = $estilosPagina ?? [];
+$cuentaParaModal = $usuario ?? $usuarioActual;
 
 ?>
 <!DOCTYPE html>
@@ -47,6 +48,10 @@ $estilosPagina = $estilosPagina ?? [];
         <link rel="stylesheet" href="<?= escapar($rutaAssets) ?>/css/<?= escapar($hoja) ?>">
     <?php endforeach; ?>
     <script src="<?= escapar($rutaAssets) ?>/js/base.js" defer></script>
+    <?php if ($usuarioActual !== null): ?>
+        <link rel="stylesheet" href="<?= escapar($rutaAssets) ?>/css/modal-cuenta.css">
+        <script src="<?= escapar($rutaAssets) ?>/js/modal-cuenta.js" defer></script>
+    <?php endif; ?>
 </head>
 <body>
 <a class="saltar-contenido" href="#contenido">Ir al contenido</a>
@@ -77,7 +82,7 @@ $estilosPagina = $estilosPagina ?? [];
                         <details class="menu-usuario">
                             <summary><?= escapar($usuarioActual['nombre']) ?></summary>
                             <ul>
-                                <li><a href="<?= escapar($rutas['perfil']) ?>"<?= marcarActual('perfil', $paginaActual) ?>>Mi cuenta</a></li>
+                                <li><a href="<?= escapar($rutas['perfil']) ?>" data-abrir-cuenta aria-haspopup="dialog" aria-controls="modal-cuenta"<?= marcarActual('perfil', $paginaActual) ?>>Mi cuenta</a></li>
                                 <li><a href="<?= escapar($rutas['mis_campanas']) ?>"<?= marcarActual('mis_campanas', $paginaActual) ?>>Mis campañas</a></li>
                                 <li><a href="<?= escapar($rutas['mis_donaciones']) ?>"<?= marcarActual('mis_donaciones', $paginaActual) ?>>Mis donaciones</a></li>
                                 <?php if (!empty($usuarioActual['admin'])): ?>

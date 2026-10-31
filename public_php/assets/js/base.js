@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('keydown', function (evento) {
+        // El diálogo administra Escape y devuelve el foco a quien lo abrió.
+        if (document.querySelector('dialog[open]')) return;
         if (evento.key === 'Escape' && menu && menu.classList.contains('abierto')) {
             boton.setAttribute('aria-expanded', 'false');
             menu.classList.remove('abierto');

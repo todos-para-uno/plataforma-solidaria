@@ -6,12 +6,17 @@
 
 (function () {
   var modal = document.getElementById('modal-cuenta');
-  if (!modal) return;
+  if (!modal || typeof modal.showModal !== 'function') return;
+  var devolverFoco = null;
 
   // ---------- Abrir y cerrar ----------
   // Cualquier botón con data-abrir-cuenta abre el modal.
   document.querySelectorAll('[data-abrir-cuenta]').forEach(function (boton) {
-    boton.addEventListener('click', function () {
+    boton.addEventListener('click', function (evento) {
+      evento.preventDefault();
+      var menuCuenta = boton.closest('.menu-usuario');
+      devolverFoco = menuCuenta ? menuCuenta.querySelector('summary') : boton;
+      if (menuCuenta) menuCuenta.open = false;
       modal.showModal();                         // <dialog> nativo: pone el ::backdrop y atrapa el foco
       document.body.classList.add('modal-abierto');
     });
@@ -30,6 +35,7 @@
   modal.addEventListener('close', function () {
     document.body.classList.remove('modal-abierto');
     mostrarLecturaPerfil();
+    if (devolverFoco) devolverFoco.focus();
   });
 
   // ---------- Pestañas Perfil / Seguridad ----------
@@ -63,10 +69,21 @@
   // ---------- Editar perfil ----------
   var lectura = modal.querySelector('[data-perfil-lectura]');
   var formulario = modal.querySelector('[data-perfil-formulario]');
+  // Esta vista permite previsualizar. No enviar a una ruta hasta integrar el guardado.
+  formulario.addEventListener('submit', function (evento) { evento.preventDefault(); });
+  var vistaInicial = formulario.querySelector('[data-avatar-vista]').cloneNode(true);
+  var urlAvatar = null;
+
+  function liberarAvatar() {
+    if (urlAvatar) URL.revokeObjectURL(urlAvatar);
+    urlAvatar = null;
+  }
 
   function mostrarLecturaPerfil() {
     if (!formulario) return;
     formulario.reset();
+    liberarAvatar();
+    formulario.querySelector('[data-avatar-vista]').replaceWith(vistaInicial.cloneNode(true));
     formulario.hidden = true;
     lectura.hidden = false;
   }
@@ -91,12 +108,20 @@
       return;
     }
 
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(archivo.type)) {
+      alert('Elegí una imagen JPG, PNG, GIF o WEBP.');
+      inputAvatar.value = '';
+      return;
+    }
+
     var vista = formulario.querySelector('[data-avatar-vista]');
     var img = document.createElement('img');
     img.className = 'avatar';
     img.alt = '';
     img.setAttribute('data-avatar-vista', '');
-    img.src = URL.createObjectURL(archivo);
+    liberarAvatar();
+    urlAvatar = URL.createObjectURL(archivo);
+    img.src = urlAvatar;
     vista.replaceWith(img);
   });
 })();
