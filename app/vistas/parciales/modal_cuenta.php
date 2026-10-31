@@ -142,10 +142,16 @@ if (!is_array($dispositivos)) { $dispositivos = []; }
           </div>
         </div>
         <div class="fila-cuenta">
-          <span class="fila-cuenta__etiqueta">Donaciones</span>
+          <span class="fila-cuenta__etiqueta">Mercado Pago</span>
           <div class="fila-cuenta__valor">
-            <a class="boton boton-secundario boton-chico" href="<?= escapar($rutaCuentaMp) ?>">Gestionar Mercado Pago</a>
-            <p class="campo-ayuda">Conectá tu cuenta para recibir aportes de tus campañas.</p>
+            <p>Conectá tu cuenta para recibir los aportes de tus campañas de dinero.</p>
+            <?php if (!empty($rutaCuentaMp)): ?>
+              <a class="boton boton-secundario boton-chico" href="<?= escapar($rutaCuentaMp) ?>" aria-describedby="cuenta-mercadopago-ayuda">Conectar Mercado Pago</a>
+              <p class="campo-ayuda" id="cuenta-mercadopago-ayuda">Continuarás a la vinculación de tu cuenta.</p>
+            <?php else: ?>
+              <button type="button" class="boton boton-secundario boton-chico" disabled aria-describedby="cuenta-mercadopago-ayuda">Conectar Mercado Pago</button>
+              <p class="campo-ayuda" id="cuenta-mercadopago-ayuda">La conexión estará disponible próximamente.</p>
+            <?php endif; ?>
           </div>
         </div>
       </section>
