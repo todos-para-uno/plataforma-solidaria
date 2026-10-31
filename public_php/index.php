@@ -89,6 +89,7 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         } else {
             $usuarioActual = [
                 'nombre' => $usuario->getNombre(),
+                'mail' => $usuario->getEmail(),
                 'admin' => $usuario->getAdmin(),
             ];
         }
@@ -168,6 +169,28 @@ if (in_array($ruta, ['buscador', 'resultados_buscar'], true)) {
     // Las búsquedas nuevas usan GET. Se conserva la lectura de formularios POST anteriores.
     $controlador->mostrar($rutaBase, $rutaAssets, $metodo === 'POST' ? $_POST : $_GET,
         $ruta === 'resultados_buscar', $usuarioActual);
+    return;
+}
+
+if ($ruta === 'perfil') {
+    // perfil.php trabaja con un array; la sesión carga un objeto Usuario.
+    // Se arma el array que la vista espera. Sin sesión queda null y la vista muestra su aviso.
+    $datosPerfil = null;
+    if (isset($usuario) && $usuario instanceof Usuario) {
+        require_once __DIR__ . '/../app/repositorios/ValidacionesRepository.php';
+        $validacion = (new ValidacionesRepository(conectarBd()))->findById($usuario->getIdValidacion());
+
+        $datosPerfil = [
+            'nombre' => $usuario->getNombre(),
+            'mail' => $usuario->getEmail(),
+            'telefono' => $usuario->getTelefono(),
+            'tipo_documento' => $usuario->getTipoDocumento()?->value,
+            'documento' => $usuario->getDocumento(),
+            'validacion_nombre' => $validacion instanceof Validaciones ? $validacion->getNombre() : 'Blanco',
+        ];
+    }
+    $usuario = $datosPerfil;
+    require __DIR__ . '/../app/vistas/perfil.php';
     return;
 }
 

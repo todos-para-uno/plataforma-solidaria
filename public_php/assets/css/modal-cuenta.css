@@ -1,0 +1,49 @@
+/* Distribución de Mi cuenta. Los componentes y la paleta vienen de base.css. */
+.modal-cuenta {
+    width: min(920px, calc(100% - var(--e-8)));
+    max-width: none;
+    max-height: calc(100dvh - var(--e-8));
+    padding: 0;
+    margin: auto;
+    background: var(--papel);
+    color: var(--azul);
+    border: solid var(--grafito);
+    border-width: var(--trazo);
+    border-radius: var(--radio-tarjeta);
+    box-shadow: var(--sombra-tarjeta);
+    font: inherit;
+    overflow-y: auto;
+}
+.modal-cuenta::backdrop { background: rgb(21 58 107 / 45%); }
+body.modal-abierto { overflow: hidden; }
+.modal-cuenta__caja { display: grid; grid-template-columns: 200px minmax(0, 1fr); }
+.modal-cuenta__lateral { padding: var(--e-8) var(--e-4); background: var(--hueso); border-right: 1px solid var(--linea); }
+.modal-cuenta__bajada { font-size: var(--t-chico); color: var(--texto-secundario); }
+.modal-cuenta__nav { display: flex; flex-direction: column; gap: var(--e-2); }
+.modal-cuenta__pestana { justify-content: flex-start; }
+.modal-cuenta__pestana[aria-selected="true"] { background: var(--sol); color: var(--azul); border-color: var(--grafito); }
+.modal-cuenta__contenido { min-width: 0; padding: var(--e-8); }
+.modal-cuenta__cabecera { display: flex; justify-content: flex-end; margin-bottom: var(--e-4); }
+.modal-cuenta__seccion-titulo { padding-bottom: var(--e-4); border-bottom: 1px solid var(--linea); }
+.fila-cuenta { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: var(--e-4); padding-block: var(--e-6); border-bottom: 1px solid var(--linea); }
+.fila-cuenta:last-child { border-bottom: none; }
+.fila-cuenta__etiqueta { font-weight: 700; }
+.fila-cuenta__valor { min-width: 0; overflow-wrap: anywhere; }
+.cuenta-dato { display: flex; align-items: center; flex-wrap: wrap; gap: var(--e-2); }
+.perfil-resumen { display: flex; align-items: center; flex-wrap: wrap; gap: var(--e-3); }
+.perfil-resumen__nombre { flex: 1; font-weight: 700; overflow-wrap: anywhere; }
+.avatar { width: 48px; height: 48px; flex-shrink: 0; object-fit: cover; border: 1px solid var(--grafito); border-radius: var(--radio-control); }
+.avatar--inicial { display: inline-grid; place-items: center; background: var(--verde-suave); color: var(--verde); font-weight: 700; }
+.tarjeta-edicion { margin-top: var(--e-4); padding: var(--e-4); }
+.imagen-perfil { display: flex; flex-wrap: wrap; gap: var(--e-4); margin-bottom: var(--e-4); }
+.campos-dobles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e-3); }
+.cuenta-acciones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--e-2); margin-top: var(--e-4); }
+.dispositivo + .dispositivo { margin-top: var(--e-4); padding-top: var(--e-4); border-top: 1px solid var(--linea); }
+@media (max-width: 760px) {
+    .modal-cuenta__caja { grid-template-columns: minmax(0, 1fr); }
+    .modal-cuenta__lateral { padding: var(--e-4); border-right: 0; border-bottom: 1px solid var(--linea); }
+    .modal-cuenta__nav { flex-direction: row; flex-wrap: wrap; }
+    .modal-cuenta__contenido { padding: var(--e-4); }
+    .fila-cuenta { grid-template-columns: minmax(0, 1fr); gap: var(--e-2); }
+    .campos-dobles { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
