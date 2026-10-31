@@ -1,0 +1,318 @@
+/* =========================================================
+   Modal "Mi cuenta" — todospara.uno
+   Ubicación sugerida: public_php/assets/css/modal-cuenta.css
+   Si base.css ya define estas variables, borrá el bloque :root.
+   ========================================================= */
+:root {
+  --hueso: #F7F5F0;
+  --azul: #1B365D;
+  --dorado: #F4B223;
+  --terracota: #D96B43;
+  --celeste: #74ACDF;
+  --verde: #3A8E67;
+  --blanco: #FFFFFF;
+  --grafito: rgba(27, 54, 93, 0.18);   /* línea tipo lápiz */
+  --texto-suave: #5B6577;
+}
+
+/* ---------- Contenedor <dialog> ---------- */
+.modal-cuenta {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: 920px;
+  width: calc(100% - 32px);
+  max-height: calc(100vh - 48px);
+}
+
+/* Fondo: oscurece y desenfoca la página */
+.modal-cuenta::backdrop {
+  background: rgba(27, 54, 93, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Que el atributo hidden siempre oculte, aunque la clase tenga display */
+.modal-cuenta [hidden] { display: none !important; }
+
+.modal-cuenta *, .modal-cuenta *::before, .modal-cuenta *::after { box-sizing: border-box; }
+
+/* Evita que la página de atrás scrollee con el modal abierto */
+body.modal-abierto { overflow: hidden; }
+
+.modal-cuenta__caja {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 560px;
+  max-height: calc(100vh - 48px);
+  background: var(--blanco);
+  border: 1.5px solid var(--grafito);
+  border-radius: 16px 18px 15px 17px; /* trazo apenas irregular, a mano */
+  box-shadow: 0 18px 40px rgba(27, 54, 93, 0.22);
+  overflow: hidden;
+  color: var(--azul);
+}
+
+/* ---------- Columna izquierda ---------- */
+.modal-cuenta__lateral {
+  background: var(--hueso);
+  border-right: 1.5px solid var(--grafito);
+  padding: 28px 18px;
+}
+
+.modal-cuenta__titulo {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+}
+
+.modal-cuenta__bajada {
+  margin: 0 0 24px;
+  font-size: 0.875rem;
+  color: var(--texto-suave);
+}
+
+.modal-cuenta__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-cuenta__pestana {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  background: none;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--texto-suave);
+  text-align: left;
+  cursor: pointer;
+}
+
+.modal-cuenta__pestana:hover { color: var(--azul); }
+
+.modal-cuenta__pestana[aria-selected="true"] {
+  background: var(--blanco);
+  border-color: var(--grafito);
+  color: var(--azul);
+  font-weight: 600;
+}
+
+.modal-cuenta__pestana[aria-selected="true"] .modal-cuenta__icono { color: var(--terracota); }
+
+.modal-cuenta__icono { font-size: 0.7rem; }
+
+/* ---------- Columna derecha ---------- */
+.modal-cuenta__contenido {
+  position: relative;
+  padding: 28px 32px;
+  overflow-y: auto;
+}
+
+.modal-cuenta__cerrar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--grafito);
+  border-radius: 50%;
+  background: var(--blanco);
+  color: var(--azul);
+  cursor: pointer;
+}
+
+.modal-cuenta__cerrar:hover { border-color: var(--terracota); color: var(--terracota); }
+
+.modal-cuenta__seccion-titulo {
+  margin: 0 0 8px;
+  padding-bottom: 14px;
+  font-size: 1.1rem;
+  border-bottom: 1.5px solid var(--grafito);
+}
+
+/* Fila: etiqueta a la izquierda, valor a la derecha */
+.fila-cuenta {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1.5px dashed var(--grafito);
+}
+
+.fila-cuenta:last-child { border-bottom: none; }
+
+.fila-cuenta__etiqueta {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.fila-cuenta__valor { min-width: 0; }
+
+.dato {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+  word-break: break-word;
+}
+
+.ayuda {
+  margin: 2px 0;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+
+.insignia {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(116, 172, 223, 0.2); /* celeste suave */
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--azul);
+}
+
+/* ---------- Perfil ---------- */
+.perfil-resumen {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.perfil-resumen__nombre { font-weight: 600; flex: 1; }
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--dorado);
+  flex-shrink: 0;
+}
+
+.avatar--inicial {
+  display: inline-grid;
+  place-items: center;
+  background: var(--hueso);
+  font-weight: 700;
+  color: var(--terracota);
+}
+
+.tarjeta-edicion {
+  padding: 18px;
+  background: var(--hueso);
+  border: 1.5px solid var(--grafito);
+  border-radius: 12px 14px 12px 13px;
+}
+
+.tarjeta-edicion__titulo { margin: 0 0 14px; font-weight: 600; }
+
+.imagen-perfil {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.campos-dobles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.campo { display: flex; flex-direction: column; gap: 4px; }
+.campo__etiqueta { font-size: 0.85rem; font-weight: 600; }
+
+.campo__input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1.5px solid var(--grafito);
+  border-radius: 8px;
+  background: var(--blanco);
+  font: inherit;
+  color: var(--azul);
+}
+
+.campo__input:focus {
+  outline: none;
+  border-color: var(--celeste);
+  box-shadow: 0 0 0 3px rgba(116, 172, 223, 0.3);
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.dispositivo + .dispositivo {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1.5px dashed var(--grafito);
+}
+
+/* ---------- Botones ---------- */
+.boton {
+  display: inline-block;
+  padding: 9px 16px;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton--chico { padding: 6px 12px; font-size: 0.85rem; }
+
+.boton--primario { background: var(--terracota); color: var(--blanco); }
+.boton--primario:hover { background: #C25A34; }
+
+.boton--secundario { background: var(--blanco); border-color: var(--grafito); color: var(--azul); }
+.boton--secundario:hover { border-color: var(--azul); }
+
+.boton--peligro { background: var(--blanco); border-color: var(--terracota); color: var(--terracota); }
+.boton--peligro:hover { background: var(--terracota); color: var(--blanco); }
+
+.boton-texto {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--azul);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--dorado);
+  cursor: pointer;
+}
+
+.boton-texto--peligro { margin-left: 10px; color: var(--terracota); text-decoration-color: var(--terracota); }
+
+.modal-cuenta :focus-visible { outline: 2px solid var(--celeste); outline-offset: 2px; }
+
+/* ---------- Celular: columnas apiladas ---------- */
+@media (max-width: 680px) {
+  .modal-cuenta__caja { grid-template-columns: 1fr; min-height: 0; }
+
+  .modal-cuenta__lateral {
+    border-right: none;
+    border-bottom: 1.5px solid var(--grafito);
+    padding: 20px 16px 12px;
+  }
+
+  .modal-cuenta__bajada { margin-bottom: 12px; }
+  .modal-cuenta__nav { flex-direction: row; }
+  .modal-cuenta__contenido { padding: 20px 16px; }
+  .fila-cuenta { grid-template-columns: 1fr; gap: 8px; }
+  .campos-dobles { grid-template-columns: 1fr; }
+}

@@ -171,6 +171,28 @@ if (in_array($ruta, ['buscador', 'resultados_buscar'], true)) {
     return;
 }
 
+if ($ruta === 'perfil') {
+    // perfil.php trabaja con un array; la sesión carga un objeto Usuario.
+    // Se arma el array que la vista espera. Sin sesión queda null y la vista muestra su aviso.
+    $datosPerfil = null;
+    if (isset($usuario) && $usuario instanceof Usuario) {
+        require_once __DIR__ . '/../app/repositorios/ValidacionesRepository.php';
+        $validacion = (new ValidacionesRepository(conectarBd()))->findById($usuario->getIdValidacion());
+
+        $datosPerfil = [
+            'nombre' => $usuario->getNombre(),
+            'mail' => $usuario->getEmail(),
+            'telefono' => $usuario->getTelefono(),
+            'tipo_documento' => $usuario->getTipoDocumento()?->value,
+            'documento' => $usuario->getDocumento(),
+            'validacion_nombre' => $validacion instanceof Validaciones ? $validacion->getNombre() : 'Blanco',
+        ];
+    }
+    $usuario = $datosPerfil;
+    require __DIR__ . '/../app/vistas/perfil.php';
+    return;
+}
+
 if (isset($vistas[$ruta])) {
     require __DIR__ . '/../app/vistas/' . $vistas[$ruta];
     return;
