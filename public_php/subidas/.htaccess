@@ -1,0 +1,10 @@
+# Fotos subidas por los usuarios: solo se sirven como imágenes, nunca se ejecutan.
+# PHP ya guarda cada foto con un nombre aleatorio y extensión .png, .jpg o .webp;
+# estas reglas son una segunda barrera si alguien lograra dejar otro archivo acá.
+Options -Indexes
+<FilesMatch "\.(?i:php\d?|phtml|phar|phps|cgi|pl|py|sh|htm|html|svg)$">
+    Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

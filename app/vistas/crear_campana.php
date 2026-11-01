@@ -13,10 +13,11 @@ $dibujarInsumo = static function ($indice, array $fila) use ($categoriasInsumos)
 ?>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="<?= escapar($rutaAssets) ?>/js/crear_campana_imagenes.js" defer></script>
 <section class="seccion"><div class="contenedor"><div class="crear-interior">
 <div class="seccion-encabezado"><h1>Crear campaña</h1><p class="bajada">Contá qué necesitás y definí un objetivo para cada insumo.</p></div>
 <?php if ($errores): ?><div class="alerta alerta-error" role="alert"><p>No pudimos publicar la campaña:</p><ul><?php foreach ($errores as $error): ?><li><?= escapar($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-<form class="crear-formulario" action="<?= escapar($rutas['crear_campana']) ?>" method="post">
+<form class="crear-formulario" action="<?= escapar($rutas['crear_campana']) ?>" method="post" enctype="multipart/form-data">
 <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>"><input type="hidden" name="clave" value="<?= escapar($clave) ?>">
 <section class="tarjeta crear-tarjeta"><h2>Información básica</h2>
 <div class="campo"><label for="crear-nombre">Nombre de la campaña</label><input id="crear-nombre" name="nombre" maxlength="100" value="<?= escapar($valor('nombre')) ?>" required></div>
@@ -25,6 +26,45 @@ $dibujarInsumo = static function ($indice, array $fila) use ($categoriasInsumos)
 <?php foreach ($categorias as $cat): ?><option value="<?= (int)$cat['id'] ?>" <?= $valor('categoria') === (string)$cat['id'] ? 'selected' : '' ?>><?= escapar($cat['nombre']) ?></option><?php endforeach; ?></select></div>
 <div class="campo"><label for="crear-tipo">¿Qué necesitás?</label><select id="crear-tipo" name="tipo_ayuda" required><option value="insumos" <?= $tipoAyuda === 'insumos' ? 'selected' : '' ?>>Insumos</option><option value="dinero" <?= $tipoAyuda === 'dinero' ? 'selected' : '' ?>>Dinero</option></select></div>
 </section>
+                <!-- Imágenes de la campaña: arrastrar o elegir, con vista previa -->
+                <section class="tarjeta crear-tarjeta" aria-labelledby="crear-imagenes-titulo">
+                    <h2 id="crear-imagenes-titulo">Imágenes</h2>
+                    <div class="campo campo-imagenes" data-carga-imagenes
+                         data-max-imagenes="<?= (int) $maxImagenes ?>"
+                         data-max-bytes="<?= (int) $tamanoMaximoImagen ?>"
+                         data-max-total="<?= (int) $tamanoMaximoTotal ?>">
+                        <span class="campo-imagenes-etiqueta" id="crear-imagenes-etiqueta">Fotos de la campaña <span class="texto-secundario">(opcional)</span></span>
+
+                        <label class="zona-carga" for="crear-imagenes" data-zona-carga>
+                            <svg class="zona-carga-icono" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+                                <rect x="5" y="9" width="38" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                <circle cx="16" cy="19" r="3.5" fill="var(--sol)" stroke="currentColor" stroke-width="2"/>
+                                <path d="M8 35l10-10 7 7 5-5 10 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                            </svg>
+                            <span class="zona-carga-titulo" data-zona-titulo>Arrastrá tus fotos acá</span>
+                            <span class="zona-carga-texto">o <span class="zona-carga-enlace">elegilas desde tu dispositivo</span></span>
+                            <span class="zona-carga-formatos">PNG, JPG o WEBP · hasta <?= escapar($textoTamanoImagen) ?> cada una · máximo <?= (int) $maxImagenes ?></span>
+                        </label>
+                        <input id="crear-imagenes" class="solo-lectores" name="imagenes[]" type="file" multiple
+                               accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                               aria-labelledby="crear-imagenes-etiqueta"
+                               aria-describedby="crear-imagenes-ayuda crear-imagenes-error">
+
+                        <div class="imagenes-estado">
+                            <span class="imagenes-puntos" aria-hidden="true">
+                                <?php for ($i = 0; $i < (int) $maxImagenes; $i++): ?><span></span><?php endfor; ?>
+                            </span>
+                            <span class="imagenes-contador" data-contador aria-live="polite">0 de <?= (int) $maxImagenes ?> imágenes</span>
+                        </div>
+
+                        <ul class="imagenes-previa" data-previa aria-label="Imágenes seleccionadas"></ul>
+
+                        <span class="campo-error" id="crear-imagenes-error" data-error-imagenes role="alert" hidden></span>
+                        <span class="campo-ayuda" id="crear-imagenes-ayuda">La primera foto se muestra como portada. Evitá publicar datos personales o rostros sin permiso.</span>
+                    </div>
+                </section>
+
+
 <fieldset id="bloque-insumos" class="tarjeta crear-tarjeta" aria-labelledby="titulo-insumos" <?= $tipoAyuda !== 'insumos' ? 'hidden disabled' : '' ?>><h2 id="titulo-insumos">Insumos que necesitás</h2>
 <p class="crear-insumos-ayuda">Agregá cada insumo con su cantidad. Indicá la unidad en el nombre, por ejemplo “Leche (litros)” o “Frazadas (unidades)”.</p>
 <div id="lista-insumos"><?php foreach ($filas as $indice => $fila) $dibujarInsumo($indice,$fila); ?></div>

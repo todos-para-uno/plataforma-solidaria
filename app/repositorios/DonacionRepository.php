@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/CrudRepository.php';
 require_once __DIR__ . '/../modelos/Donacion.php';
+require_once __DIR__ . '/CampanaImagenesRepository.php';
 final class DonacionRepository extends CrudRepository
 {
     public function __construct(PDO $pdo)
@@ -45,7 +46,11 @@ final class DonacionRepository extends CrudRepository
             LEFT JOIN sub_categoria_insumos s ON s.id = d.id_sub_categoria_insumos
             WHERE d.id_usuario = ? ORDER BY d.fecha_hora DESC, d.id DESC');
         $stmt->execute([$usuario]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $portadas = (new CampanaImagenesRepository($this->pdo))->portadas(array_column($filas, 'id_camp'));
+        foreach ($filas as &$fila) $fila['imagen_subida'] = $portadas[(int) $fila['id_camp']] ?? null;
+        unset($fila);
+        return $filas;
     }
 
     public function findByIdCamp(int $idCamp): array

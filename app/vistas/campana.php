@@ -23,7 +23,12 @@ $pctMonetaria = ($campana->getMonetaria() && $objetivoMonetario > 0)
 
             <!-- Tarjeta principal de detalle -->
             <article class="tarjeta campana tarjeta-detalle">
-                <div class="campana-imagen imagen-detalle" role="img" aria-label="Fotografía ilustrativa de la campaña"></div>
+                <?php if (!empty($imagenesCampana)): ?>
+                <img class="campana-imagen imagen-detalle" src="<?= escapar($rutaBase . '/' . $imagenesCampana[0]->getRuta()) ?>" alt="<?= escapar($campana->getNombre()) ?>">
+                <?php if (count($imagenesCampana) > 1): ?><div class="campana-galeria" aria-label="Fotos de la campaña">
+                    <?php foreach (array_slice($imagenesCampana, 1) as $indice => $foto): ?><a href="<?= escapar($rutaBase . '/' . $foto->getRuta()) ?>" target="_blank" rel="noopener noreferrer"><img src="<?= escapar($rutaBase . '/' . $foto->getRuta()) ?>" alt="<?= escapar($campana->getNombre()) ?> — foto <?= $indice + 2 ?>" loading="lazy"></a><?php endforeach; ?>
+                </div><?php endif; ?>
+                <?php else: ?><div class="campana-imagen imagen-detalle" role="img" aria-label="Campaña sin fotos"></div><?php endif; ?>
 
                 <div class="campana-cuerpo cuerpo-detalle">
 

@@ -45,6 +45,9 @@ $pruebas = [
             'funcion' => 'ubicacionesTest',
         ],
     ],
+    'servicios' => [
+        'ImagenesCampana' => ['archivo' => 'servicios/ImagenesCampanaTest.php', 'funcion' => 'imagenesCampanaTest'],
+    ],
     'repositorios' => [
         'EstadoAutenticacionRepository' => [
             'archivo' => 'repositorios/EstadoAutenticacionRepositoryTest.php',
@@ -68,6 +71,7 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'CrearCampanaImagenes' => ['archivo'=>'controladores/CrearCampanaImagenesTest.php','funcion'=>'crearCampanaImagenesTest'],
         'CrearCampanaController' => [
             'archivo' => 'controladores/CrearCampanaControllerTest.php',
             'funcion' => 'crearCampanaControllerTest',

@@ -37,7 +37,9 @@ require __DIR__ . '/parciales/cabecera.php';
             <div class="grilla-campanas">
                 <?php foreach ($donaciones as $donacion): ?>
                     <article class="tarjeta campana">
-                        <?php if (!empty($donacion['imagen'])): ?>
+                        <?php if (!empty($donacion['imagen_subida'])): ?>
+                            <img class="campana-imagen" src="<?= escapar($rutaBase . '/' . $donacion['imagen_subida']) ?>" alt="<?= escapar($donacion['campaña_nombre']) ?>" loading="lazy">
+                        <?php elseif (!empty($donacion['imagen'])): ?>
                             <img class="campana-imagen"
                                  src="<?= escapar($rutaAssets . '/imagenes/' . $donacion['imagen']) ?>"
                                  alt="<?= escapar('Imagen de ' . $donacion['campaña_nombre']) ?>"

@@ -202,7 +202,7 @@ if ($ruta === 'campana') {
     $controlador = new CampanaController(
         new CampRepository($pdo), new CatCampRepository($pdo),
         new UsuariosRepository($pdo), new ValidacionesRepository($pdo),
-        new ObjetivosRepository($pdo), new PuntoEntregaRepository($pdo)
+        new ObjetivosRepository($pdo), new PuntoEntregaRepository($pdo), new CampanaImagenesRepository($pdo)
     );
     $controlador->mostrar($rutaBase, $rutaAssets, $_GET['id'] ?? null, $usuarioActual);
     return;
@@ -212,7 +212,7 @@ if (in_array($ruta, ['buscador', 'resultados_buscar'], true)) {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/BuscadorController.php';
     $pdo = conectarBd();
-    $controlador = new BuscadorController(new CampRepository($pdo), new CatCampRepository($pdo));
+    $controlador = new BuscadorController(new CampRepository($pdo), new CatCampRepository($pdo), new CampanaImagenesRepository($pdo));
     // Las búsquedas nuevas usan GET. Se conserva la lectura de formularios POST anteriores.
     $controlador->mostrar($rutaBase, $rutaAssets, $metodo === 'POST' ? $_POST : $_GET,
         $ruta === 'resultados_buscar', $usuarioActual);

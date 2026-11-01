@@ -109,6 +109,22 @@ CREATE TABLE camp (
     FOREIGN KEY (id_ubicacion) REFERENCES ubicaciones(id)
 );
 
+CREATE TABLE IF NOT EXISTS campana_imagenes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_camp INT NOT NULL,
+    -- Ruta relativa a public_php, por ejemplo: subidas/campanas/3f9a...c1.webp
+    ruta VARCHAR(255) NOT NULL,
+    -- Posición en la galería. La imagen con orden 0 es la portada.
+    orden TINYINT UNSIGNED NOT NULL,
+    fecha_subida DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_campana_imagenes_orden UNIQUE (id_camp, orden),
+    CONSTRAINT ck_campana_imagenes_orden CHECK (orden BETWEEN 0 AND 3),
+    CONSTRAINT fk_campana_imagenes_camp
+        FOREIGN KEY (id_camp) REFERENCES camp(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- objetivos
 CREATE TABLE objetivos (
     id INT AUTO_INCREMENT PRIMARY KEY,

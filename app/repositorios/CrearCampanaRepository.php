@@ -28,7 +28,7 @@ final class CrearCampanaRepository
         if (!$id) throw new InvalidArgumentException('Seleccioná una categoría válida.');
         return $id;
     }
-    public function publicar(int $actor, array $entrada): int
+    public function publicar(int $actor, array $entrada, ?Closure $guardarRelacionados = null): int
     {
         $nombre = $this->texto($entrada, 'nombre', 100);
         $descripcion = $this->texto($entrada, 'descripcion', 5000);
@@ -78,6 +78,7 @@ final class CrearCampanaRepository
                 $sub = (int) $this->pdo->lastInsertId();
                 $objetivos->save(['id_camp'=>$id,'id_categoria_insumos'=>$cat,'id_sub_categoria_insumos'=>$sub,'objetivo'=>$cantidad,'parcial'=>0]);
             }
+            if ($guardarRelacionados !== null) $guardarRelacionados($id);
             if ($externa) $this->pdo->exec('RELEASE SAVEPOINT crear_campana'); else $this->pdo->commit();
             return $id;
         } catch (Throwable $e) {

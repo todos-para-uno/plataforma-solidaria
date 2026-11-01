@@ -23,6 +23,8 @@ $todasLasActivas = $campRepository->findByEstado(EstadoCamp::Activa);
 $nombresCategorias = array_column($catCampRepository->listarParaBuscador(), 'nombre', 'id');
 $campanas = array_slice($todasLasActivas, 0, 3); // Tomamos solo tres campañas
 
+$portadas = (new CampanaImagenesRepository($pdo))->portadas(array_map(fn($c) => $c->getId(), $campanas));
+
 $tituloPagina  = 'Todospara.uno — Campañas solidarias';
 $paginaActual  = 'inicio';
 $usuarioActual = $usuarioActual ?? null;
@@ -93,7 +95,8 @@ require __DIR__ . '/parciales/cabecera.php';
                 <?php foreach ($campanas as $c): ?>
                     <article class="tarjeta campana">
                         <!-- Imagen representativa o contenedor visual alineado con resultados_buscar.php -->
-                        <div class="campana-imagen" role="img" aria-label="Foto de la campaña"></div>
+                        <?php if (!empty($portadas[$c->getId()])): ?><img class="campana-imagen" src="<?= escapar($rutaBase . '/' . $portadas[$c->getId()]) ?>" alt="" loading="lazy">
+                        <?php else: ?><div class="campana-imagen" role="img" aria-label="Campaña sin fotos"></div><?php endif; ?>
                         <div class="campana-cuerpo">
                             <div class="campana-datos">
                                 <span class="insignia"><?= escapar($nombresCategorias[$c->getCategoria()] ?? 'Sin categoría') ?></span>

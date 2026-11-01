@@ -1,0 +1,7 @@
+# Las fotos de las campañas no se versionan; solo se conserva la estructura de carpetas.
+*
+!.gitignore
+!.htaccess
+!campanas/
+campanas/*
+!campanas/.gitkeep

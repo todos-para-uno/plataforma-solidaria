@@ -36,6 +36,7 @@ require __DIR__ . '/parciales/cabecera.php';
                     <?php foreach ($resultados as $resultado): ?>
                         <article class="tarjeta campana resultado-campana">
                             <a class="resultado-enlace" href="<?= escapar($rutas['campana'] . '&id=' . $resultado->getId()) ?>">
+                                <?php if (!empty($portadas[$resultado->getId()])): ?><img class="campana-imagen" src="<?= escapar($rutaBase . '/' . $portadas[$resultado->getId()]) ?>" alt="" loading="lazy"><?php endif; ?>
                                 <div class="resultado-categoria"><?= escapar($nombresCategorias[$resultado->getCategoria()] ?? 'Sin categoría') ?></div>
                                 <div class="campana-cuerpo">
                                     <span class="insignia"><?= $resultado->getMonetaria() ? 'Dinero' : 'Insumos' ?></span>
