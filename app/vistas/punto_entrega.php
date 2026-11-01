@@ -1,5 +1,5 @@
 <?php
-$tituloPagina = 'Punto de entrega'; $paginaActual = 'mis_campanas'; $estilosPagina = ['campana.css'];
+$tituloPagina = 'Punto de entrega'; $paginaActual = 'mis_campanas'; $estilosPagina = ['campana.css', 'punto_entrega.css'];
 require __DIR__ . '/parciales/cabecera.php';
 ?>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -14,11 +14,12 @@ require __DIR__ . '/parciales/cabecera.php';
 <?php foreach ($catalogo as $prov => $localidades): ?><option <?= ($punto['provincia'] ?? '') === $prov ? 'selected' : '' ?> value="<?= escapar($prov) ?>"><?= escapar($prov) ?></option><?php endforeach; ?></select></div>
 <div class="campo"><label for="localidad">Localidad</label><select id="localidad" name="localidad" required><option value="">Seleccioná una localidad</option>
 <?php foreach ($catalogo[$punto['provincia'] ?? ''] ?? [] as $loc): ?><option <?= ($punto['localidad'] ?? '') === $loc ? 'selected' : '' ?> value="<?= escapar($loc) ?>"><?= escapar($loc) ?></option><?php endforeach; ?></select></div>
+<?php require __DIR__ . '/parciales/buscar_punto_entrega.php'; ?>
 <div class="campo"><label for="referencia">Dirección, horarios o referencia de entrega</label><input id="referencia" name="referencia" maxlength="150" value="<?= escapar($punto['referencia'] ?? '') ?>"></div>
-<p>Hacé clic en el mapa para elegir el lugar. También podés ingresar sus coordenadas.</p>
+<p>El punto seleccionado será el lugar de entrega para todos los insumos.</p>
 <div id="mapa-entrega" class="mapa-entrega" aria-label="Mapa del punto de entrega"></div>
-<div class="campo"><label for="latitud">Latitud</label><input type="number" step="0.000001" min="-90" max="90" id="latitud" name="latitud" required value="<?= escapar((string) ($punto['latitud'] ?? '')) ?>"></div>
-<div class="campo"><label for="longitud">Longitud</label><input type="number" step="0.000001" min="-180" max="180" id="longitud" name="longitud" required value="<?= escapar((string) ($punto['longitud'] ?? '')) ?>"></div>
+<input type="hidden" id="latitud" name="latitud" value="<?= escapar((string) ($punto['latitud'] ?? '')) ?>">
+<input type="hidden" id="longitud" name="longitud" value="<?= escapar((string) ($punto['longitud'] ?? '')) ?>">
 <button class="boton" type="submit">Guardar punto de entrega</button>
 <a class="boton boton-secundario" href="<?= escapar($rutaBase) ?>/index.php?ruta=campana&amp;id=<?= $id ?>">Volver a la campaña</a>
 </form></article></div></section>

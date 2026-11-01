@@ -39,7 +39,7 @@
     --nivel-blanco: #ffffff;
     --nivel-celeste: #1f5f8b;  --nivel-celeste-fondo: #e3f0f9;
     --nivel-azul: #ffffff;     --nivel-azul-fondo: var(--azul);
-    --nivel-violeta: #5a3d8a;  --nivel-violeta-fondo: #efe9f7;
+    --nivel-violeta: #5a3d8a;  --nivel-violeta-fondo: #ded2f2;
  
     /* Tipografía: sin descargas, funciona sin internet */
     --fuente-titulos: Georgia, "Times New Roman", serif;

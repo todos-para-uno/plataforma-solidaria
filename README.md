@@ -433,3 +433,23 @@ El nivel se recalcula al navegar con sesión iniciada y al guardar el documento.
 ```bash
 php tests/run_tests.php controladores PerfilController
 ```
+
+
+## Crear campañas con varios objetivos
+
+La ruta `crear_campana` admite GET y POST y requiere sesión. Se usan categorías reales de la base, CSRF y una clave de sesión de un solo uso para evitar publicaciones duplicadas.
+
+En una campaña de insumos se pueden agregar o quitar hasta 20 filas: categoría del insumo, nombre con su unidad y cantidad positiva con hasta dos decimales. Los nombres se reutilizan o agregan al catálogo de subcategorías existente. Cada fila genera un objetivo independiente, con progreso inicial cero. Todos comparten un único punto de entrega, seleccionado buscando un lugar o dirección, o haciendo clic en el mapa. Las coordenadas se guardan en campos ocultos; provincia y localidad se completan cuando coinciden con el catálogo y pueden revisarse. No se cambia la estructura de la base.
+
+Las campañas de dinero guardan su monto objetivo y CBU/CVU. Guardar la campaña, su ubicación y los objetivos es una operación atómica. Ante un error se conservan los campos y las filas para corregirlos. Se retiró el campo de fecha límite, que no tiene una columna donde persistirse en el esquema actual.
+
+```bash
+php tests/run_tests.php controladores CrearCampanaController
+```
+
+
+### Buscar el punto de entrega
+
+Crear campaña y editar su punto de entrega comparten un buscador de lugares/direcciones con Photon, basado en OpenStreetMap. La búsqueda se realiza al pulsar **Buscar en el mapa** o Enter; no hace consultas mientras se escribe. Se muestran hasta cinco resultados en Argentina. Elegir uno centra el mapa, guarda las coordenadas ocultas y completa la referencia; se pueden agregar horarios después. También se puede ajustar el marcador arrastrándolo o haciendo clic en el mapa. Revisar provincia y localidad si el proveedor no las reconoce en el catálogo.
+
+Se utiliza caché durante la visita, una sola búsqueda simultánea y un tiempo de espera de diez segundos. El servicio público admite uso moderado para proyectos, sin garantía de disponibilidad: [documentación de Photon](https://github.com/komoot/photon#demo-server). Si falla la búsqueda, se conserva el punto anterior y se puede elegir otro haciendo clic en el mapa. No se requieren claves ni cambios de estructura en la base.
