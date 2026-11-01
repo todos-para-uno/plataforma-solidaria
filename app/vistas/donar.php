@@ -10,6 +10,13 @@ require __DIR__ . '/parciales/cabecera.php';
     <form class="tarjeta" action="<?= escapar($rutas['donar'] . '&id=' . $campana['id']) ?>" method="post">
         <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
         <input type="hidden" name="referencia" value="<?= escapar($referencia) ?>">
+        <?php if ($usuario === null): ?>
+            <div class="campo">
+                <label for="aporte-mail">Correo electrónico</label>
+                <input id="aporte-mail" name="mail" type="email" autocomplete="email" maxlength="254" value="<?= escapar($mailDonante) ?>" required aria-describedby="aporte-mail-ayuda">
+                <span class="campo-ayuda" id="aporte-mail-ayuda">Podés donar sin crear una cuenta. Usaremos este correo para iniciar el pago.</span>
+            </div>
+        <?php endif; ?>
         <div class="campo"><label for="aporte-monto">Monto en pesos argentinos</label>
             <input type="number" id="aporte-monto" name="monto" min="0.01" max="9999999999.99" step="0.01" value="<?= escapar($monto) ?>" required aria-describedby="aporte-ayuda">
             <span class="campo-ayuda" id="aporte-ayuda">Continuarás en Mercado Pago para completar el pago. El aporte se sumará cuando se confirme.</span>

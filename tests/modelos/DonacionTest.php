@@ -12,6 +12,9 @@ echo "Cantidad: " . $donacion->getCantidad() . "\n";
 echo "Categoría: " . $donacion->getIdCategoriaInsumos() . "\n";
 echo "Subcategoría: " . $donacion->getIdSubCategoriaInsumos() . "\n";
 
+require_once __DIR__ . '/../../utilidades/TestUtils.php';
+$invitado = new Donacion(null, 53, 11);
+TestUtils::comprobar($invitado->getIdUsuario() === null && $invitado->getCantidad() === 11.0, 'Una donación admite un visitante sin cuenta.');
 echo "<hr>";
 }
 ?>

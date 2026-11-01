@@ -127,7 +127,7 @@ CREATE TABLE objetivos (
 -- donaciones
 CREATE TABLE donacion (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    id_usuario INT NOT NULL,
+    id_usuario INT NULL,
     id_camp INT NOT NULL,
     id_categoria_insumos INT,
     id_sub_categoria_insumos INT,
@@ -196,7 +196,9 @@ CREATE TABLE IF NOT EXISTS mercadopago_cuentas (
 
 CREATE TABLE IF NOT EXISTS mercadopago_pagos (
     referencia CHAR(36) PRIMARY KEY,
-    id_usuario INT NOT NULL,
+    id_usuario INT NULL,
+    correo_donante VARCHAR(254) NULL,
+    invitado_hash CHAR(64) NULL,
     id_camp INT NOT NULL,
     id_creador INT NOT NULL,
     mp_receptor VARCHAR(32) NOT NULL,

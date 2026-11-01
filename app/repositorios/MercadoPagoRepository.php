@@ -67,16 +67,16 @@ final class MercadoPagoRepository
         return $q->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function crearIntento(string $ref, int $usuario, array $campana, array $cuenta, string $monto): array
+    public function crearIntento(string $ref, ?int $usuario, array $campana, array $cuenta, string $monto, string $mail, ?string $invitadoHash = null): array
     {
         // INSERT IGNORE resuelve dos POST simultáneos del mismo formulario. Se compara el contenido después.
         $q = $this->pdo->prepare('INSERT IGNORE INTO mercadopago_pagos
-            (referencia,id_usuario,id_camp,id_creador,mp_receptor,produccion,monto)
-            VALUES (?,?,?,?,?,?,?)');
-        $q->execute([$ref, $usuario, $campana['id'], $campana['owner_id'], $cuenta['mp_usuario'], (int) $cuenta['produccion'], $monto]);
+            (referencia,id_usuario,id_camp,id_creador,mp_receptor,produccion,monto,correo_donante,invitado_hash)
+            VALUES (?,?,?,?,?,?,?,?,?)');
+        $q->execute([$ref, $usuario, $campana['id'], $campana['owner_id'], $cuenta['mp_usuario'], (int) $cuenta['produccion'], $monto, $mail, $invitadoHash]);
         $pago = $this->pago($ref);
-        if ($pago === null || (int) $pago['id_usuario'] !== $usuario || (int) $pago['id_camp'] !== (int) $campana['id']
-            || $pago['monto'] !== $monto || $pago['mp_receptor'] !== $cuenta['mp_usuario']) {
+        if ($pago === null || ($pago['id_usuario'] === null ? null : (int) $pago['id_usuario']) !== $usuario || (int) $pago['id_camp'] !== (int) $campana['id']
+            || $pago['invitado_hash'] !== $invitadoHash || $pago['correo_donante'] !== $mail || $pago['monto'] !== $monto || $pago['mp_receptor'] !== $cuenta['mp_usuario']) {
             throw new InvalidArgumentException('Ese intento ya corresponde a otro aporte. Abrí nuevamente el formulario.');
         }
         return $pago;

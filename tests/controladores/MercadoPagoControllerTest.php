@@ -40,13 +40,13 @@ function mercadoPagoControllerTest(PDO $pdo): void
             'clave_cifrado' => base64_encode(random_bytes(32)), 'webhook_secret' => 'firma-ficticia', 'produccion' => false];
         $repo = new MercadoPagoRepository($pdo);
         $llamadas = []; $fallar = false; $estado = 'created'; $detalle = 'created'; $version = 1; $ref = null;
-        $receptor = '123456789'; $identidadReal = false; $manipular = null;
-        $cliente = new MercadoPagoCliente(static function ($metodo, $ruta, $datos, $token, $clave) use (&$llamadas, &$fallar, &$estado, &$detalle, &$version, &$ref, &$receptor, &$identidadReal, &$manipular): array {
+        $orderId = 'ORDTSTPRUEBA123'; $receptor = '123456789'; $identidadReal = false; $manipular = null;
+        $cliente = new MercadoPagoCliente(static function ($metodo, $ruta, $datos, $token, $clave) use (&$llamadas, &$fallar, &$estado, &$detalle, &$version, &$ref, &$receptor, &$identidadReal, &$manipular, &$orderId): array {
             $llamadas[] = compact('metodo', 'ruta', 'datos', 'token', 'clave');
             if ($ruta === '/oauth/token') return ['access_token' => 'token-vendedor-ficticio', 'refresh_token' => 'refresh-ficticio', 'user_id' => $receptor, 'expires_in' => 3600, 'live_mode' => true];
             if ($ruta === '/users/me') return ['id' => $receptor, 'site_id' => 'MLA', 'tags' => $identidadReal ? [] : ['test_user']];
             if ($fallar) throw new RuntimeException('Error de transporte simulado.');
-            $respuesta = ['id' => 'ORDTSTPRUEBA123', 'checkout_url' => 'https://www.mercadopago.com.ar/checkout/v1/redirect?order_id=ORDTSTPRUEBA123',
+            $respuesta = ['id' => $orderId, 'checkout_url' => 'https://www.mercadopago.com.ar/checkout/v1/redirect?order_id=' . $orderId,
                 'external_reference' => $ref, 'user_id' => $receptor, 'currency' => 'ARS', 'type' => 'online', 'total_amount' => '1000.01',
                 'total_paid_amount' => '1000.01', 'status' => $estado, 'status_detail' => $detalle, 'version' => $version,
                 'integration_data' => ['application_id' => '123456'], 'transactions' => ['refunds' => [['amount' => '100.01']]]];
@@ -57,6 +57,8 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $control = new MercadoPagoController($repo, $servicio, $config, new BaneoRepository($pdo));
         $url = $servicio->iniciarOAuth($creadorId, 'crear_campana');
         parse_str(parse_url($url, PHP_URL_QUERY), $parametros);
+        TestUtils::comprobar($parametros['redirect_uri'] === 'https://ejemplo.test/mercadopago-retorno.php'
+            && !str_contains($parametros['redirect_uri'], '?'), 'La autorización usa un retorno fijo sin parámetros de enrutamiento.');
         TestUtils::comprobar($parametros['code_challenge_method'] === 'S256' && isset($parametros['state']) && !str_contains($url, 'solo-ficticio'), 'OAuth usa state y PKCE sin exponer el secreto.');
         $assertThrows(static fn () => $servicio->terminarOAuth($creadorId, ['state' => 'ajeno', 'code' => 'x']), 'Rechaza un callback con state ajeno.');
         $assertThrows(static fn () => $servicio->terminarOAuth($donanteId, ['state' => $parametros['state'], 'code' => 'x']), 'No vincula la autorización a otro usuario.');
@@ -68,6 +70,10 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $identidadReal = false;
         $servicio->iniciarOAuth($creadorId, 'crear_campana'); $state = $_SESSION['mp_oauth']['state'];
         TestUtils::comprobar($servicio->terminarOAuth($creadorId, ['state' => $state, 'code' => 'x']) === 'crear_campana', 'Completa la vinculación y conserva un destino interno.');
+        $intercambios = array_values(array_filter($llamadas, static fn ($l) => $l['ruta'] === '/oauth/token' && ($l['datos']['grant_type'] ?? '') === 'authorization_code'));
+        $intercambio = $intercambios[array_key_last($intercambios)]['datos'];
+        TestUtils::comprobar($intercambio['test_token'] === true && $intercambio['redirect_uri'] === $parametros['redirect_uri']
+            && isset($intercambio['code_verifier']), 'El intercambio solicita un token de prueba y conserva el retorno y PKCE.');
         $assertThrows(static fn () => $servicio->terminarOAuth($creadorId, ['state' => $state, 'code' => 'x']), 'No permite reutilizar el callback OAuth.');
         TestUtils::comprobar(!str_contains($repo->cuenta($creadorId)['access_cifrado'], 'token-vendedor') && $servicio->token($creadorId) === 'token-vendedor-ficticio', 'Guarda la autorización cifrada y la recupera en backend.');
         $cuentaOriginal = $repo->cuenta($creadorId);
@@ -129,6 +135,53 @@ function mercadoPagoControllerTest(PDO $pdo): void
         TestUtils::comprobar(http_response_code() === 200 && str_contains($html, 'true'), 'El webhook firmado consulta la order y reconoce el reintento.');
         $historial = $repo->historial($donanteId);
         TestUtils::comprobar(count($historial) === 1 && $historial[0]['estado'] === 'refunded' && $repo->historial($creadorId) === [], 'El historial no duplica el pago y pertenece al usuario autenticado.');
+
+        // Aportes sin registro: ni el correo ni la referencia pública dan acceso a otra sesión.
+        $_SESSION = [];
+        $_SERVER['REQUEST_METHOD'] = 'GET'; $_GET = ['id' => (string) $f['mesa']];
+        $usuariosAntes = (int) $pdo->query('SELECT COUNT(*) FROM usuarios')->fetchColumn();
+        $html = $capturar(static fn () => $control->atender('donar', null));
+        TestUtils::comprobar(http_response_code() === 200 && str_contains($html, 'name="mail"') && str_contains($html, 'sin crear una cuenta'), 'Una visita sin sesión abre el formulario y puede indicar su correo.');
+        $ref = array_key_last($_SESSION['mp_intentos']);
+        $sesionInvitado = $_SESSION;
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['referencia' => $ref, 'monto' => '1000.01', 'mail' => 'invitado@example.test', 'csrf_token' => 'ajeno'];
+        $capturar(static fn () => $control->atender('donar', null));
+        TestUtils::comprobar(http_response_code() === 403 && $repo->pago($ref) === null, 'El aporte de invitado también exige CSRF.');
+        $_POST['csrf_token'] = Csrf::generar(); $_POST['mail'] = ['invalido'];
+        $capturar(static fn () => $control->atender('donar', null));
+        TestUtils::comprobar(http_response_code() === 422 && $repo->pago($ref) === null, 'El correo inválido no inicia un pago de invitado.');
+        $_POST['mail'] = 'invitado@example.test'; $orderId = 'ORDTSTINVITADO123';
+        $estado = 'created'; $detalle = 'created'; $version = 1;
+        $capturar(static fn () => $control->atender('donar', null));
+        $pagoInvitado = $repo->pago($ref);
+        TestUtils::comprobar(http_response_code() === 303 && $pagoInvitado['id_usuario'] === null && $pagoInvitado['invitado_hash'] === hash('sha256', $_SESSION['mp_invitado']), 'El checkout no exige registro ni inventa un usuario para el visitante.');
+        $n = count($llamadas);
+        $capturar(static fn () => $control->atender('donar', null));
+        TestUtils::comprobar(http_response_code() === 303 && count($llamadas) === $n, 'El envío repetido de un invitado reutiliza el mismo checkout.');
+        $assertThrows(static fn () => $servicio->crearPago(null, 'otro@example.test', $f['mesa'], '1000.01', $ref, $pagoInvitado['invitado_hash']), 'No cambia el correo del intento al reintentarlo.');
+        $assertThrows(static fn () => $servicio->crearPago(null, 'invitado@example.test', $f['mesa'], '1000.01', $ref, hash('sha256', 'otro-navegador')), 'Otra sesión no reutiliza el intento de un invitado.');
+        $estado = 'processed'; $detalle = 'accredited'; $version = 2;
+        $servicio->sincronizar($ref); $servicio->sincronizar($ref);
+        $pagoInvitado = $repo->pago($ref);
+        $consulta = $pdo->prepare('SELECT id_usuario FROM donacion WHERE id=?'); $consulta->execute([$pagoInvitado['id_donacion']]);
+        TestUtils::comprobar($consulta->fetch(PDO::FETCH_ASSOC)['id_usuario'] === null && (int) $pdo->query('SELECT COUNT(*) FROM usuarios')->fetchColumn() === $usuariosAntes, 'Acredita la donación sin crear cuentas y conserva al donante sin usuario.');
+        $q->execute([$f['mesa']]);
+        TestUtils::comprobar($q->fetchColumn() === '1000.01', 'El aporte de invitado actualiza el progreso una sola vez.');
+        $_SERVER['REQUEST_METHOD'] = 'GET'; $_GET = ['referencia' => $ref];
+        $html = $capturar(static fn () => $control->atender('pago_resultado', null));
+        TestUtils::comprobar(http_response_code() === 200 && str_contains($html, 'Aporte confirmado') && !str_contains($html, 'Ver mis donaciones'), 'El visitante consulta su resultado en el mismo navegador sin ingresar.');
+        $_SERVER['REQUEST_METHOD'] = 'POST'; $_POST = ['referencia' => $ref, 'csrf_token' => Csrf::generar()];
+        $capturar(static fn () => $control->atender('mp_verificar', null));
+        TestUtils::comprobar(http_response_code() === 303, 'El invitado puede verificar su pago con sesión y CSRF.');
+        $_SESSION = []; $_SERVER['REQUEST_METHOD'] = 'GET';
+        $capturar(static fn () => $control->atender('pago_resultado', null));
+        TestUtils::comprobar(http_response_code() === 404, 'Conocer la referencia no permite consultar el aporte desde otra sesión.');
+        $capturar(static fn () => $control->atender('pago_resultado', $donante));
+        TestUtils::comprobar(http_response_code() === 404, 'Una cuenta registrada tampoco se apropia de un aporte de invitado.');
+        $capturar(static fn () => $control->atender('mercadopago', null));
+        TestUtils::comprobar(http_response_code() === 303, 'Vincular una cuenta receptora sigue requiriendo registro.');
+        TestUtils::comprobar(count($repo->historial($donanteId)) === 1, 'Los aportes de invitado no se atribuyen al historial de una cuenta.');
     } finally {
         $pdo->rollBack();
         if ($temporales) {

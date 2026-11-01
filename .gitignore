@@ -1,3 +1,5 @@
 /config/conexion.local.php
 /config/mercadopago.local.php
+/config/.mercadopago.local.php.*
+/config/mercadopago.local.php~
 /.respaldos-locales/

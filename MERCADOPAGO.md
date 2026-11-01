@@ -6,15 +6,15 @@ El código incluye vinculación, renovación de tokens, inicio de aportes, retor
 
 ## 1. Preparar la base
 
-En una base existente, hacer un respaldo e importar `database/migrations/20261031_mercadopago.sql` seleccionando esa base. Crea `mercadopago_cuentas` y `mercadopago_pagos` sin borrar datos.
+En una base existente, hacer un respaldo e importar `database/migrations/20261031_mercadopago.sql` y luego `database/migrations/20261031_donaciones_invitados.sql`, seleccionando esa base. Crea `mercadopago_cuentas` y `mercadopago_pagos` sin borrar datos.
 
 Para una base nueva, `database/schema.sql` ya incluye esas tablas. El usuario habitual de la aplicación necesita permisos de consulta y modificación; la importación debe hacerla un usuario que pueda crear tablas.
 
 ## 2. Crear la aplicación de Mercado Pago
 
-En Developers, crear una aplicación de **Pagos online → Checkout Pro → Marketplace**, usando Orders API. Ubicar el Client ID (número de aplicación) y el Client Secret. No usar un Access Token fijo de la plataforma para cobrar por otros usuarios.
+En Developers, crear una aplicación de **Pagos online → Checkout Pro → Marketplace**, usando Orders API. Ubicar el par **Client ID / Client Secret** en Credenciales → Producción. Copiar el campo Client ID literalmente: no sustituirlo por el N.º de aplicación ni por el User ID que aparezcan en otra pantalla o entorno. No usar un Access Token fijo de la plataforma para cobrar por otros usuarios.
 
-Habilitar **PKCE** en la configuración de OAuth: nuestro código envía `code_challenge_method=S256`.
+Habilitar **PKCE** en la configuración de OAuth: nuestro código envía `code_challenge_method=S256`. Al intercambiar el código por una autorización, envía `test_token=true` si `produccion` es `false`; ese parámetro se manda en el cuerpo de la solicitud al servidor de tokens, no en el enlace de autorización.
 
 ## 3. Darle una URL HTTPS al servidor local
 
@@ -34,20 +34,20 @@ Configurar en la aplicación de Mercado Pago:
 
 | Configuración | Dirección |
 | --- | --- |
-| Redirect URL de OAuth | `https://TU-DOMINIO/index.php?ruta=mp_retorno` |
+| Redirect URL de OAuth | `https://TU-DOMINIO/mercadopago-retorno.php` |
 | Webhook de Orders | `https://TU-DOMINIO/index.php?ruta=mp_webhook` |
 
 En Webhooks, seleccionar el evento **Order (Mercado Pago)** y guardar la firma secreta. Si la aplicación está bajo una subcarpeta, incluirla en ambas URL y en `url_publica`.
 
-Si el túnel cambia de dirección, actualizar la configuración privada y el panel de Mercado Pago. La Redirect URL debe coincidir exactamente, incluidos parámetros y subcarpeta.
+Si el túnel cambia de dirección, actualizar la configuración privada y el panel de Mercado Pago. La Redirect URL debe coincidir exactamente, incluida la subcarpeta. El retorno OAuth usa `/mercadopago-retorno.php`, sin `?ruta=...`. Reemplazar el retorno anterior del panel si todavía apunta a `index.php?ruta=mp_retorno`.
 
 ## 4. Configuración privada
 
 Copiar `config/mercadopago.ejemplo.php` a `config/mercadopago.local.php` y completar sus campos localmente. El segundo archivo está excluido de Git y queda fuera de `public_php`.
 
 - `habilitado`: pasar a `true` cuando estén completas la configuración y la migración.
-- `client_id`: número de la aplicación nueva.
-- `client_secret`: secreto de OAuth de esa aplicación.
+- `client_id`: valor del campo **Client ID**, junto al Client Secret, en las credenciales de OAuth. No inferirlo del N.º de aplicación mostrado en otro entorno.
+- `client_secret`: secreto de OAuth de esa aplicación (Client Secret en Credenciales → Producción del panel). Esa ubicación no implica cambiar `produccion` a `true` en nuestra configuración; si el panel exige activar el entorno, seguir sus requisitos de habilitación antes de copiar la clave.
 - `url_publica`: URL HTTPS que sirve `public_php`, sin `/index.php` ni barra final.
 - `clave_cifrado`: clave para cifrar las autorizaciones en la base.
 - `webhook_secret`: firma secreta del webhook de esa misma aplicación.
@@ -80,12 +80,12 @@ Una cuenta externa solo se vincula a un usuario local. La renovación debe mante
 ## 6. Probar un aporte
 
 1. Tener una campaña monetaria activa en la base cuyo `owner_id` sea el creador vinculado.
-2. Iniciar sesión como otro usuario de todospara.uno y abrir el detalle de esa campaña.
+2. Abrir el detalle de esa campaña. Se puede donar con una cuenta de todospara.uno o como visitante sin registrarse; al visitante se le pide un correo para iniciar el pago.
 3. Tocar **Donar a esta campaña**, ingresar un monto y continuar al checkout.
 4. Pagar con el comprador y los medios de pago de prueba adecuados al entorno de Mercado Pago.
 5. Volver a la pantalla de resultado. No se acredita a partir de `status=approved` en la URL: el estado se verifica consultando Orders con la autorización del receptor.
 6. Comprobar la notificación en el panel de Mercado Pago. También se puede usar **Consultar estado**, que exige sesión y CSRF.
-7. Revisar **Mis donaciones**, el progreso y el listado de campañas del creador.
+7. Revisar el progreso y el listado de campañas del creador. Quien tenga cuenta puede usar **Mis donaciones**. El visitante consulta su resultado desde el mismo navegador mientras conserve la sesión; la referencia del aporte no concede acceso por sí sola. No se crea una cuenta ni se agrega automáticamente el aporte a una cuenta que tenga ese correo.
 
 Los intentos conservan su referencia e idempotencia al reintentar el mismo envío. Si Mercado Pago tarda o falla, reintentar el formulario mostrado; no abrir otro aporte para sustituirlo sin revisar antes su estado.
 

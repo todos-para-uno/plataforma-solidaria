@@ -10,7 +10,7 @@ final class MercadoPagoController
     {
         header('Cache-Control: no-store');
         header('Referrer-Policy: no-referrer');
-        if ($usuario === null) {
+        if ($usuario === null && !in_array($ruta, ['donar', 'pago_resultado', 'mp_verificar'], true)) {
             header('Location: ' . $rutaBase . '/index.php?ruta=ingresar', true, 303);
             return;
         }
@@ -19,7 +19,7 @@ final class MercadoPagoController
             echo 'La solicitud no es válida. Recargá la página e intentá nuevamente.';
             return;
         }
-        $usuarioActual = ['nombre' => $usuario->getNombre(), 'mail' => $usuario->getEmail(), 'admin' => $usuario->getAdmin()];
+        $usuarioActual = $usuario === null ? null : ['nombre' => $usuario->getNombre(), 'mail' => $usuario->getEmail(), 'admin' => $usuario->getAdmin()];
         $config = $this->config;
         $csrfToken = Csrf::generar();
         $mensaje = $_SESSION['mp_mensaje'] ?? null;
@@ -44,7 +44,7 @@ final class MercadoPagoController
             if (in_array($ruta, ['pago_resultado', 'mp_verificar'], true)) {
                 $ref = $ruta === 'mp_verificar' ? ($_POST['referencia'] ?? null) : ($_GET['referencia'] ?? null);
                 $pago = is_string($ref) ? $this->repositorio->pago($ref) : null;
-                if ($pago === null || (int) $pago['id_usuario'] !== $usuario->getId()) {
+                if ($pago === null || !$this->puedeVerPago($pago, $usuario)) {
                     http_response_code(404); echo 'Aporte no encontrado.'; return;
                 }
                 if ($ruta === 'mp_verificar') {
@@ -63,18 +63,26 @@ final class MercadoPagoController
                 }
                 $this->servicio->verificarConfiguracion();
                 $monto = '';
+                $mailDonante = $usuario?->getEmail() ?? '';
+                if ($usuario === null && !is_string($_SESSION['mp_invitado'] ?? null)) {
+                    $_SESSION['mp_invitado'] = bin2hex(random_bytes(32));
+                }
+                $invitadoHash = $usuario === null ? hash('sha256', $_SESSION['mp_invitado']) : null;
                 $error = null;
                 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $referencia = $_POST['referencia'] ?? null;
                     $intento = is_string($referencia) ? ($_SESSION['mp_intentos'][$referencia] ?? null) : null;
-                    if (!is_array($intento) || $intento['campana'] !== $id || $intento['usuario'] !== $usuario->getId() || time() - $intento['creado'] > 7200) {
+                    if (!is_array($intento) || $intento['campana'] !== $id || $intento['usuario'] !== $usuario?->getId() || ($intento['invitado'] ?? null) !== $invitadoHash || time() - $intento['creado'] > 7200) {
                         http_response_code(403); echo 'El formulario venció. Abrí nuevamente la campaña.'; return;
                     }
                     $monto = is_string($_POST['monto'] ?? null) ? trim($_POST['monto']) : '';
+                    $mailDonante = $usuario?->getEmail() ?? (is_string($_POST['mail'] ?? null) ? trim($_POST['mail']) : '');
                     try {
-                        $url = $this->servicio->crearPago($usuario->getId(), $usuario->getEmail(), $id, $monto, $referencia);
+                        $url = $this->servicio->crearPago($usuario?->getId(), $mailDonante, $id, $monto, $referencia, $invitadoHash);
                         header('Location: ' . $url, true, 303);
                         return;
+                    } catch (PDOException $e) {
+                        throw $e;
                     } catch (InvalidArgumentException | RuntimeException $e) {
                         // Los errores propios nunca incluyen respuestas ni credenciales del proveedor.
                         $error = $e->getMessage();
@@ -83,7 +91,7 @@ final class MercadoPagoController
                 } else {
                     $referencia = MercadoPagoSeguridad::uuid();
                     $_SESSION['mp_intentos'] = array_slice($_SESSION['mp_intentos'] ?? [], -19, null, true);
-                    $_SESSION['mp_intentos'][$referencia] = ['campana' => $id, 'usuario' => $usuario->getId(), 'creado' => time()];
+                    $_SESSION['mp_intentos'][$referencia] = ['campana' => $id, 'usuario' => $usuario?->getId(), 'invitado' => $invitadoHash, 'creado' => time()];
                 }
                 require __DIR__ . '/../vistas/donar.php';
                 return;
@@ -109,6 +117,16 @@ final class MercadoPagoController
             $error = $e->getMessage();
             require __DIR__ . '/../vistas/mercadopago_error.php';
         }
+    }
+
+    private function puedeVerPago(array $pago, ?Usuario $usuario): bool
+    {
+        if ($pago['id_usuario'] !== null) {
+            return $usuario !== null && (int) $pago['id_usuario'] === $usuario->getId();
+        }
+        $clave = $_SESSION['mp_invitado'] ?? null;
+        return is_string($clave) && is_string($pago['invitado_hash'] ?? null)
+            && hash_equals($pago['invitado_hash'], hash('sha256', $clave));
     }
 
     public function webhook(): void

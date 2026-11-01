@@ -16,6 +16,11 @@ require __DIR__ . '/parciales/cabecera.php';
             <button class="boton boton-secundario" type="submit">Consultar estado</button>
         </form>
     </div>
-    <p style="margin-top:var(--e-8)"><a href="<?= escapar($rutas['mis_donaciones']) ?>">Ver mis donaciones</a></p>
+    <?php if ($pago['id_usuario'] !== null): ?>
+        <p style="margin-top:var(--e-8)"><a href="<?= escapar($rutas['mis_donaciones']) ?>">Ver mis donaciones</a></p>
+    <?php else: ?>
+        <p class="campo-ayuda" style="margin-top:var(--e-8)">Podés consultar este aporte desde el navegador con el que lo hiciste mientras se conserve tu sesión.</p>
+        <p><a href="<?= escapar($rutas['explorar']) ?>">Explorar campañas</a></p>
+    <?php endif; ?>
 </div></section>
 <?php require __DIR__ . '/parciales/pie.php'; ?>

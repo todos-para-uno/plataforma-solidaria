@@ -29,6 +29,9 @@ final class MercadoPagoServicio
 
     public function url(string $ruta, array $parametros = []): string
     {
+        if ($ruta === 'mp_retorno') {
+            return rtrim($this->config['url_publica'], '/') . '/mercadopago-retorno.php';
+        }
         return rtrim($this->config['url_publica'], '/') . '/index.php?' . http_build_query(['ruta' => $ruta] + $parametros);
     }
 
@@ -65,6 +68,7 @@ final class MercadoPagoServicio
             'client_id' => $this->config['client_id'], 'client_secret' => $this->config['client_secret'],
             'grant_type' => 'authorization_code', 'code' => $query['code'],
             'redirect_uri' => $this->url('mp_retorno'), 'code_verifier' => $pendiente['verifier'],
+            'test_token' => !$this->config['produccion'],
         ]);
         $this->repositorio->transaccion(function () use ($usuario, $datos): void {
             $cuenta = $this->repositorio->cuenta($usuario, true);
@@ -125,9 +129,15 @@ final class MercadoPagoServicio
         });
     }
 
-    public function crearPago(int $usuario, string $mail, int $campanaId, string $monto, string $referencia): string
+    public function crearPago(?int $usuario, string $mail, int $campanaId, string $monto, string $referencia, ?string $invitadoHash = null): string
     {
         $this->verificarConfiguracion();
+        if (!filter_var($mail, FILTER_VALIDATE_EMAIL) || strlen($mail) > 254 || preg_match('/[\r\n]/', $mail)) {
+            throw new InvalidArgumentException('Ingresá un correo electrónico válido para continuar con el pago.');
+        }
+        if ($usuario === null && (!is_string($invitadoHash) || !preg_match('/^[a-f0-9]{64}$/D', $invitadoHash))) {
+            throw new InvalidArgumentException('No se pudo identificar la sesión del aporte. Recargá el formulario.');
+        }
         $centavos = MercadoPagoSeguridad::centavos($monto);
         if ($centavos <= 0) throw new InvalidArgumentException('El monto debe ser mayor a cero.');
         $monto = MercadoPagoSeguridad::pesos($centavos);
@@ -140,7 +150,7 @@ final class MercadoPagoServicio
         if ($cuenta === null || (bool) $cuenta['produccion'] !== $this->config['produccion']) {
             throw new RuntimeException('El creador todavía no conectó su cuenta para recibir donaciones.');
         }
-        $this->repositorio->crearIntento($referencia, $usuario, $campana, $cuenta, $monto);
+        $this->repositorio->crearIntento($referencia, $usuario, $campana, $cuenta, $monto, $mail, $invitadoHash);
         // El intento se persiste ANTES de llamar a la API. Un error/timeout conserva la clave de reintento.
         // Confirmar la renovación en su propia transacción antes de intentar el cobro.
         $token = $this->token((int) $campana['owner_id'], $cuenta['mp_usuario']);
@@ -150,7 +160,7 @@ final class MercadoPagoServicio
             $retorno = $this->url('pago_resultado', ['referencia' => $referencia]);
             $order = $this->cliente->solicitar('POST', '/v1/orders', [
                 'type' => 'online', 'processing_mode' => 'manual', 'total_amount' => $pago['monto'],
-                'external_reference' => $referencia, 'payer' => ['email' => $mail],
+                'external_reference' => $referencia, 'payer' => ['email' => $pago['correo_donante']],
                 'items' => [['title' => 'Aporte a ' . $campana['nombre'], 'unit_price' => $pago['monto'], 'quantity' => 1]],
                 'config' => ['online' => ['success_url' => $retorno, 'failure_url' => $retorno, 'pending_url' => $retorno, 'auto_return' => 'all']],
             ], $token, $referencia);
