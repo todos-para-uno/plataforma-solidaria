@@ -205,6 +205,8 @@ img { display: block; max-width: 100%; height: auto; }
     min-height: 44px;
     padding-inline: var(--e-3);
     font-weight: 600;
+    text-transform: uppercase;
+    border-radius: var(--radio-control);
     cursor: pointer;
     list-style: none;
     white-space: nowrap;
