@@ -7,7 +7,7 @@
 <footer class="pie">
     <div class="contenedor pie-interior">
         <div class="pie-marca">
-            <img src="<?= escapar($rutaAssets) ?>/imagenes/logo-todosparauno-claro.png" alt="todospara.uno" width="640" height="109" loading="lazy">
+            <img src="<?= escapar($rutaAssets) ?>/imagenes/logo-todosparauno-claro.png" alt="todospara.uno" width="777" height="119" loading="lazy">
             <p>Campañas solidarias para donar dinero o insumos a quien lo necesita.</p>
         </div>
 
