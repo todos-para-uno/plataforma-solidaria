@@ -1,5 +1,7 @@
 # todospara.uno
 
+# todospara.uno
+
 Una plataforma solidaria para conectar a quienes necesitan ayuda con quienes quieren colaborar, mediante donaciones de dinero o insumos.
 
 Proyecto académico del **Grupo 4**, de la **Tecnicatura Universitaria en Programación de la UTN**.
@@ -310,6 +312,17 @@ La identidad del administrador se obtiene del ID guardado en la sesión y sus pe
 ### Actualizar una base existente
 
 Para actualizar tu base existente, importá `database/migrations/20261028_imagen_y_desbaneo.sql` desde el cliente de MariaDB o phpMyAdmin, seleccionando tu base existente. Este único archivo agrega `camp.imagen`, `baneados.fecha_unban` (`DATETIME NULL`) y `baneados.motivo_unban`, conservando los datos existentes. Comprueba cada columna y agrega solo las que faltan: podés volver a ejecutarlo si ya tenías `imagen` o habías aplicado una parte.
+
+Después, importá también `database/migrations/20261101_campana_imagenes.sql`. Crea la tabla `campana_imagenes`, donde se guardan las fotos que sube el creador de una campaña (hasta 4; la de `orden` 0 es la portada). Se puede volver a ejecutar sin problemas.
+
+### Fotos de las campañas
+
+Las fotos se guardan en `public_php/subidas/campanas/` con un nombre aleatorio; esa carpeta no se sube a Git. El límite por foto es 5 MB, pero PHP puede imponer uno menor: con la configuración de fábrica (`upload_max_filesize = 2M`, `post_max_size = 8M`) el formulario muestra y aplica 2 MB por foto. Para permitir 4 fotos de 5 MB, cambiá en tu `php.ini` (en XAMPP: `C:\xampp\php\php.ini`) y reiniciá Apache:
+
+```ini
+upload_max_filesize = 5M
+post_max_size = 24M
+```
 
 Si creás una base nueva, importá solamente `database/schema.sql`, que ya incluye estos campos. No ejecutes la migración después de importar el schema actualizado ni vuelvas a importar el schema sobre tu base existente.
 

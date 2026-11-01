@@ -6,7 +6,6 @@ $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $esLectura = in_array($metodo, ['GET', 'HEAD'], true);
 $vistas = [
     'inicio' => 'index.php',
-    'crear_campana' => 'crear_campana.php',
     'mis_donaciones' => 'mis_donaciones.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
     'perfil' => 'perfil.php'
@@ -16,6 +15,7 @@ $vistas = [
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
 $rutasConControlador = [
     'campana',
+    'crear_campana',
     'buscador',
     'resultados_buscar',
     'registro',
@@ -41,7 +41,7 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
 }
 
 $soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear'], true);
-$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'crear_campana'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -169,6 +169,23 @@ if ($ruta === 'campana') {
         new ObjetivosRepository($pdo)
     );
     $controlador->mostrar($rutaBase, $rutaAssets, $_GET['id'] ?? null, $usuarioActual);
+    return;
+}
+
+if ($ruta === 'crear_campana') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/CrearCampanaController.php';
+    $pdo = conectarBd();
+    $controlador = new CrearCampanaController(
+        $pdo, new CampRepository($pdo), new CatCampRepository($pdo),
+        new ObjetivosRepository($pdo), new CampanaImagenesRepository($pdo),
+        new ImagenesCampana(__DIR__ . '/subidas/campanas')
+    );
+    if ($metodo === 'POST') {
+        $controlador->procesarCreacion($rutaBase, $rutaAssets, $usuario ?? null);
+    } else {
+        $controlador->mostrarFormulario($rutaBase, $rutaAssets, $usuario ?? null);
+    }
     return;
 }
 

@@ -45,6 +45,12 @@ $pruebas = [
             'funcion' => 'ubicacionesTest',
         ],
     ],
+    'servicios' => [
+        'ImagenesCampana' => [
+            'archivo' => 'servicios/ImagenesCampanaTest.php',
+            'funcion' => 'imagenesCampanaTest',
+        ],
+    ],
     'repositorios' => [
         'EstadoAutenticacionRepository' => [
             'archivo' => 'repositorios/EstadoAutenticacionRepositoryTest.php',

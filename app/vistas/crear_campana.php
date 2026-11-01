@@ -21,6 +21,12 @@ $ubicacionTexto = $ubicacionTexto ?? '';
 $lat = $lat ?? '';
 $lng = $lng ?? '';
 
+// Límites de las imágenes. El controlador los toma de ImagenesCampana (incluye los límites de php.ini).
+$maxImagenes = $maxImagenes ?? 4;
+$tamanoMaximoImagen = $tamanoMaximoImagen ?? 5 * 1024 * 1024;
+$tamanoMaximoTotal = $tamanoMaximoTotal ?? 0;
+$textoTamanoImagen = str_replace('.', ',', (string) round($tamanoMaximoImagen / 1048576, 1)) . ' MB';
+
 $categorias = $categorias ?? [
     'alimentos' => 'Alimentos',
     'educacion' => 'Educación',
@@ -37,6 +43,7 @@ require __DIR__ . '/parciales/cabecera.php';
 <!-- Celdas y dependencias CSS/JS para OpenStreetMap (Leaflet) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="<?= escapar($rutaAssets) ?>/js/crear_campana_imagenes.js" defer></script>
 
 <section class="seccion" aria-labelledby="titulo-crear">
     <div class="contenedor">
@@ -59,7 +66,8 @@ require __DIR__ . '/parciales/cabecera.php';
                 </div>
             <?php endif; ?>
 
-            <form class="crear-formulario" action="<?= escapar($rutas['crear_campana']) ?>" method="post">
+            <form class="crear-formulario" action="<?= escapar($rutas['crear_campana']) ?>" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken ?? '') ?>">
 
                 <!-- Información básica -->
                 <section class="tarjeta crear-tarjeta" aria-labelledby="crear-basica">
@@ -86,9 +94,47 @@ require __DIR__ . '/parciales/cabecera.php';
                         <select id="crear-categoria-campo" name="categoria" required>
                             <option value="">Seleccioná una opción</option>
                             <?php foreach ($categorias as $clave => $nombreCategoria): ?>
-                                <option value="<?= escapar($clave) ?>"<?php if ($clave === $categoria): ?> selected<?php endif; ?>><?= escapar($nombreCategoria) ?></option>
+                                <option value="<?= escapar($clave) ?>"<?php if ((string) $clave === (string) $categoria): ?> selected<?php endif; ?>><?= escapar($nombreCategoria) ?></option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+                </section>
+
+                <!-- Imágenes de la campaña: arrastrar o elegir, con vista previa -->
+                <section class="tarjeta crear-tarjeta" aria-labelledby="crear-imagenes-titulo">
+                    <h2 id="crear-imagenes-titulo">Imágenes</h2>
+                    <div class="campo campo-imagenes" data-carga-imagenes
+                         data-max-imagenes="<?= (int) $maxImagenes ?>"
+                         data-max-bytes="<?= (int) $tamanoMaximoImagen ?>"
+                         data-max-total="<?= (int) $tamanoMaximoTotal ?>">
+                        <span class="campo-imagenes-etiqueta" id="crear-imagenes-etiqueta">Fotos de la campaña <span class="texto-secundario">(opcional)</span></span>
+
+                        <label class="zona-carga" for="crear-imagenes" data-zona-carga>
+                            <svg class="zona-carga-icono" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+                                <rect x="5" y="9" width="38" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                <circle cx="16" cy="19" r="3.5" fill="var(--sol)" stroke="currentColor" stroke-width="2"/>
+                                <path d="M8 35l10-10 7 7 5-5 10 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                            </svg>
+                            <span class="zona-carga-titulo" data-zona-titulo>Arrastrá tus fotos acá</span>
+                            <span class="zona-carga-texto">o <span class="zona-carga-enlace">elegilas desde tu dispositivo</span></span>
+                            <span class="zona-carga-formatos">PNG, JPG o WEBP · hasta <?= escapar($textoTamanoImagen) ?> cada una · máximo <?= (int) $maxImagenes ?></span>
+                        </label>
+                        <input id="crear-imagenes" class="solo-lectores" name="imagenes[]" type="file" multiple
+                               accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                               aria-labelledby="crear-imagenes-etiqueta"
+                               aria-describedby="crear-imagenes-ayuda crear-imagenes-error">
+
+                        <div class="imagenes-estado">
+                            <span class="imagenes-puntos" aria-hidden="true">
+                                <?php for ($i = 0; $i < (int) $maxImagenes; $i++): ?><span></span><?php endfor; ?>
+                            </span>
+                            <span class="imagenes-contador" data-contador aria-live="polite">0 de <?= (int) $maxImagenes ?> imágenes</span>
+                        </div>
+
+                        <ul class="imagenes-previa" data-previa aria-label="Imágenes seleccionadas"></ul>
+
+                        <span class="campo-error" id="crear-imagenes-error" data-error-imagenes role="alert" hidden></span>
+                        <span class="campo-ayuda" id="crear-imagenes-ayuda">La primera foto se muestra como portada. Evitá publicar datos personales o rostros sin permiso.</span>
                     </div>
                 </section>
 
