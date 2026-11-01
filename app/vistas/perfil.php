@@ -73,7 +73,7 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
                 <!-- Cartel de aviso si el usuario no tiene su documento ingresado -->
                 <?php if (!$tieneDocumento): ?>
                     <div class="alerta alerta-aviso" role="region" aria-label="Aviso de documento pendiente">
-                        <p><strong>Aviso importante:</strong> Todavía no ingresaste tu número de documento. Completalo para pasar al nivel Celeste y aumentar tu confianza en la plataforma.</p>
+                        <p><strong>Aviso importante:</strong> Todavía no ingresaste tu número de documento. Podés cargar tu DNI o Pasaporte para pasar a los siguientes niveles. Tus donaciones realizadas y recibidas se tendrán en cuenta al cargarlo.</p>
                     </div>
                 <?php endif; ?>
 
@@ -88,6 +88,14 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
                         </span>
                     </div>
 
+                    <?php if (isset($confianza)): ?>
+                    <div class="perfil-campo">
+                        <span class="perfil-etiqueta">Estado de confianza</span>
+                        <p class="perfil-valor"><span class="insignia <?= escapar($claseInsignia) ?>"><?= escapar($confianza['nombre']) ?></span> <?= escapar($confianza['descripcion']) ?></p>
+                        <p>Donaciones realizadas: <?= (int) $confianza['realizadas'] ?> · Recibidas: <?= (int) $confianza['recibidas'] ?></p>
+                        <p class="campo-ayuda">Con documento cargado: Celeste sin donaciones; Azul con 1 o 2; Violeta con 3 o más. Se suman las donaciones realizadas y recibidas.</p>
+                    </div>
+                    <?php endif; ?>
                     <!-- Correo electrónico -->
                     <div class="perfil-campo">
                         <span class="perfil-etiqueta">Correo electrónico</span>
@@ -124,9 +132,10 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
                 <?php if (!$tieneDocumento): ?>
                     <div class="tarjeta perfil-form-tarjeta">
                         <h3>Completá tu documento</h3>
-                        <p class="perfil-form-descripcion">Ingresá tu tipo y número de documento para validar tu cuenta.</p>
+                        <p class="perfil-form-descripcion">Ingresá tu tipo y número de documento para avanzar en los niveles de confianza.</p>
                         
                         <form action="<?= escapar($rutas['actualizar_documento']) ?>" method="post">
+                            <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
                             <div class="campo">
                                 <label for="tipo_documento">Tipo de documento</label>
                                 <select id="tipo_documento" name="tipo_documento" required>

@@ -172,7 +172,17 @@ function ingresoControllerTest(PDO $pdo): void
             return ob_get_clean();
         };
         http_response_code(200);
-        $abrirRuta('contacto');
+        $htmlBienvenida = $abrirRuta('contacto');
+        TestUtils::comprobar(
+            str_contains($htmlBienvenida, 'id="bienvenida-titulo"')
+                && str_contains($htmlBienvenida, '¡Hola, Usuario de ingreso!')
+                && !isset($_SESSION['mostrar_bienvenida']),
+            'El ingreso muestra una bienvenida personalizada y la consume al renderizarla.'
+        );
+        TestUtils::comprobar(
+            !str_contains($abrirRuta('contacto'), 'id="bienvenida-titulo"'),
+            'La bienvenida no vuelve a aparecer al recargar o navegar.'
+        );
         TestUtils::comprobar(
             http_response_code() === 200 && ($_SESSION['usuario_id'] ?? null) === $id,
             'Un antecedente vencido permite ingresar y mantener la sesión al navegar.'

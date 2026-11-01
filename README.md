@@ -1,7 +1,5 @@
 # todospara.uno
 
-# todospara.uno
-
 Una plataforma solidaria para conectar a quienes necesitan ayuda con quienes quieren colaborar, mediante donaciones de dinero o insumos.
 
 Proyecto académico del **Grupo 4**, de la **Tecnicatura Universitaria en Programación de la UTN**.
@@ -110,7 +108,7 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | POST | `/index.php?ruta=contacto` | Valida y guarda la consulta, intenta enviar el correo y redirige al formulario con una confirmación. |
 | GET | `/index.php?ruta=resultados_buscar&buscar=texto&id_categoria_campana=1` | Busca campañas activas por texto y categoría; ambos filtros son opcionales. |
 | GET | `/index.php?ruta=campana&id=123` | Detalle público de la campaña activa identificada por su ID. Devuelve 400 si el ID es inválido y 404 si no existe o no está activa. |
-| GET | `/index.php?ruta=mis_donaciones` | Historial con datos e imágenes de ejemplo. |
+| GET | `/index.php?ruta=mis_donaciones` | Historial real del usuario autenticado, con enlaces a sus campañas activas. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
 
@@ -313,17 +311,6 @@ La identidad del administrador se obtiene del ID guardado en la sesión y sus pe
 
 Para actualizar tu base existente, importá `database/migrations/20261028_imagen_y_desbaneo.sql` desde el cliente de MariaDB o phpMyAdmin, seleccionando tu base existente. Este único archivo agrega `camp.imagen`, `baneados.fecha_unban` (`DATETIME NULL`) y `baneados.motivo_unban`, conservando los datos existentes. Comprueba cada columna y agrega solo las que faltan: podés volver a ejecutarlo si ya tenías `imagen` o habías aplicado una parte.
 
-Después, importá también `database/migrations/20261101_campana_imagenes.sql`. Crea la tabla `campana_imagenes`, donde se guardan las fotos que sube el creador de una campaña (hasta 4; la de `orden` 0 es la portada). Se puede volver a ejecutar sin problemas.
-
-### Fotos de las campañas
-
-Las fotos se guardan en `public_php/subidas/campanas/` con un nombre aleatorio; esa carpeta no se sube a Git. El límite por foto es 5 MB, pero PHP puede imponer uno menor: con la configuración de fábrica (`upload_max_filesize = 2M`, `post_max_size = 8M`) el formulario muestra y aplica 2 MB por foto. Para permitir 4 fotos de 5 MB, cambiá en tu `php.ini` (en XAMPP: `C:\xampp\php\php.ini`) y reiniciá Apache:
-
-```ini
-upload_max_filesize = 5M
-post_max_size = 24M
-```
-
 Si creás una base nueva, importá solamente `database/schema.sql`, que ya incluye estos campos. No ejecutes la migración después de importar el schema actualizado ni vuelvas a importar el schema sobre tu base existente.
 
 El código de baneos requiere estos campos antes de usarse. Los registros anteriores quedan con `fecha_unban = NULL` y motivo nulo; las fechas originales se conservan. El historial anterior no permite distinguir qué baneos se levantaron manualmente, porque esa operación se registraba cambiando `fecha_fin`.
@@ -399,3 +386,98 @@ Si documentás una integración pendiente, indicá qué falta y dónde se hará.
 | Un enlace no cambia de pantalla. | Revisá si su destino en `rutas.php` sigue siendo `#`: esa funcionalidad todavía está pendiente. |
 
 La organización de esta guía toma como referencia la [documentación de Luanti para preparar el entorno](https://docs.luanti.org/for-creators/development-setup/) y sus [guías de Git](https://docs.luanti.org/for-engine-devs/git-guidelines/): instrucciones por tarea, ejemplos concretos y cambios que se puedan revisar por separado.
+
+
+## Donaciones de insumos: punto de entrega y recepción
+
+Se conserva la estructura actual de la base: no requiere migraciones.
+
+- En **Mis campañas**, el creador de una campaña activa de insumos puede abrir **Definir punto de entrega**, elegir provincia/localidad y marcar un único lugar en el mapa. La dirección o referencia admite horarios de recepción. La ubicación se guarda en `ubicaciones` y queda asociada mediante `camp.id_ubicacion`; editarla reutiliza ese registro.
+- En el detalle público se muestran el mapa y la referencia. Todos los insumos pedidos se entregan en ese mismo lugar.
+- Desde **Mis campañas → Ver insumos recibidos y registrar entrega**, el creador ingresa el correo de un donante registrado, el objetivo y la cantidad efectivamente recibida. La confirmación agrega un registro a `donacion` y suma la cantidad a `objetivos.parcial` dentro de una transacción.
+- El formulario tiene CSRF y una clave de sesión de un solo uso para evitar que reenviarlo duplique la recepción. Una nueva recepción intencional debe abrirse como formulario nuevo.
+- El historial de recepciones solo es visible para el creador. El progreso actualizado es público. Las cantidades usan la unidad del objetivo y admiten hasta dos decimales; se conservan también entregas que superen la meta.
+- No se registran promesas de donación ni una doble confirmación: el creador es quien confirma la entrega. La estructura actual exige un donante con cuenta; no se crean usuarios ficticios para entregas anónimas. No se cambia automáticamente el estado de la campaña ni el nivel de confianza.
+- La creación completa de campañas continúa como tarea separada; este recorrido funciona con las campañas ya guardadas.
+
+Pruebas con la base local, con datos de prueba revertidos al terminar:
+
+```bash
+php tests/run_tests.php controladores PuntoEntregaController
+php tests/run_tests.php controladores RecepcionInsumosController
+```
+
+
+### Historial del donante
+
+**Mis donaciones** consulta `donacion` para el usuario autenticado y muestra las campañas, insumos, cantidades y fechas reales. Una recepción registrada por el creador aparece en la cuenta del donante identificado por su correo. Cada entrega tiene su propia tarjeta. Las campañas activas tienen un botón para abrir su detalle; las suspendidas o finalizadas conservan el registro sin enlazar a un detalle público inaccesible. No se cambió la estructura de la base.
+
+```bash
+php tests/run_tests.php controladores MisDonacionesController
+```
+
+
+## Niveles de confianza y documento
+
+Se reutiliza `validaciones` para los nombres y las descripciones, y `usuarios.id_validacion` para el nivel actual. No requiere cambios de estructura ni modificar esos textos.
+
+- Sin DNI o Pasaporte cargado, el usuario permanece **Blanco**, aunque tenga donaciones.
+- Con documento y sin donaciones: **Celeste**.
+- Con documento y 1 o 2 donaciones: **Azul**.
+- Con documento y 3 o más donaciones: **Violeta**.
+
+Se cuenta cada registro de `donacion` una vez para cada participante: como realizado para el donante y como recibido para el creador de la campaña. Para el nivel se suman ambos tipos de actividad; no se cuentan promesas ni cantidades de unidades como donaciones distintas. No es necesario que la campaña alcance su meta. Las donaciones anteriores se reconocen al cargar el documento.
+
+El nivel se recalcula al navegar con sesión iniciada y al guardar el documento. El perfil y el panel **Mi cuenta → Perfil** muestran el nombre y la descripción de la base. La carga del documento requiere sesión y CSRF, solo afecta al usuario autenticado y no modifica el indicador `verificado`.
+
+```bash
+php tests/run_tests.php controladores PerfilController
+```
+
+
+## Crear campañas con varios objetivos
+
+La ruta `crear_campana` admite GET y POST y requiere sesión. Se usan categorías reales de la base, CSRF y una clave de sesión de un solo uso para evitar publicaciones duplicadas.
+
+En una campaña de insumos se pueden agregar o quitar hasta 20 filas: categoría del insumo, nombre con su unidad y cantidad positiva con hasta dos decimales. Los nombres se reutilizan o agregan al catálogo de subcategorías existente. Cada fila genera un objetivo independiente, con progreso inicial cero. Todos comparten un único punto de entrega, seleccionado buscando un lugar o dirección, o haciendo clic en el mapa. Las coordenadas se guardan en campos ocultos; provincia y localidad se completan cuando coinciden con el catálogo y pueden revisarse. No se cambia la estructura de la base.
+
+Las campañas de dinero guardan su monto objetivo y CBU/CVU. Guardar la campaña, su ubicación y los objetivos es una operación atómica. Ante un error se conservan los campos y las filas para corregirlos. Se retiró el campo de fecha límite, que no tiene una columna donde persistirse en el esquema actual.
+
+```bash
+php tests/run_tests.php controladores CrearCampanaController
+```
+
+
+### Buscar el punto de entrega
+
+Crear campaña y editar su punto de entrega comparten un buscador de lugares/direcciones con Photon, basado en OpenStreetMap. La búsqueda se realiza al pulsar **Buscar en el mapa** o Enter; no hace consultas mientras se escribe. Se muestran hasta cinco resultados en Argentina. Elegir uno centra el mapa, guarda las coordenadas ocultas y completa la referencia; se pueden agregar horarios después. También se puede ajustar el marcador arrastrándolo o haciendo clic en el mapa. Revisar provincia y localidad si el proveedor no las reconoce en el catálogo.
+
+Se utiliza caché durante la visita, una sola búsqueda simultánea y un tiempo de espera de diez segundos. El servicio público admite uso moderado para proyectos, sin garantía de disponibilidad: [documentación de Photon](https://github.com/komoot/photon#demo-server). Si falla la búsqueda, se conserva el punto anterior y se puede elegir otro haciendo clic en el mapa. No se requieren claves ni cambios de estructura en la base.
+
+
+## Imágenes de campañas (integración del PR #49)
+
+Se integraron el modelo `CampanaImagen`, el repositorio, la validación/almacenamiento, la selección múltiple con vista previa y la migración aportados en [el PR #49](https://github.com/todos-para-uno/plataforma-solidaria/pull/49). Se conserva el formulario actual: múltiples insumos con cantidades, búsqueda del punto de entrega, documento y niveles de confianza, y la paleta visual.
+
+### Base existente
+
+Importar **solo** `database/migrations/20261101_campana_imagenes.sql` en la base seleccionada desde phpMyAdmin o un usuario administrador. La cuenta de la aplicación necesita permisos de lectura/escritura en la nueva tabla. La migración agrega `campana_imagenes`, se puede repetir y conserva los datos y la columna `camp.imagen`. Para una base nueva, el esquema completo ya incluye la tabla; no reimportar el esquema sobre una base con datos.
+
+Las campañas sin fotos continúan funcionando mientras se importa la migración. Publicar con fotos requiere que la tabla ya exista.
+
+### Subidas y presentación
+
+- Hasta 4 fotos opcionales PNG, JPG o WEBP, con el límite efectivo que permita PHP (máximo de aplicación: 5 MB por foto). Permite arrastrar, quitar y elegir portada.
+- Se validan los archivos en el servidor y se guardan con nombres aleatorios en `public_php/subidas/campanas/`. PHP necesita permiso para escribir allí. Las fotos no se versionan.
+- Se corrigieron los nombres del PR: `campanas` es una carpeta real, y los archivos de configuración son `.gitignore` y `.htaccess`, con punto inicial. Apache usa este último para desactivar el listado y bloquear archivos ejecutables. En otros servidores debe configurarse la protección equivalente; el servidor de desarrollo de PHP no procesa `.htaccess`.
+- La campaña, sus objetivos y sus filas de imágenes se guardan en una transacción. Si falla, se revierten las filas y se limpian los archivos creados. Si hay errores del formulario, se conservan los campos de texto y se solicita volver a elegir las fotos.
+- La portada se muestra en inicio, resultados de búsqueda y Mis donaciones. El detalle muestra la portada y las fotos adicionales. No se reemplazan las imágenes ilustrativas previas.
+
+```bash
+php tests/run_tests.php servicios ImagenesCampana
+php tests/run_tests.php controladores CrearCampanaImagenes
+php tests/run_tests.php controladores
+node tests/js/PuntoEntregaTest.js
+```
+
+La prueba de integración de imágenes informa `PENDIENTE` si aún no existe la tabla. Las pruebas de archivos usan fotos temporales y las de base revierten los registros de prueba.

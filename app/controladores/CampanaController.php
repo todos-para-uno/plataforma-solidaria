@@ -5,6 +5,8 @@ require_once __DIR__ . '/../repositorios/UsuariosRepository.php';
 require_once __DIR__ . '/../repositorios/ValidacionesRepository.php';
 require_once __DIR__ . '/../repositorios/ObjetivosRepository.php';
 require_once __DIR__ . '/../seguridad/Csrf.php';
+require_once __DIR__ . '/../repositorios/PuntoEntregaRepository.php';
+require_once __DIR__ . '/../repositorios/CampanaImagenesRepository.php';
 
 final class CampanaController
 {
@@ -13,7 +15,9 @@ final class CampanaController
         private CatCampRepository $categorias,
         private UsuariosRepository $usuarios,
         private ValidacionesRepository $validaciones,
-        private ObjetivosRepository $objetivos
+        private ObjetivosRepository $objetivos,
+        private ?PuntoEntregaRepository $puntos = null,
+        private ?CampanaImagenesRepository $imagenes = null
     ) {}
 
     public function mostrar(string $rutaBase, string $rutaAssets, mixed $id, ?array $usuarioActual = null): void
@@ -40,6 +44,8 @@ final class CampanaController
         $validacion = $creador === null ? null : $this->validaciones->findById($creador->getIdValidacion());
         $objetivos = $this->objetivos->buscarDetallePorCampana($idCampana);
         $objetivoMonetario = array_sum(array_column($objetivos, 'objetivo'));
+        $puntoEntrega = $this->puntos?->buscar($idCampana);
+        $imagenesCampana = $this->imagenes?->buscarPorCampana($idCampana) ?? [];
         $csrfToken = Csrf::generar();
         require __DIR__ . '/../vistas/campana.php';
     }

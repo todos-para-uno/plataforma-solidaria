@@ -64,7 +64,7 @@ class IngresoController
                     $this->estadoAutenticacion?->limpiar($usuario->getId());
                     session_regenerate_id(true);
                     // Conservar solo la identidad; los datos se consultan en cada petición.
-                    $_SESSION = ['usuario_id' => $usuario->getId()];
+                    $_SESSION = ['usuario_id' => $usuario->getId(), 'mostrar_bienvenida' => true];
                     Csrf::generar();
                     header('Location: ' . $rutaBase . '/index.php', true, 303);
                     return;

@@ -46,10 +46,7 @@ $pruebas = [
         ],
     ],
     'servicios' => [
-        'ImagenesCampana' => [
-            'archivo' => 'servicios/ImagenesCampanaTest.php',
-            'funcion' => 'imagenesCampanaTest',
-        ],
+        'ImagenesCampana' => ['archivo' => 'servicios/ImagenesCampanaTest.php', 'funcion' => 'imagenesCampanaTest'],
     ],
     'repositorios' => [
         'EstadoAutenticacionRepository' => [
@@ -74,6 +71,27 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'CrearCampanaImagenes' => ['archivo'=>'controladores/CrearCampanaImagenesTest.php','funcion'=>'crearCampanaImagenesTest'],
+        'CrearCampanaController' => [
+            'archivo' => 'controladores/CrearCampanaControllerTest.php',
+            'funcion' => 'crearCampanaControllerTest',
+        ],
+        'PerfilController' => [
+            'archivo' => 'controladores/PerfilControllerTest.php',
+            'funcion' => 'perfilControllerTest',
+        ],
+        'MisDonacionesController' => [
+            'archivo' => 'controladores/MisDonacionesControllerTest.php',
+            'funcion' => 'misDonacionesControllerTest',
+        ],
+        'RecepcionInsumosController' => [
+            'archivo' => 'controladores/RecepcionInsumosControllerTest.php',
+            'funcion' => 'recepcionInsumosControllerTest',
+        ],
+        'PuntoEntregaController' => [
+            'archivo' => 'controladores/PuntoEntregaControllerTest.php',
+            'funcion' => 'puntoEntregaControllerTest',
+        ],
         'CampanaController' => [
             'archivo' => 'controladores/CampanaControllerTest.php',
             'funcion' => 'campanaControllerTest',

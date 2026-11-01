@@ -109,13 +109,12 @@ CREATE TABLE camp (
     FOREIGN KEY (id_ubicacion) REFERENCES ubicaciones(id)
 );
 
--- imágenes subidas por el creador de la campaña (hasta 4; orden 0 es la portada)
--- Tabla aparte en lugar de un JSON en camp: la base garantiza el límite y borra en cascada.
-CREATE TABLE campana_imagenes (
+CREATE TABLE IF NOT EXISTS campana_imagenes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_camp INT NOT NULL,
     -- Ruta relativa a public_php, por ejemplo: subidas/campanas/3f9a...c1.webp
     ruta VARCHAR(255) NOT NULL,
+    -- Posición en la galería. La imagen con orden 0 es la portada.
     orden TINYINT UNSIGNED NOT NULL,
     fecha_subida DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

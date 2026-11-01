@@ -105,3 +105,7 @@ $cuentaParaModal = $usuario ?? $usuarioActual;
 </header>
 
 <main id="contenido" tabindex="-1">
+<?php if ($usuarioActual !== null && ($_SESSION['mostrar_bienvenida'] ?? false) === true): ?>
+    <?php unset($_SESSION['mostrar_bienvenida']); ?>
+    <?php require __DIR__ . '/bienvenida.php'; ?>
+<?php endif; ?>

@@ -23,7 +23,12 @@ $pctMonetaria = ($campana->getMonetaria() && $objetivoMonetario > 0)
 
             <!-- Tarjeta principal de detalle -->
             <article class="tarjeta campana tarjeta-detalle">
-                <div class="campana-imagen imagen-detalle" role="img" aria-label="Fotografía ilustrativa de la campaña"></div>
+                <?php if (!empty($imagenesCampana)): ?>
+                <img class="campana-imagen imagen-detalle" src="<?= escapar($rutaBase . '/' . $imagenesCampana[0]->getRuta()) ?>" alt="<?= escapar($campana->getNombre()) ?>">
+                <?php if (count($imagenesCampana) > 1): ?><div class="campana-galeria" aria-label="Fotos de la campaña">
+                    <?php foreach (array_slice($imagenesCampana, 1) as $indice => $foto): ?><a href="<?= escapar($rutaBase . '/' . $foto->getRuta()) ?>" target="_blank" rel="noopener noreferrer"><img src="<?= escapar($rutaBase . '/' . $foto->getRuta()) ?>" alt="<?= escapar($campana->getNombre()) ?> — foto <?= $indice + 2 ?>" loading="lazy"></a><?php endforeach; ?>
+                </div><?php endif; ?>
+                <?php else: ?><div class="campana-imagen imagen-detalle" role="img" aria-label="Campaña sin fotos"></div><?php endif; ?>
 
                 <div class="campana-cuerpo cuerpo-detalle">
 
@@ -73,7 +78,7 @@ $pctMonetaria = ($campana->getMonetaria() && $objetivoMonetario > 0)
                                                 <span class="progreso-relleno" style="width: <?= $pctInsumo ?>%"></span>
                                             </div>
                                             <p class="progreso-cifras">
-                                                Recaudado: <strong><?= (int) $obj['parcial'] ?></strong> de <?= (int) $obj['objetivo'] ?> (<strong><?= $pctInsumo ?>%</strong>)
+                                                Recaudado: <strong><?= formatearCantidad((float) $obj['parcial']) ?></strong> de <?= formatearCantidad((float) $obj['objetivo']) ?> (<strong><?= $pctInsumo ?>%</strong>)
                                             </p>
                                         </div>
                                     <?php endforeach; ?>
@@ -84,10 +89,32 @@ $pctMonetaria = ($campana->getMonetaria() && $objetivoMonetario > 0)
                         <?php endif; ?>
                     </div>
 
+                    <?php if (!$campana->getMonetaria()): ?>
+                    <div class="detalle-seccion-bloque">
+                        <h2>Punto de entrega de insumos</h2>
+                        <?php if (!empty($puntoEntrega)):
+                            $lat = (float) $puntoEntrega['latitud']; $lng = (float) $puntoEntrega['longitud'];
+                            $mapaUrl = 'https://www.openstreetmap.org/export/embed.html?' . http_build_query(['bbox' => ($lng-.005) . ',' . ($lat-.005) . ',' . ($lng+.005) . ',' . ($lat+.005), 'layer' => 'mapnik', 'marker' => $lat . ',' . $lng]);
+                        ?>
+                        <p>Todos los insumos pedidos se reciben en este lugar:</p>
+                        <p><strong><?= escapar($puntoEntrega['localidad']) ?>, <?= escapar($puntoEntrega['provincia']) ?></strong></p>
+                        <?php if ($puntoEntrega['referencia']): ?><p><?= nl2br(escapar($puntoEntrega['referencia'])) ?></p><?php endif; ?>
+                        <iframe class="mapa-entrega" title="Ubicación del punto de entrega" src="<?= escapar($mapaUrl) ?>" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                        <p><a target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat=<?= $lat ?>&amp;mlon=<?= $lng ?>#map=16/<?= $lat ?>/<?= $lng ?>">Abrir ubicación en el mapa</a></p>
+                        <?php else: ?><p>El creador todavía no definió el punto de entrega.</p><?php endif; ?>
+                        <?php if ((int) ($_SESSION['usuario_id'] ?? 0) === $campana->getOwnerId()): ?>
+                        <a class="boton boton-secundario" href="<?= escapar($rutaBase) ?>/index.php?ruta=punto_entrega&amp;id=<?= $campana->getId() ?>">Definir punto de entrega</a>
+                        <a class="boton" href="<?= escapar($rutaBase) ?>/index.php?ruta=recepcion_insumos&amp;id=<?= $campana->getId() ?>">Registrar insumos recibidos</a>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Acciones -->
                     <div class="detalle-acciones">
+                        <?php if ($campana->getMonetaria()): ?>
                         <button type="button" class="boton boton-donar boton-ancho" disabled aria-describedby="donaciones-pendientes">Donar a esta campaña</button>
-                        <p id="donaciones-pendientes" class="texto-secundario">Las donaciones desde el sitio todavía no están disponibles.</p>
+                        <?php endif; ?>
+                        <p id="donaciones-pendientes" class="texto-secundario"><?= $campana->getMonetaria() ? 'Las donaciones de dinero todavía no están disponibles.' : 'Acercá los insumos al punto de entrega. El creador registrará la recepción.' ?></p>
                         <a href="<?= escapar($rutas['resultados_buscar']) ?>" class="boton boton-secundario boton-ancho">Volver al buscador</a>
                     </div>
 

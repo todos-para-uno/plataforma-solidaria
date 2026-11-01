@@ -44,12 +44,33 @@ final class CampanaImagenesRepository extends CrudRepository
     /** @return list<CampanaImagen> Imágenes de la campaña, empezando por la portada. */
     public function buscarPorCampana(int $idCamp): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT * FROM `campana_imagenes` WHERE `id_camp` = :idCamp ORDER BY `orden`'
-        );
-        $stmt->execute(['idCamp' => $idCamp]);
+        try {
+            $stmt = $this->pdo->prepare('SELECT * FROM `campana_imagenes` WHERE `id_camp` = :idCamp ORDER BY `orden`');
+            $stmt->execute(['idCamp' => $idCamp]);
+        } catch (PDOException $e) {
+            // Permitir leer campañas existentes mientras se importa la migración.
+            if (($e->errorInfo[1] ?? null) === 1146) return [];
+            throw $e;
+        }
 
         return $this->hidratarFilas($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    /** Portadas para una lista de tarjetas, en una sola consulta. */
+    public function portadas(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if (!$ids) return [];
+        try {
+            $stmt = $this->pdo->prepare('SELECT * FROM campana_imagenes WHERE orden = 0 AND id_camp IN (' . implode(',', array_fill(0, count($ids), '?')) . ')');
+            $stmt->execute($ids);
+        } catch (PDOException $e) {
+            if (($e->errorInfo[1] ?? null) === 1146) return [];
+            throw $e;
+        }
+        $portadas = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) $portadas[(int) $fila['id_camp']] = $this->hidratar($fila)->getRuta();
+        return $portadas;
     }
 
     protected function hidratar(array $fila): CampanaImagen
