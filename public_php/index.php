@@ -26,6 +26,7 @@ $rutasConControlador = [
     'contacto',
     'banear',
     'finalizar_baneo',
+    'admin_mensajes',
     'admin_usuarios',
     'admin_actividad',
     'admin_password',
@@ -109,6 +110,16 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         }
         return;
     }
+}
+
+if ($ruta === 'admin_mensajes') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/AdministracionMensajesController.php';
+    $pdo = conectarBd();
+    (new AdministracionMensajesController(
+        new AdministracionMensajesRepository($pdo), new UsuariosRepository($pdo)
+    ))->atender();
+    return;
 }
 
 if (in_array($ruta, ['admin_usuarios', 'admin_actividad', 'admin_password', 'admin_desbloquear'], true)) {
