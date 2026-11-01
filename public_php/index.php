@@ -6,7 +6,6 @@ $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $esLectura = in_array($metodo, ['GET', 'HEAD'], true);
 $vistas = [
     'inicio' => 'index.php',
-    'crear_campana' => 'crear_campana.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
 
     
@@ -14,6 +13,7 @@ $vistas = [
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
 $rutasConControlador = [
+    'crear_campana',
     'perfil',
     'actualizar_documento',
     'mis_donaciones',
@@ -45,7 +45,7 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
 }
 
 $soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento'], true);
-$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'punto_entrega', 'recepcion_insumos'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'crear_campana', 'punto_entrega', 'recepcion_insumos'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -163,6 +163,13 @@ if ($ruta === 'contacto') {
     } else {
         $controlador->mostrarFormulario($rutaBase, $rutaAssets, $usuario ?? null);
     }
+    return;
+}
+
+if ($ruta === 'crear_campana') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/CrearCampanaController.php';
+    (new CrearCampanaController(conectarBd()))->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
     return;
 }
 

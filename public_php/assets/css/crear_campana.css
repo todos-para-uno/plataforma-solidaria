@@ -3,6 +3,7 @@ main {
     background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
     background-repeat: no-repeat;
 }
 .crear-interior {
@@ -63,4 +64,17 @@ main {
 }
 .input-con-simbolo input {
     padding-left: 28px !important;
+}
+.crear-insumo-fila { border: 1px solid var(--linea); border-radius: var(--radio-control); padding: var(--e-4); margin-bottom: var(--e-4); }
+.crear-tarjeta legend, .crear-insumo-fila legend { font-weight: 700; color: var(--azul); padding-inline: var(--e-2); }
+.crear-tarjeta[hidden] { display: none; }
+.mapa-entrega { width: 100%; height: 320px; border-radius: var(--radio-control); margin-block: var(--e-4); }
+.crear-tarjeta, .crear-insumo-fila { min-inline-size: 0; }
+
+.crear-insumos-ayuda {
+    padding: var(--e-4);
+    border: 2px solid var(--terracota);
+    border-radius: var(--radio-control);
+    background: var(--terracota-suave);
+    color: var(--azul);
 }
