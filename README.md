@@ -383,6 +383,7 @@ Si documentás una integración pendiente, indicá qué falta y dónde se hará.
 | El formulario de ingreso devuelve **405** al enviarlo. | Comprobá que la copia servida por Apache esté actualizada y que `public_php/index.php` acepte POST para `ingresar`. |
 | El servidor no puede usar el puerto 8000. | Detené el servidor que ya lo ocupa o elegí otro puerto, por ejemplo `php -S localhost:8002 -t public_php`. Abrí ese mismo puerto en el navegador. |
 | La página abre sin estilos. | Entrá por la URL del servidor PHP y revisá que hayas usado `-t public_php` desde la raíz. Abrir el archivo con doble clic no ejecuta PHP. |
+| Al publicar una campaña aparece `Permission denied` o `Permiso denegado` en `subidas/campanas`. | El usuario que ejecuta PHP necesita escribir en esa carpeta. Seguí [Permisos de imágenes en XAMPP para Linux](#permisos-de-imágenes-en-xampp-para-linux). Git no conserva propietarios ni permisos de escritura de las carpetas. |
 | Un enlace no cambia de pantalla. | Revisá si su destino en `rutas.php` sigue siendo `#`: esa funcionalidad todavía está pendiente. |
 
 La organización de esta guía toma como referencia la [documentación de Luanti para preparar el entorno](https://docs.luanti.org/for-creators/development-setup/) y sus [guías de Git](https://docs.luanti.org/for-engine-devs/git-guidelines/): instrucciones por tarea, ejemplos concretos y cambios que se puedan revisar por separado.
@@ -481,3 +482,20 @@ node tests/js/PuntoEntregaTest.js
 ```
 
 La prueba de integración de imágenes informa `PENDIENTE` si aún no existe la tabla. Las pruebas de archivos usan fotos temporales y las de base revierten los registros de prueba.
+
+### Permisos de imágenes en XAMPP para Linux
+
+Si el proyecto está en `/opt/lampp/htdocs/plataforma-solidaria`, Apache puede ejecutar PHP con un usuario distinto del que clonó el repositorio. Aunque `public_php/subidas/campanas/` exista, ese usuario necesita permisos para crear archivos allí.
+
+Consultá las directivas `User` y `Group` en `/opt/lampp/etc/httpd.conf` y comprobá el usuario de los procesos de Apache con `ps -eo user,comm`. Si Apache usa el usuario y grupo `daemon`, ejecutá desde la raíz del proyecto:
+
+```bash
+mkdir -p public_php/subidas/campanas
+sudo chgrp daemon public_php/subidas/campanas
+sudo chmod 2775 public_php/subidas/campanas
+sudo -u daemon test -w public_php/subidas/campanas && echo "Apache puede escribir las imágenes"
+```
+
+Si las directivas indican otros nombres, reemplazá el grupo en `chgrp` y el usuario en `sudo -u`. El modo `2775` permite escribir al dueño y al grupo, mantiene la lectura pública de las fotos y hace que los nuevos archivos hereden el grupo de la carpeta. Los directorios superiores también deben permitirle a Apache recorrer la ruta.
+
+Volvé a elegir las fotos y publicá de nuevo. Este ajuste es local a cada máquina: actualizar la rama no cambia los permisos. Limitá el cambio a la carpeta de imágenes; no hace falta usar `chmod 777` ni cambiar permisos de todo el proyecto. Durante el desarrollo, el formulario muestra el detalle técnico del error, incluida la ruta afectada, y el controlador también lo registra en PHP/Apache. Se mantienen los warnings de escritura de PHP sin suprimir; su visualización depende de `display_errors` y `error_reporting` del servidor.

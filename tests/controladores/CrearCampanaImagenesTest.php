@@ -48,6 +48,18 @@ function crearCampanaImagenesTest(PDO $pdo): void
         $_FILES=['imagenes'=>['name'=>['foto.png'],'tmp_name'=>[$foto],'error'=>[0],'size'=>[filesize($foto)]]];
         [$codigo]=$render();$stmt=$pdo->prepare('SELECT COUNT(*) FROM camp WHERE nombre=?');$stmt->execute([$_POST['nombre']]);
         TestUtils::comprobar($codigo===422&&(int)$stmt->fetchColumn()===0&&count(glob($tmp.'/fallidas/*')?:[])===0,'Un fallo posterior a escribir la foto borra el archivo y revierte la campaña');
+        // Un archivo usado como directorio fuerza un fallo real de escritura.
+        $destinoBloqueado=$foto.'/campanas';
+        $controller=new CrearCampanaController($pdo,new ImagenesCampana($destinoBloqueado,'subidas/campanas',static fn($ruta)=>is_file($ruta)));
+        $_SERVER['REQUEST_METHOD']='GET';$_POST=[];$_FILES=[];[$codigo,$html]=$render();preg_match('/name="clave" value="([a-f0-9]{64})"/',$html,$clave);
+        $_SERVER['REQUEST_METHOD']='POST';$_POST=$datosValidos;$_POST['clave']=$clave[1];$_POST['nombre']=$f['prefijo'].' Fallo de carpeta';
+        $_FILES=['imagenes'=>['name'=>['foto.png'],'tmp_name'=>[$foto],'error'=>[0],'size'=>[filesize($foto)]]];
+        // Capturamos el warning de mkdir solo en la prueba; la aplicación lo conserva.
+        set_error_handler(static fn(int $nivel): bool=>$nivel===E_WARNING);
+        try {[$codigo,$html]=$render();} finally {restore_error_handler();}
+        TestUtils::comprobar($codigo===503&&str_contains($html,'<li>Detalle técnico (desarrollo): No se pudo crear la carpeta de imágenes: '.escapar($destinoBloqueado).'</li>'),'El formulario muestra el motivo técnico y la ruta cuando falla el guardado');
+        $stmt=$pdo->prepare('SELECT COUNT(*) FROM camp WHERE nombre=?');$stmt->execute([$_POST['nombre']]);
+        TestUtils::comprobar((int)$stmt->fetchColumn()===0,'Mostrar el detalle técnico mantiene la reversión de la campaña fallida');
         $_POST=[];$_FILES=[];$_SERVER['CONTENT_LENGTH']='99999999';[$codigo,$html]=$render();
         TestUtils::comprobar($codigo===413&&str_contains($html,'fotos más livianas'),'Informa un envío demasiado grande sin confundirlo con un error CSRF');
         // Forzar un fallo al relacionar una quinta foto debe revertir toda la campaña.

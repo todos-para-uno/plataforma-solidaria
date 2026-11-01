@@ -134,6 +134,43 @@ function imagenesCampanaTest(): void
         $servicio->eliminar($rutas);
         TestUtils::comprobar(glob($destino . '/*') === [], 'eliminar() borra las imágenes guardadas.');
 
+        // El controlador necesita el motivo y la ruta para mostrarlos durante el desarrollo.
+        $comprobarFalloDeCarpeta = static function (ImagenesCampana $servicioFallido) use ($validas, $temporal): void {
+            $excepcion = null;
+            // El caso de mkdir fallido también emite un warning, que se captura solo en la prueba.
+            set_error_handler(static fn (int $nivel): bool => $nivel === E_WARNING);
+            try {
+                $servicioFallido->guardar([$validas['archivos'][0]]);
+            } catch (RuntimeException $e) {
+                $excepcion = $e;
+            } finally {
+                restore_error_handler();
+            }
+            TestUtils::comprobar(
+                $excepcion !== null && str_contains($excepcion->getMessage(), 'carpeta de imágenes')
+                    && str_contains($excepcion->getMessage(), $temporal),
+                'Un destino no disponible genera una excepción con el motivo y la ruta.'
+            );
+        };
+
+        $bloqueo = $temporal . '/bloqueo';
+        file_put_contents($bloqueo, 'Este archivo impide crear una carpeta debajo.');
+        $comprobarFalloDeCarpeta(new ImagenesCampana($bloqueo . '/campanas'));
+
+        chmod($destino, 0555);
+        clearstatcache(true, $destino);
+        try {
+            if (!is_writable($destino)) {
+                $comprobarFalloDeCarpeta(new ImagenesCampana($destino));
+                TestUtils::comprobar(glob($destino . '/*') === [], 'Una carpeta sin escritura no deja imágenes parciales.');
+            } else {
+                echo "OMITIDA: El usuario actual puede escribir incluso en carpetas con permisos 0555.\n";
+            }
+        } finally {
+            chmod($destino, 0755);
+            clearstatcache(true, $destino);
+        }
+
         TestUtils::comprobar(ImagenesCampana::formatearTamano(5 * 1048576) === '5 MB', 'Formatea tamaños enteros.');
         TestUtils::comprobar(ImagenesCampana::formatearTamano(1572864) === '1,5 MB', 'Formatea tamaños con decimales.');
 

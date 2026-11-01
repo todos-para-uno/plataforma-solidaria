@@ -124,7 +124,10 @@ final class ImagenesCampana
             return [];
         }
         if (!is_dir($this->directorioDestino) && !mkdir($this->directorioDestino, 0755, true) && !is_dir($this->directorioDestino)) {
-            throw new RuntimeException('No se pudo crear la carpeta de imágenes.');
+            throw new RuntimeException('No se pudo crear la carpeta de imágenes: ' . $this->directorioDestino);
+        }
+        if (!is_writable($this->directorioDestino)) {
+            throw new RuntimeException('PHP no tiene permiso de escritura en la carpeta de imágenes: ' . $this->directorioDestino);
         }
 
         $guardadas = [];
@@ -136,7 +139,7 @@ final class ImagenesCampana
 
                 if (!$this->recodificar($archivo['tmp'], $archivo['tipo'], $destino)
                     && !($this->mover)($archivo['tmp'], $destino)) {
-                    throw new RuntimeException('No se pudo guardar la imagen.');
+                    throw new RuntimeException('No se pudo guardar la imagen en: ' . $destino);
                 }
                 @chmod($destino, 0644);
                 $guardadas[] = trim($this->prefijoRuta, '/') . '/' . $nombreFinal;

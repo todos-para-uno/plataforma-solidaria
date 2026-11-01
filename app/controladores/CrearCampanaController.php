@@ -38,7 +38,12 @@ final class CrearCampanaController
                     unset($_SESSION['crear_campana_claves'][$clave]);
                     header('Location: ' . $rutaBase . '/index.php?ruta=campana&id=' . $id, true, 303); return;
                 } catch (InvalidArgumentException $e) { http_response_code(422); $errores[] = $e->getMessage(); }
-                catch (Throwable $e) { http_response_code(503); $errores[] = 'No pudimos guardar la campaña y sus imágenes. Intentá nuevamente.'; }
+                catch (Throwable $e) {
+                    error_log('No se pudo publicar la campaña: ' . $e->getMessage());
+                    http_response_code(503);
+                    $errores[] = 'No pudimos guardar la campaña y sus imágenes. Intentá nuevamente.';
+                    $errores[] = 'Detalle técnico (desarrollo): ' . $e->getMessage();
+                }
                 $this->archivos->eliminar($rutasGuardadas);
                 if (!empty($_FILES['imagenes'])) $errores[] = 'Volvé a seleccionar las fotos antes de publicar.';
             }
