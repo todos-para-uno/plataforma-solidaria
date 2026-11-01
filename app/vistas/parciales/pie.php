@@ -15,7 +15,7 @@
             <h2 id="pie-plataforma">Plataforma</h2>
             <ul>
                 <li><a href="<?= escapar($rutas['explorar']) ?>">Explorar campañas</a></li>
-                <li><a href="<?= escapar($rutas['crear_campana']) ?>">Crear una campaña</a></li>
+                <li><a href="<?= escapar($rutaCrearCampana) ?>">Crear una campaña</a></li>
                 <li><a href="<?= escapar($rutas['como_funciona']) ?>">Cómo funciona</a></li>
             </ul>
         </nav>
@@ -27,17 +27,9 @@
                 <li><a href="<?= escapar($rutas['contacto']) ?>">Contacto</a></li>
             </ul>
         </nav>
-
-        <nav aria-labelledby="pie-legal">
-            <h2 id="pie-legal">Legal</h2>
-            <ul>
-                <li><a href="<?= escapar($rutas['terminos']) ?>">Términos y condiciones</a></li>
-                <li><a href="<?= escapar($rutas['privacidad']) ?>">Privacidad</a></li>
-            </ul>
-        </nav>
     </div>
 
-    <div class="contenedor pie-legal">
+    <div class="contenedor pie-creditos">
         <p>Proyecto académico del Grupo 4, Tecnicatura Universitaria en Programación (UTN), <?= date('Y') ?>.</p>
     </div>
 </footer>
