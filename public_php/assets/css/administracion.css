@@ -322,3 +322,42 @@ main {
 .admin-paginacion-botones button[hidden] { display:none; }
 .admin-paginacion-botones button { min-width:44px; }
 #admin-pagina { font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* Mensajes de contacto: agrupación por correo, detalles animados y lectura cómoda. */
+.admin-mensajes-lista { display:grid; gap:.65rem; min-height:180px; }
+.admin-mensajes-remitente { border:1px solid var(--linea); border-radius:.6rem; overflow:hidden; background:var(--papel); }
+.admin-mensajes-cabecera { display:flex; width:100%; align-items:center; justify-content:space-between; gap:1rem; padding:1rem; border:0; background:transparent; text-align:left; color:inherit; font:inherit; cursor:pointer; }
+.admin-mensajes-cabecera:hover { background:var(--verde-suave); }
+.admin-mensajes-cabecera:focus-visible { outline:2px solid var(--azul); outline-offset:-3px; }
+.admin-mensajes-identidad { display:grid; gap:.2rem; min-width:0; overflow-wrap:anywhere; }
+.admin-mensajes-identidad small,.admin-mensajes-cantidad small { color:var(--grafito); }
+.admin-mensajes-cantidad { display:flex; align-items:center; justify-content:end; gap:.7rem; flex-wrap:wrap; }
+.admin-mensajes-flecha { font-size:1.4rem; transition:transform .28s ease; }
+.admin-mensajes-abierto .admin-mensajes-flecha { transform:rotate(180deg); }
+.admin-mensajes-desplegable { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows .28s ease,opacity .28s ease; }
+.admin-mensajes-abierto .admin-mensajes-desplegable { grid-template-rows:1fr; opacity:1; }
+.admin-mensajes-interior { min-height:0; overflow:hidden; display:grid; gap:.75rem; }
+.admin-mensajes-abierto .admin-mensajes-interior { padding:1rem; border-top:1px solid var(--linea); background:var(--verde-suave); }
+.admin-mensaje { padding:1rem; border:1px solid var(--linea); border-radius:.5rem; background:var(--papel); overflow-wrap:anywhere; }
+.admin-mensaje-encabezado { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem; }
+.admin-mensaje-encabezado time,.admin-mensaje-meta { color:var(--grafito); font-size:.85rem; }
+.admin-mensaje-texto { white-space:pre-wrap; line-height:1.6; margin:.75rem 0; }
+.admin-mensaje-responder { display:inline-block; margin-top:.65rem; font-weight:600; }
+.admin-mensajes-vacio { display:grid; justify-items:center; gap:.7rem; padding:3rem 1rem; color:var(--grafito); text-align:center; }
+.admin-mensajes-vacio-icono { display:grid; place-items:center; border:1px solid var(--linea); border-radius:50%; width:3.5rem; height:3.5rem; font-size:1.8rem; }
+.admin-mensaje-error { color:var(--error); }
+@media(max-width:600px) {
+  .admin-mensajes-cabecera { align-items:flex-start; }
+  .admin-mensajes-cantidad { flex-direction:column; align-items:flex-end; gap:.1rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .admin-mensajes-desplegable,.admin-mensajes-flecha { transition:none; }
+}
+
+/* Selector de ordenamiento de mensajes, alineado con el buscador. */
+#panel-mensajes .admin-controles { display:flex; align-items:end; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
+#panel-mensajes .admin-controles label { display:grid; gap:.35rem; }
+#panel-mensajes .admin-controles label:first-child { flex:1 1 280px; }
+#panel-mensajes .admin-controles label:last-child { flex:0 1 230px; }
+#admin-mensajes-orden { width:100%; }
+@media(max-width:540px) { #panel-mensajes .admin-controles label:last-child { flex:1 1 100%; } }
