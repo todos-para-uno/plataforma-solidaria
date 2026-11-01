@@ -3,6 +3,16 @@
 document.documentElement.classList.add('js');
 
 document.addEventListener('DOMContentLoaded', function () {
+    const bienvenida = document.querySelector('[data-bienvenida]');
+    const cerrarBienvenida = bienvenida?.querySelector('[data-cerrar-bienvenida]');
+    if (cerrarBienvenida) {
+        cerrarBienvenida.hidden = false;
+        cerrarBienvenida.addEventListener('click', function () {
+            bienvenida.closest('.bienvenida').remove();
+            document.getElementById('contenido').focus({ preventScroll: true });
+        });
+    }
+
     // 1. Gestión del menú desplegable del celular
     const boton = document.querySelector('.menu-boton');
     const menu = document.getElementById('menu');
