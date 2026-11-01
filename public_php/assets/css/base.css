@@ -354,10 +354,10 @@ img { display: block; max-width: 100%; height: auto; }
 @media (max-width: 760px) {
     /* En el celular el pie se compacta: menos aire entre bloques y las mismas dos columnas de enlaces. */
     .pie-interior { grid-template-columns: 1fr 1fr; gap: var(--e-4); padding-block: var(--e-6) var(--e-3); }
-    /* La marca ocupa todo el ancho y va centrada: es un mensaje corto. Los enlaces siguen a la izquierda. */
-    .pie-marca { grid-column: 1 / -1; text-align: center; }
-    .pie-marca img { width: 190px; margin-inline: auto; margin-bottom: var(--e-3); }
-    .pie-marca p { max-width: 34ch; margin-inline: auto; }
+    /* La marca ocupa todo el ancho, alineada a la izquierda como los enlaces, con el logo más grande. */
+    .pie-marca { grid-column: 1 / -1; }
+    .pie-marca img { width: 190px; margin-bottom: var(--e-3); }
+    .pie-marca p { max-width: none; }
     .pie h2 { margin-bottom: var(--e-1); }
     .pie li a { padding-inline: var(--e-1); }
     .pie-creditos { padding-block: var(--e-3); }
