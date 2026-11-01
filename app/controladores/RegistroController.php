@@ -14,6 +14,8 @@ class RegistroController
         string $rutaAssets
     ): void {
         $csrfToken = Csrf::generar();
+        // Llega desde "Crear campaña" sin sesión: la vista explica por qué está acá.
+        $avisoCrearCampana = ($_GET['motivo'] ?? '') === 'crear_campana';
 
         require __DIR__ . '/../vistas/registro.php';
     }

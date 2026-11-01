@@ -14,6 +14,8 @@ return [
     'contacto'        => $rutaEntrada . '?ruta=contacto',
     'ingresar'        => $rutaEntrada . '?ruta=ingresar',
     'registro'        => $rutaEntrada . '?ruta=registro',
+    // Sin sesión, "Crear campaña" lleva a Crear cuenta con un aviso que explica por qué.
+    'registro_para_crear' => $rutaEntrada . '?ruta=registro&motivo=crear_campana',
     'campana'         => $rutaEntrada . '?ruta=campana',
     'crear_campana'   => $rutaEntrada . '?ruta=crear_campana',
     'mis_campanas'    => $rutaEntrada . '?ruta=mis_campanas',
@@ -23,6 +25,4 @@ return [
     'perfil'          => $rutaEntrada . '?ruta=perfil',
     'salir'           => $rutaEntrada . '?ruta=salir',
     'preguntas'       => $rutaEntrada . '?ruta=preguntas_frecuentes',
-    'terminos'        => '#',
-    'privacidad'      => '#',
 ];

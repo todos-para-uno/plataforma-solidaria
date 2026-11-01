@@ -313,16 +313,17 @@ img { display: block; max-width: 100%; height: auto; }
  
 .pie-interior {
     display: grid;
-    grid-template-columns: 1.4fr repeat(3, 1fr);
+    /* Tres columnas iguales: la marca y los enlaces se reparten sin dejar un hueco en el medio. */
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--e-8);
-    padding-block: var(--e-16) var(--e-8);
+    padding-block: var(--e-12) var(--e-6);
 }
  
-.pie-marca img { width: 180px; margin-bottom: var(--e-4); }
+.pie-marca img { width: 220px; margin-bottom: var(--e-3); }
 .pie-marca p { margin: 0; max-width: 30ch; color: var(--hueso); }
  
 .pie h2 {
-    margin-bottom: var(--e-3);
+    margin-bottom: var(--e-2);
     font-family: var(--fuente-texto);
     font-size: var(--t-base);
     font-weight: 700;
@@ -343,16 +344,23 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .pie :focus-visible { outline-color: var(--sol); }
  
-.pie-legal {
-    padding-block: var(--e-4) var(--e-8);
+.pie-creditos {
+    padding-block: var(--e-4) var(--e-6);
     border-top: 1px solid rgba(247, 245, 240, 0.25);
     font-size: var(--t-chico);
 }
-.pie-legal p { margin: 0; max-width: none; color: #c9d3e0; }
+.pie-creditos p { margin: 0; max-width: none; color: #c9d3e0; }
  
 @media (max-width: 760px) {
-    .pie-interior { grid-template-columns: 1fr 1fr; padding-block: var(--e-12) var(--e-6); }
+    /* En el celular el pie se compacta: menos aire entre bloques y las mismas dos columnas de enlaces. */
+    .pie-interior { grid-template-columns: 1fr 1fr; gap: var(--e-4); padding-block: var(--e-6) var(--e-3); }
+    /* La marca ocupa todo el ancho, alineada a la izquierda como los enlaces, con el logo más grande. */
     .pie-marca { grid-column: 1 / -1; }
+    .pie-marca img { width: 190px; margin-bottom: var(--e-3); }
+    .pie-marca p { max-width: none; }
+    .pie h2 { margin-bottom: var(--e-1); }
+    .pie li a { padding-inline: var(--e-1); }
+    .pie-creditos { padding-block: var(--e-3); }
 }
  
 /* 4b. Secciones de página: separación vertical y fondos alternados
