@@ -122,7 +122,10 @@ final class UsuariosRepository extends CrudRepository
         if (!in_array($limite, [10, 15, 25, 50], true) || $offset < 0) {
             throw new InvalidArgumentException('Paginación inválida.');
         }
-        $sql = "SELECT u.id, u.nombre, u.mail, u.telefono, u.admin, u.verificado,
+        $sql = "SELECT u.id, u.nombre, u.mail, u.telefono, u.admin,
+                       CASE WHEN u.tipo_documento IN ('DNI', 'Pasaporte')
+                           AND NULLIF(TRIM(u.documento), '') IS NOT NULL
+                           THEN 1 ELSE 0 END AS documento_cargado,
                        u.id_validacion, v.nombre AS validacion_nombre,
                        (SELECT b.id FROM baneados b WHERE b.id_usuario = u.id
                            AND b.fecha_unban IS NULL AND b.fecha_inicio <= CURRENT_TIMESTAMP

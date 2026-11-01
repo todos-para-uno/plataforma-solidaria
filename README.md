@@ -429,7 +429,7 @@ Se reutiliza `validaciones` para los nombres y las descripciones, y `usuarios.id
 
 Se cuenta cada registro de `donacion` una vez para cada participante: como realizado para el donante y como recibido para el creador de la campaña. Para el nivel se suman ambos tipos de actividad; no se cuentan promesas ni cantidades de unidades como donaciones distintas. No es necesario que la campaña alcance su meta. Las donaciones anteriores se reconocen al cargar el documento.
 
-El nivel se recalcula al navegar con sesión iniciada y al guardar el documento. El perfil y el panel **Mi cuenta → Perfil** muestran el nombre y la descripción de la base. La carga del documento requiere sesión y CSRF, solo afecta al usuario autenticado y no modifica el indicador `verificado`.
+El nivel se recalcula al navegar con sesión iniciada y al guardar el documento. El perfil y el panel **Mi cuenta → Perfil** muestran el nombre y la descripción de la base. La carga del documento requiere sesión y CSRF, solo afecta al usuario autenticado y no modifica el indicador `verificado`. En el listado administrativo, **Documento cargado** muestra un tilde verde cuando el usuario ingresó DNI o pasaporte; no expone el número del documento.
 
 ```bash
 php tests/run_tests.php controladores PerfilController

@@ -176,7 +176,7 @@
       if (expanded === user.id) {
         const box = create('div',undefined,'admin-detalles');
         const dl = create('dl');
-        booleanDetail(dl,'Verificado',Boolean(Number(user.verificado)));
+        booleanDetail(dl,'Documento cargado',Boolean(Number(user.documento_cargado)));
         booleanDetail(dl,'Administrador',Boolean(Number(user.admin)));
         validationDetail(dl,user);
         detail(dl,'Teléfono',user.telefono || 'No informado');
