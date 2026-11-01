@@ -7,7 +7,6 @@ $esLectura = in_array($metodo, ['GET', 'HEAD'], true);
 $vistas = [
     'inicio' => 'index.php',
     'crear_campana' => 'crear_campana.php',
-    'mis_donaciones' => 'mis_donaciones.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
     'perfil' => 'perfil.php'
     
@@ -15,6 +14,9 @@ $vistas = [
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
 $rutasConControlador = [
+    'mis_donaciones',
+    'recepcion_insumos',
+    'punto_entrega',
     'campana',
     'buscador',
     'resultados_buscar',
@@ -41,7 +43,7 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
 }
 
 $soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear'], true);
-$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'punto_entrega', 'recepcion_insumos'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -159,14 +161,36 @@ if ($ruta === 'contacto') {
     return;
 }
 
+if ($ruta === 'mis_donaciones') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/MisDonacionesController.php';
+    (new MisDonacionesController(new DonacionRepository(conectarBd())))->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
+    return;
+}
+
+if ($ruta === 'recepcion_insumos') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/RecepcionInsumosController.php';
+    (new RecepcionInsumosController(conectarBd()))->atender($usuario ?? null, $rutaBase, $rutaAssets);
+    return;
+}
+
+if ($ruta === 'punto_entrega') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/PuntoEntregaController.php';
+    (new PuntoEntregaController(conectarBd()))->atender($usuario ?? null, $rutaBase, $rutaAssets);
+    return;
+}
+
 if ($ruta === 'campana') {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/CampanaController.php';
+    require_once __DIR__ . '/../app/repositorios/PuntoEntregaRepository.php';
     $pdo = conectarBd();
     $controlador = new CampanaController(
         new CampRepository($pdo), new CatCampRepository($pdo),
         new UsuariosRepository($pdo), new ValidacionesRepository($pdo),
-        new ObjetivosRepository($pdo)
+        new ObjetivosRepository($pdo), new PuntoEntregaRepository($pdo)
     );
     $controlador->mostrar($rutaBase, $rutaAssets, $_GET['id'] ?? null, $usuarioActual);
     return;

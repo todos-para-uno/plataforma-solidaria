@@ -68,6 +68,18 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'MisDonacionesController' => [
+            'archivo' => 'controladores/MisDonacionesControllerTest.php',
+            'funcion' => 'misDonacionesControllerTest',
+        ],
+        'RecepcionInsumosController' => [
+            'archivo' => 'controladores/RecepcionInsumosControllerTest.php',
+            'funcion' => 'recepcionInsumosControllerTest',
+        ],
+        'PuntoEntregaController' => [
+            'archivo' => 'controladores/PuntoEntregaControllerTest.php',
+            'funcion' => 'puntoEntregaControllerTest',
+        ],
         'CampanaController' => [
             'archivo' => 'controladores/CampanaControllerTest.php',
             'funcion' => 'campanaControllerTest',

@@ -108,7 +108,7 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | POST | `/index.php?ruta=contacto` | Valida y guarda la consulta, intenta enviar el correo y redirige al formulario con una confirmación. |
 | GET | `/index.php?ruta=resultados_buscar&buscar=texto&id_categoria_campana=1` | Busca campañas activas por texto y categoría; ambos filtros son opcionales. |
 | GET | `/index.php?ruta=campana&id=123` | Detalle público de la campaña activa identificada por su ID. Devuelve 400 si el ID es inválido y 404 si no existe o no está activa. |
-| GET | `/index.php?ruta=mis_donaciones` | Historial con datos e imágenes de ejemplo. |
+| GET | `/index.php?ruta=mis_donaciones` | Historial real del usuario autenticado, con enlaces a sus campañas activas. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
 
@@ -386,3 +386,32 @@ Si documentás una integración pendiente, indicá qué falta y dónde se hará.
 | Un enlace no cambia de pantalla. | Revisá si su destino en `rutas.php` sigue siendo `#`: esa funcionalidad todavía está pendiente. |
 
 La organización de esta guía toma como referencia la [documentación de Luanti para preparar el entorno](https://docs.luanti.org/for-creators/development-setup/) y sus [guías de Git](https://docs.luanti.org/for-engine-devs/git-guidelines/): instrucciones por tarea, ejemplos concretos y cambios que se puedan revisar por separado.
+
+
+## Donaciones de insumos: punto de entrega y recepción
+
+Se conserva la estructura actual de la base: no requiere migraciones.
+
+- En **Mis campañas**, el creador de una campaña activa de insumos puede abrir **Definir punto de entrega**, elegir provincia/localidad y marcar un único lugar en el mapa. La dirección o referencia admite horarios de recepción. La ubicación se guarda en `ubicaciones` y queda asociada mediante `camp.id_ubicacion`; editarla reutiliza ese registro.
+- En el detalle público se muestran el mapa y la referencia. Todos los insumos pedidos se entregan en ese mismo lugar.
+- Desde **Mis campañas → Ver insumos recibidos y registrar entrega**, el creador ingresa el correo de un donante registrado, el objetivo y la cantidad efectivamente recibida. La confirmación agrega un registro a `donacion` y suma la cantidad a `objetivos.parcial` dentro de una transacción.
+- El formulario tiene CSRF y una clave de sesión de un solo uso para evitar que reenviarlo duplique la recepción. Una nueva recepción intencional debe abrirse como formulario nuevo.
+- El historial de recepciones solo es visible para el creador. El progreso actualizado es público. Las cantidades usan la unidad del objetivo y admiten hasta dos decimales; se conservan también entregas que superen la meta.
+- No se registran promesas de donación ni una doble confirmación: el creador es quien confirma la entrega. La estructura actual exige un donante con cuenta; no se crean usuarios ficticios para entregas anónimas. No se cambia automáticamente el estado de la campaña ni el nivel de confianza.
+- La creación completa de campañas continúa como tarea separada; este recorrido funciona con las campañas ya guardadas.
+
+Pruebas con la base local, con datos de prueba revertidos al terminar:
+
+```bash
+php tests/run_tests.php controladores PuntoEntregaController
+php tests/run_tests.php controladores RecepcionInsumosController
+```
+
+
+### Historial del donante
+
+**Mis donaciones** consulta `donacion` para el usuario autenticado y muestra las campañas, insumos, cantidades y fechas reales. Una recepción registrada por el creador aparece en la cuenta del donante identificado por su correo. Cada entrega tiene su propia tarjeta. Las campañas activas tienen un botón para abrir su detalle; las suspendidas o finalizadas conservan el registro sin enlazar a un detalle público inaccesible. No se cambió la estructura de la base.
+
+```bash
+php tests/run_tests.php controladores MisDonacionesController
+```
