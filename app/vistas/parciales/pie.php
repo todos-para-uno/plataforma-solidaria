@@ -44,9 +44,9 @@
 <?php
 if ($usuarioActual !== null) {
     // Aislar las variables del parcial de los formularios y datos de la página.
-    (static function ($usuario, string $rutaCuentaMp): void {
+    (static function ($usuario, string $rutaCuentaMp, ?array $confianzaCuenta, string $rutaPerfil): void {
         require __DIR__ . '/modal_cuenta.php';
-    })($cuentaParaModal, $rutas['mercadopago'] ?? '');
+    })($cuentaParaModal, $rutas['mercadopago'] ?? '', $confianza ?? $_SESSION['nivel_confianza'] ?? null, $rutas['perfil']);
 }
 ?>
 </body>

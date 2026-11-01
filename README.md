@@ -415,3 +415,21 @@ php tests/run_tests.php controladores RecepcionInsumosController
 ```bash
 php tests/run_tests.php controladores MisDonacionesController
 ```
+
+
+## Niveles de confianza y documento
+
+Se reutiliza `validaciones` para los nombres y las descripciones, y `usuarios.id_validacion` para el nivel actual. No requiere cambios de estructura ni modificar esos textos.
+
+- Sin DNI o Pasaporte cargado, el usuario permanece **Blanco**, aunque tenga donaciones.
+- Con documento y sin donaciones: **Celeste**.
+- Con documento y 1 o 2 donaciones: **Azul**.
+- Con documento y 3 o más donaciones: **Violeta**.
+
+Se cuenta cada registro de `donacion` una vez para cada participante: como realizado para el donante y como recibido para el creador de la campaña. Para el nivel se suman ambos tipos de actividad; no se cuentan promesas ni cantidades de unidades como donaciones distintas. No es necesario que la campaña alcance su meta. Las donaciones anteriores se reconocen al cargar el documento.
+
+El nivel se recalcula al navegar con sesión iniciada y al guardar el documento. El perfil y el panel **Mi cuenta → Perfil** muestran el nombre y la descripción de la base. La carga del documento requiere sesión y CSRF, solo afecta al usuario autenticado y no modifica el indicador `verificado`.
+
+```bash
+php tests/run_tests.php controladores PerfilController
+```

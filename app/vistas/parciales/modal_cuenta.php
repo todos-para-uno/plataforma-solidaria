@@ -74,6 +74,18 @@ if (!is_array($dispositivos)) { $dispositivos = []; }
       <!-- ===== PERFIL ===== -->
       <section class="modal-cuenta__seccion" id="seccion-perfil" role="tabpanel" aria-labelledby="pestana-perfil">
         <h3 class="modal-cuenta__seccion-titulo">Perfil</h3>
+        <?php if (!empty($confianzaCuenta)): ?>
+        <div class="fila-cuenta">
+          <span class="fila-cuenta__etiqueta">Nivel de confianza</span>
+          <div class="fila-cuenta__valor">
+            <p class="cuenta-dato"><strong><?= escapar($confianzaCuenta['nombre']) ?>:</strong> <?= escapar($confianzaCuenta['descripcion']) ?></p>
+            <?php if (!$confianzaCuenta['tiene_documento']): ?>
+              <div class="alerta alerta-aviso"><p>Podés cargar tu DNI o Pasaporte para pasar a los siguientes niveles.</p></div>
+              <a class="boton boton-secundario boton-chico" href="<?= escapar($rutaPerfil) ?>">Cargar documento</a>
+            <?php else: ?><a href="<?= escapar($rutaPerfil) ?>">Ver mi nivel y mis donaciones</a><?php endif; ?>
+          </div>
+        </div>
+        <?php endif; ?>
 
         <div class="fila-cuenta">
           <span class="fila-cuenta__etiqueta">Datos personales</span>
