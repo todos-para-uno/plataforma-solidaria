@@ -8,12 +8,14 @@ $vistas = [
     'inicio' => 'index.php',
     'crear_campana' => 'crear_campana.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
-    'perfil' => 'perfil.php'
+
     
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
 $rutasConControlador = [
+    'perfil',
+    'actualizar_documento',
     'mis_donaciones',
     'recepcion_insumos',
     'punto_entrega',
@@ -42,7 +44,7 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear'], true);
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento'], true);
 $aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'punto_entrega', 'recepcion_insumos'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
@@ -90,6 +92,9 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
             echo 'Tu cuenta se encuentra baneada.';
             return;
         } else {
+            require_once __DIR__ . '/../app/repositorios/ConfianzaRepository.php';
+            $_SESSION['nivel_confianza'] = (new ConfianzaRepository(conectarBd()))->actualizar($usuario->getId());
+            $usuario = $usuarios->findById($usuario->getId());
             $usuarioActual = [
                 'nombre' => $usuario->getNombre(),
                 'mail' => $usuario->getEmail(),
@@ -207,25 +212,10 @@ if (in_array($ruta, ['buscador', 'resultados_buscar'], true)) {
     return;
 }
 
-if ($ruta === 'perfil') {
-    // perfil.php trabaja con un array; la sesión carga un objeto Usuario.
-    // Se arma el array que la vista espera. Sin sesión queda null y la vista muestra su aviso.
-    $datosPerfil = null;
-    if (isset($usuario) && $usuario instanceof Usuario) {
-        require_once __DIR__ . '/../app/repositorios/ValidacionesRepository.php';
-        $validacion = (new ValidacionesRepository(conectarBd()))->findById($usuario->getIdValidacion());
-
-        $datosPerfil = [
-            'nombre' => $usuario->getNombre(),
-            'mail' => $usuario->getEmail(),
-            'telefono' => $usuario->getTelefono(),
-            'tipo_documento' => $usuario->getTipoDocumento()?->value,
-            'documento' => $usuario->getDocumento(),
-            'validacion_nombre' => $validacion instanceof Validaciones ? $validacion->getNombre() : 'Blanco',
-        ];
-    }
-    $usuario = $datosPerfil;
-    require __DIR__ . '/../app/vistas/perfil.php';
+if (in_array($ruta, ['perfil', 'actualizar_documento'], true)) {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/PerfilController.php';
+    (new PerfilController(conectarBd()))->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
     return;
 }
 

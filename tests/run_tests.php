@@ -68,6 +68,10 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'PerfilController' => [
+            'archivo' => 'controladores/PerfilControllerTest.php',
+            'funcion' => 'perfilControllerTest',
+        ],
         'MisDonacionesController' => [
             'archivo' => 'controladores/MisDonacionesControllerTest.php',
             'funcion' => 'misDonacionesControllerTest',
