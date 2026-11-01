@@ -16,7 +16,6 @@
             <ul>
                 <li><a href="<?= escapar($rutas['explorar']) ?>">Explorar campañas</a></li>
                 <li><a href="<?= escapar($rutaCrearCampana) ?>">Crear una campaña</a></li>
-                <li><a href="<?= escapar($rutas['como_funciona']) ?>">Cómo funciona</a></li>
             </ul>
         </nav>
 
