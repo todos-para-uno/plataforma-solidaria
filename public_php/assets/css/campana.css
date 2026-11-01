@@ -47,9 +47,9 @@ main {
 }
 
 .detalle-progreso-contenedor {
-    background: var(--verde-suave);
+    background: var(--terracota-suave);
     padding: var(--e-6);
-    border: 1px solid var(--linea);
+    border: 2px solid var(--terracota);
     border-radius: var(--radio-control);
 }
 
@@ -148,3 +148,4 @@ main {
 .modal-acciones {
     margin-top: var(--e-6);
 }
+.mapa-entrega { width: 100%; height: 340px; border: 0; border-radius: 8px; margin-block: 1rem; }

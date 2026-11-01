@@ -4,3 +4,15 @@ main {
     background-position: center;
     background-repeat: no-repeat;
 }
+
+.donacion-ver-campana {
+    background: var(--aviso-fondo);
+    color: var(--azul);
+    font-weight: 400;
+}
+.donacion-ver-campana:is(:hover, :focus-visible) {
+    background: var(--sol-suave);
+    color: var(--azul);
+    text-decoration: none;
+}
+.donacion-ver-campana:focus-visible { outline-color: var(--azul); }

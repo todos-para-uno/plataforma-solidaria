@@ -50,3 +50,26 @@
 .mis-campanas-vacio p {
     margin-inline: auto;
 }
+
+/* Acciones de insumos: misma forma y tipografía de los botones del sitio. */
+.mis-campanas-acciones {
+    display: grid;
+    gap: var(--e-3);
+    margin-block: var(--e-2) var(--e-4);
+}
+.mis-campanas-acciones .boton {
+    margin-top: 0;
+    background: var(--aviso-fondo);
+    color: var(--azul);
+    font-weight: 400;
+    text-align: center;
+    text-decoration: none;
+}
+.mis-campanas-acciones .boton:is(:hover, :focus-visible) {
+    background: var(--sol-suave);
+    color: var(--azul);
+    text-decoration: none;
+}
+.mis-campanas-acciones .boton:focus-visible {
+    outline-color: var(--azul);
+}
