@@ -438,8 +438,8 @@
     byId('admin-baneo-descripcion').textContent = `${user.nombre} (${user.mail}). ${lifting ? 'El baneo vigente dejará de impedir el ingreso.' : 'El baneo impedirá el ingreso mientras esté vigente.'}`;
     const reason = byId('admin-baneo-motivo');
     reason.name = lifting ? 'motivo_unban' : 'motivo';
-    reason.required = !lifting;
-    byId('admin-baneo-motivo-label').firstChild.textContent = lifting ? 'Motivo de desbaneo (opcional)' : 'Motivo';
+    reason.required = true;
+    byId('admin-baneo-motivo-label').firstChild.textContent = lifting ? 'Motivo de desbaneo' : 'Motivo';
     byId('admin-baneo-fecha-label').hidden = lifting;
     byId('admin-baneo-error').textContent = '';
     if (lifting && !user.id_baneo_vigente) {
