@@ -62,6 +62,32 @@ cd plataforma-solidaria
 
 En los pasos que siguen, **raíz del proyecto** significa la carpeta `plataforma-solidaria`, donde está este README. Los comandos se ejecutan desde esa carpeta.
 
+### Base de demostración para la entrega
+
+En una instalación nueva, importá una sola vez [`database/schema.sql`](database/schema.sql) desde phpMyAdmin. Crea las tablas y agrega usuarios, administradores, categorías de campañas e insumos, siete campañas activas con objetivos y fotos, y donaciones de ejemplo. Los niveles Blanco, Celeste, Azul y Violeta tienen datos coherentes con las reglas de confianza. La base se llama `todosparauno`.
+
+**Con XAMPP en Windows:** colocá el proyecto en `C:\xampp\htdocs\plataforma-solidaria`, iniciá **Apache** y **MySQL** desde el panel de XAMPP, abrí `http://localhost/phpmyadmin/` y usá **Importar** para seleccionar `database/schema.sql`. Después abrí `http://localhost/plataforma-solidaria/public_php/`. Si tu carpeta de XAMPP o del proyecto tiene otro nombre, ajustá la ruta y la URL. La configuración predeterminada de la aplicación usa MariaDB en `localhost`, usuario `root` y contraseña vacía; si cambiaste esos datos en XAMPP, configurá `config/conexion.local.php` como se explica en [Preparar MariaDB](#preparar-mariadb).
+
+Todas las cuentas de demostración usan la contraseña **`Demo2026!`**:
+
+| Correo | Rol y nivel inicial |
+| --- | --- |
+| `admin.blanco@todosparauno.test` | Administrador, Blanco |
+| `admin.celeste@todosparauno.test` | Administrador, Celeste; pasaporte cargado |
+| `ana@todosparauno.test` | Usuario, Blanco; creadora de las campañas |
+| `bruno@todosparauno.test` | Usuario, Azul; DNI y una donación |
+| `carla@todosparauno.test` | Usuario, Violeta; pasaporte y tres donaciones |
+| `pepe@todosparauno.test` | Usuario, Celeste; DNI 40987654 |
+| `lola@todosparauno.test` | Usuario, Violeta; pasaporte ficticio y tres donaciones |
+
+Las direcciones `.test` y los documentos son ficticios. Las fotos ya están versionadas en `public_php/assets/imagenes/imagenes-camp/`; el SQL las referencia directamente. No hay que descomprimir otro archivo ni configurar permisos de subida para ver estas fotos. Para publicar fotos nuevas, PHP sí necesita escribir en `public_php/subidas/campanas/`; en Windows se revisan los permisos de esa carpeta si aparece un error de escritura. Los comandos `chgrp` y `chmod` de esta guía corresponden únicamente a XAMPP en Linux.
+
+El script está pensado para una base vacía. Si ya tenés datos, no vuelvas a importar el esquema completo: conservá tu base y aplicá las migraciones correspondientes.
+
+Si ya habías importado las tres campañas originales, podés agregar solo las cuatro nuevas importando [`database/migrations/20261101_demo_campanas_extra.sql`](database/migrations/20261101_demo_campanas_extra.sql) desde phpMyAdmin. La migración se puede repetir sin duplicar esas campañas. Las nuevas campañas son **Alimento para el refugio**, **Insumos para la salita**, **Equipamiento para el club** y **Fondo para emergencias**.
+
+Si importaste una versión anterior de los datos de demostración y el buscador muestra «Las campañas monetarias deben tener un CBU», importá una vez [`database/migrations/20261101_demo_cbu.sql`](database/migrations/20261101_demo_cbu.sql) en la base existente. Corrige únicamente la campaña monetaria de ejemplo de Ana; no hace falta volver a importar el esquema.
+
 ## Abrir la aplicación
 
 1. Comprobá que PHP esté disponible:
