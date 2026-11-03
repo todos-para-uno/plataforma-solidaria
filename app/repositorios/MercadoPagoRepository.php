@@ -33,17 +33,23 @@ final class MercadoPagoRepository
     {
         // No usar ON DUPLICATE KEY: una colisión en mp_usuario nunca debe actualizar otra cuenta.
         $actual = $this->cuenta($id, true);
-        $valores = [$datos['access_cifrado'], $datos['refresh_cifrado'], $datos['vence_en']];
+        $valores = [$datos['access_cifrado'], $datos['refresh_cifrado'], $datos['vence_en'], $datos['scope']];
         if ($actual !== null) {
             if ($actual['mp_usuario'] !== $datos['mp_usuario'] || (bool) $actual['produccion'] !== $datos['produccion']) {
                 throw new InvalidArgumentException('La autorización pertenece a otra cuenta.');
             }
-            $q = $this->pdo->prepare('UPDATE mercadopago_cuentas SET access_cifrado=?,refresh_cifrado=?,vence_en=?,actualizado=CURRENT_TIMESTAMP WHERE id_usuario=?');
+            $q = $this->pdo->prepare('UPDATE mercadopago_cuentas SET access_cifrado=?,refresh_cifrado=?,vence_en=?,scope=?,requiere_reautorizar=FALSE,actualizado=CURRENT_TIMESTAMP WHERE id_usuario=?');
             $q->execute([...$valores, $id]);
         } else {
-            $q = $this->pdo->prepare('INSERT INTO mercadopago_cuentas (access_cifrado,refresh_cifrado,vence_en,id_usuario,mp_usuario,produccion) VALUES (?,?,?,?,?,?)');
+            $q = $this->pdo->prepare('INSERT INTO mercadopago_cuentas (access_cifrado,refresh_cifrado,vence_en,scope,id_usuario,mp_usuario,produccion) VALUES (?,?,?,?,?,?,?)');
             $q->execute([...$valores, $id, $datos['mp_usuario'], (int) $datos['produccion']]);
         }
+    }
+
+    public function marcarReautorizacion(int $usuario): void
+    {
+        $q = $this->pdo->prepare('UPDATE mercadopago_cuentas SET requiere_reautorizar=TRUE,actualizado=CURRENT_TIMESTAMP WHERE id_usuario=?');
+        $q->execute([$usuario]);
     }
 
     public function campana(int $id): ?array

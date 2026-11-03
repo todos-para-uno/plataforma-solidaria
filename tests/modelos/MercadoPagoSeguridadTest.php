@@ -4,6 +4,13 @@ require_once __DIR__ . '/../../app/servicios/MercadoPagoServicio.php';
 require_once __DIR__ . '/../../utilidades/TestUtils.php';
 function mercadoPagoSeguridadTest(): void
 {
+    foreach (['token-ficticio-secreto', ['error' => 'invalid_grant'], null] as $codigo) {
+        $error = new MercadoPagoErrorApi(400, $codigo);
+        TestUtils::comprobar($error->errorOAuth === 'desconocido' && !str_contains($error->getMessage(), 'token-ficticio-secreto'), 'Los errores desconocidos no conservan datos del proveedor.');
+    }
+    TestUtils::comprobar((new MercadoPagoErrorApi(400, 'invalid_grant'))->requiereReautorizar(true)
+        && !(new MercadoPagoErrorApi(500, 'invalid_grant'))->requiereReautorizar(true)
+        && !(new MercadoPagoErrorApi(401, 'invalid_client'))->requiereReautorizar(true), 'Distingue un grant inválido de fallos del servidor o de las credenciales de la aplicación.');
     $cifrado = new MercadoPagoSeguridad(base64_encode(random_bytes(32)));
     $valor = 'token-ficticio-no-utilizable';
     $a = $cifrado->cifrar($valor);

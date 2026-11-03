@@ -77,10 +77,15 @@ final class MercadoPagoServicio
         return $pendiente['volver'];
     }
 
-    private function guardarAutorizacion(int $usuario, array $datos, ?array $anterior): void
+    private function guardarAutorizacion(int $usuario, array $datos, ?array $anterior, bool $renovacion = false): void
     {
         foreach (['access_token', 'refresh_token', 'user_id', 'expires_in', 'live_mode'] as $campo) {
             if (!array_key_exists($campo, $datos)) throw new RuntimeException('La autorización de Mercado Pago llegó incompleta.');
+        }
+        $scopes = is_string($datos['scope'] ?? null) ? preg_split('/\s+/', trim($datos['scope'])) : [];
+        if (!is_string($datos['token_type'] ?? null) || strtolower($datos['token_type']) !== 'bearer'
+            || array_diff(['read', 'write', 'offline_access'], $scopes) !== []) {
+            throw new InvalidArgumentException('La autorización necesita un token Bearer con permisos de lectura, escritura y renovación. Volvé a conectar Mercado Pago.');
         }
         if (!is_string($datos['access_token']) || $datos['access_token'] === '' || preg_match('/[\r\n]/', $datos['access_token'])
             || !is_string($datos['refresh_token']) || $datos['refresh_token'] === ''
@@ -90,12 +95,18 @@ final class MercadoPagoServicio
             throw new RuntimeException('La cuenta o el entorno autorizado no coincide con la configuración.');
         }
         // El prefijo APP_USR y live_mode no identifican por sí solos a un usuario de prueba.
-        $identidad = $this->cliente->solicitar('GET', '/users/me', null, $datos['access_token']);
-        $esPrueba = is_array($identidad['tags'] ?? null) && in_array('test_user', $identidad['tags'], true);
-        $produccion = !$esPrueba;
-        if ((string) ($identidad['id'] ?? '') !== (string) $datos['user_id'] || ($identidad['site_id'] ?? null) !== 'MLA'
-            || $produccion !== $this->config['produccion']) {
-            throw new RuntimeException('La cuenta debe ser de Argentina y corresponder al entorno configurado.');
+        if ($renovacion) {
+            // La identidad ya se comprobó al vincular. No agregar llamadas de red entre
+            // la rotación remota y el guardado de ambos tokens.
+            $produccion = (bool) $anterior['produccion'];
+        } else {
+            $identidad = $this->cliente->solicitar('GET', '/users/me', null, $datos['access_token']);
+            $esPrueba = is_array($identidad['tags'] ?? null) && in_array('test_user', $identidad['tags'], true);
+            $produccion = !$esPrueba;
+            if ((string) ($identidad['id'] ?? '') !== (string) $datos['user_id'] || ($identidad['site_id'] ?? null) !== 'MLA'
+                || $produccion !== $this->config['produccion']) {
+                throw new RuntimeException('La cuenta debe ser de Argentina y corresponder al entorno configurado.');
+            }
         }
         if ($anterior !== null && ($anterior['mp_usuario'] !== (string) $datos['user_id'] || (bool) $anterior['produccion'] !== $produccion)) {
             throw new InvalidArgumentException('Este usuario ya tiene vinculada otra cuenta o entorno. No se reemplazó su autorización.');
@@ -105,28 +116,60 @@ final class MercadoPagoServicio
             'access_cifrado' => $this->seguridad->cifrar($datos['access_token']),
             'refresh_cifrado' => $this->seguridad->cifrar($datos['refresh_token']),
             'vence_en' => time() + min($datos['expires_in'], 31536000),
+            'scope' => implode(' ', $scopes),
         ]);
     }
 
     public function token(int $usuario, ?string $receptor = null): string
     {
         // Bloquear la fila evita dos renovaciones concurrentes con el mismo refresh token.
-        return $this->repositorio->transaccion(function () use ($usuario, $receptor): string {
+        $token = $this->repositorio->transaccion(function () use ($usuario, $receptor): ?string {
             $cuenta = $this->repositorio->cuenta($usuario, true);
             if ($cuenta === null || (bool) $cuenta['produccion'] !== $this->config['produccion']
                 || ($receptor !== null && $cuenta['mp_usuario'] !== $receptor)) {
                 throw new RuntimeException('El creador necesita conectar su cuenta de Mercado Pago.');
             }
+            if ((bool) $cuenta['requiere_reautorizar']) return null;
             if ((int) $cuenta['vence_en'] <= time() + 300) {
-                $datos = $this->cliente->solicitar('POST', '/oauth/token', [
-                    'client_id' => $this->config['client_id'], 'client_secret' => $this->config['client_secret'],
-                    'grant_type' => 'refresh_token', 'refresh_token' => $this->seguridad->descifrar($cuenta['refresh_cifrado']),
-                ]);
-                $this->guardarAutorizacion($usuario, $datos, $cuenta);
+                try {
+                    $datos = $this->cliente->solicitar('POST', '/oauth/token', [
+                        'client_id' => $this->config['client_id'], 'client_secret' => $this->config['client_secret'],
+                        'grant_type' => 'refresh_token', 'refresh_token' => $this->seguridad->descifrar($cuenta['refresh_cifrado']),
+                    ]);
+                    $this->guardarAutorizacion($usuario, $datos, $cuenta, true);
+                } catch (MercadoPagoErrorApi $e) {
+                    if (!$e->requiereReautorizar(true)) throw $e;
+                    $this->repositorio->marcarReautorizacion($usuario);
+                    return null;
+                } catch (InvalidArgumentException $e) {
+                    $this->repositorio->marcarReautorizacion($usuario);
+                    return null;
+                }
                 return $datos['access_token'];
             }
             return $this->seguridad->descifrar($cuenta['access_cifrado']);
         });
+        // Lanzar después del commit: el estado de reconexión no debe revertirse.
+        if ($token === null) throw new RuntimeException('El creador necesita volver a conectar su cuenta de Mercado Pago para recibir o verificar aportes.');
+        return $token;
+    }
+
+    private function conAutorizacion(int $usuario, string $token, Closure $operacion): mixed
+    {
+        try {
+            return $operacion();
+        } catch (MercadoPagoErrorApi $e) {
+            if (!$e->requiereReautorizar(false)) throw $e;
+            // La transacción del pago ya terminó. No invalidar una autorización
+            // nueva si otra solicitud la renovó mientras esta usaba el token anterior.
+            $this->repositorio->transaccion(function () use ($usuario, $token): void {
+                $cuenta = $this->repositorio->cuenta($usuario, true);
+                if ($cuenta !== null && hash_equals($this->seguridad->descifrar($cuenta['access_cifrado']), $token)) {
+                    $this->repositorio->marcarReautorizacion($usuario);
+                }
+            });
+            throw new RuntimeException('Mercado Pago rechazó la autorización. El creador debe revisar la conexión de su cuenta.');
+        }
     }
 
     public function crearPago(?int $usuario, string $mail, int $campanaId, string $monto, string $referencia, ?string $invitadoHash = null): string
@@ -154,7 +197,7 @@ final class MercadoPagoServicio
         // El intento se persiste ANTES de llamar a la API. Un error/timeout conserva la clave de reintento.
         // Confirmar la renovación en su propia transacción antes de intentar el cobro.
         $token = $this->token((int) $campana['owner_id'], $cuenta['mp_usuario']);
-        return $this->repositorio->transaccion(function () use ($referencia, $mail, $campana, $token): string {
+        return $this->conAutorizacion((int) $campana['owner_id'], $token, fn () => $this->repositorio->transaccion(function () use ($referencia, $mail, $campana, $token): string {
             $pago = $this->repositorio->pago($referencia, true);
             if ($pago['order_id'] !== null) return $pago['checkout_url'];
             $retorno = $this->url('pago_resultado', ['referencia' => $referencia]);
@@ -172,7 +215,7 @@ final class MercadoPagoServicio
             $this->verificarOrder($pago, $order, $id);
             $this->repositorio->guardarOrder($referencia, $id, $url);
             return $url;
-        });
+        }));
     }
 
     public static function checkoutValido(mixed $url): bool
@@ -200,7 +243,7 @@ final class MercadoPagoServicio
         $actual = $this->repositorio->pago($referencia);
         if ($actual === null || $actual['order_id'] === null) return;
         $token = $this->token((int) $actual['id_creador'], $actual['mp_receptor']);
-        $this->repositorio->transaccion(function () use ($referencia, $token): void {
+        $this->conAutorizacion((int) $actual['id_creador'], $token, fn () => $this->repositorio->transaccion(function () use ($referencia, $token): void {
             $pago = $this->repositorio->pago($referencia, true);
             if ($pago === null || $pago['order_id'] === null) return;
             // Consultar DESPUÉS de bloquear evita aplicar dos snapshots en orden inverso.
@@ -236,6 +279,6 @@ final class MercadoPagoServicio
                 return; // No degradar un pago acreditado a un estado previo.
             }
             $this->repositorio->acreditar($pago, $acreditado, $estado, $detalle, max($version, (int) $pago['version_mp']));
-        });
+        }));
     }
 }

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/MercadoPagoErrorApi.php';
 /** API REST de Orders y OAuth. Las pruebas sustituyen el transporte, sin pagos reales. */
 class MercadoPagoCliente
 {
@@ -26,8 +27,12 @@ class MercadoPagoCliente
         $codigo = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         // No incluir respuestas, URLs con code ni tokens en mensajes de error o registros.
-        if ($cuerpo === false || $codigo < 200 || $codigo >= 300) {
+        if ($cuerpo === false) {
             throw new RuntimeException('Mercado Pago no pudo completar la operación. Intentá nuevamente.');
+        }
+        if ($codigo < 200 || $codigo >= 300) {
+            $error = json_decode($cuerpo, true);
+            throw new MercadoPagoErrorApi($codigo, is_array($error) ? ($error['error'] ?? null) : null);
         }
         try {
             $respuesta = json_decode($cuerpo, true, 64, JSON_THROW_ON_ERROR);

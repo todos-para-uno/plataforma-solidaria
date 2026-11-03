@@ -188,6 +188,8 @@ CREATE TABLE IF NOT EXISTS mercadopago_cuentas (
     mp_usuario VARCHAR(32) NOT NULL UNIQUE,
     access_cifrado TEXT NOT NULL,
     refresh_cifrado TEXT NOT NULL,
+    scope TEXT NULL,
+    requiere_reautorizar BOOLEAN NOT NULL DEFAULT FALSE,
     vence_en BIGINT NOT NULL,
     produccion BOOLEAN NOT NULL DEFAULT FALSE,
     actualizado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

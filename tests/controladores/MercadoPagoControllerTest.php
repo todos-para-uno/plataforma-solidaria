@@ -16,6 +16,7 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $sql = preg_replace('/,\n    FOREIGN KEY[^;]+(?=\n\);)/s', '', $sql);
         $sql = str_replace('CREATE TABLE IF NOT EXISTS', 'CREATE TEMPORARY TABLE', $sql);
         foreach (explode(';', $sql) as $sentencia) if (trim($sentencia) !== '') $pdo->exec($sentencia);
+        $pdo->exec(file_get_contents(__DIR__ . '/../../database/migrations/20261103_mercadopago_autorizacion.sql'));
         $temporales = true;
     }
     $pdo->beginTransaction();
@@ -41,10 +42,17 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $repo = new MercadoPagoRepository($pdo);
         $llamadas = []; $fallar = false; $estado = 'created'; $detalle = 'created'; $version = 1; $ref = null;
         $orderId = 'ORDTSTPRUEBA123'; $receptor = '123456789'; $identidadReal = false; $manipular = null;
-        $cliente = new MercadoPagoCliente(static function ($metodo, $ruta, $datos, $token, $clave) use (&$llamadas, &$fallar, &$estado, &$detalle, &$version, &$ref, &$receptor, &$identidadReal, &$manipular, &$orderId): array {
+        $respuestaOAuth = ['access_token' => 'token-vendedor-ficticio', 'refresh_token' => 'refresh-ficticio', 'expires_in' => 3600, 'live_mode' => true, 'token_type' => 'bearer', 'scope' => 'read write offline_access'];
+        $errorOAuth = null; $errorOrder = null; $fallarIdentidad = false;
+        $cliente = new MercadoPagoCliente(static function ($metodo, $ruta, $datos, $token, $clave) use (&$llamadas, &$fallar, &$estado, &$detalle, &$version, &$ref, &$receptor, &$identidadReal, &$manipular, &$orderId, &$respuestaOAuth, &$errorOAuth, &$errorOrder, &$fallarIdentidad): array {
             $llamadas[] = compact('metodo', 'ruta', 'datos', 'token', 'clave');
-            if ($ruta === '/oauth/token') return ['access_token' => 'token-vendedor-ficticio', 'refresh_token' => 'refresh-ficticio', 'user_id' => $receptor, 'expires_in' => 3600, 'live_mode' => true];
+            if ($ruta === '/oauth/token') {
+                if ($errorOAuth !== null) throw $errorOAuth;
+                return $respuestaOAuth + ['user_id' => $receptor];
+            }
+            if ($ruta === '/users/me' && $fallarIdentidad) throw new RuntimeException('Identidad no disponible.');
             if ($ruta === '/users/me') return ['id' => $receptor, 'site_id' => 'MLA', 'tags' => $identidadReal ? [] : ['test_user']];
+            if ($errorOrder !== null) throw $errorOrder;
             if ($fallar) throw new RuntimeException('Error de transporte simulado.');
             $respuesta = ['id' => $orderId, 'checkout_url' => 'https://www.mercadopago.com.ar/checkout/v1/redirect?order_id=' . $orderId,
                 'external_reference' => $ref, 'user_id' => $receptor, 'currency' => 'ARS', 'type' => 'online', 'total_amount' => '1000.01',
@@ -182,6 +190,71 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $capturar(static fn () => $control->atender('mercadopago', null));
         TestUtils::comprobar(http_response_code() === 303, 'Vincular una cuenta receptora sigue requiriendo registro.');
         TestUtils::comprobar(count($repo->historial($donanteId)) === 1, 'Los aportes de invitado no se atribuyen al historial de una cuenta.');
+        // Ciclo de autorización: errores permanentes, transitorios y rotación.
+        $reconectar = static function () use ($servicio, $creadorId): void {
+            $servicio->iniciarOAuth($creadorId, 'mercadopago');
+            $servicio->terminarOAuth($creadorId, ['state' => $_SESSION['mp_oauth']['state'], 'code' => 'nuevo']);
+        };
+        $respuestaValida = $respuestaOAuth;
+        $cuentaAntes = $repo->cuenta($creadorId);
+        foreach ([['scope', 'read write'], ['scope', 'read offline_access'], ['scope', 'write offline_access'], ['scope', null], ['token_type', 'mac'], ['token_type', null]] as [$campo, $valor]) {
+            $respuestaOAuth = array_replace($respuestaValida, [$campo => $valor]);
+            $assertThrows($reconectar, 'Rechaza autorización sin tipo Bearer o permisos necesarios.');
+            TestUtils::comprobar($repo->cuenta($creadorId)['access_cifrado'] === $cuentaAntes['access_cifrado'], 'Un consentimiento incompleto no reemplaza la cuenta existente.');
+        }
+        $respuestaOAuth = array_replace($respuestaValida, ['access_token' => 'token-renovado', 'refresh_token' => 'refresh-renovado']);
+        $pdo->prepare('UPDATE mercadopago_cuentas SET vence_en=0 WHERE id_usuario=?')->execute([$creadorId]);
+        $fallarIdentidad = true;
+        $antes = count($llamadas);
+        TestUtils::comprobar($servicio->token($creadorId) === 'token-renovado', 'La renovación funciona aunque users/me no esté disponible.');
+        $seguridad = new MercadoPagoSeguridad($config['clave_cifrado']);
+        $renovada = $repo->cuenta($creadorId);
+        TestUtils::comprobar(count($llamadas) === $antes + 1
+            && $seguridad->descifrar($renovada['refresh_cifrado']) === 'refresh-renovado'
+            && $renovada['scope'] === 'read write offline_access', 'Guarda ambos tokens nuevos y los permisos sin una segunda llamada de red.');
+        $fallarIdentidad = false;
+        foreach ([new MercadoPagoErrorApi(400, 'invalid_client'), new MercadoPagoErrorApi(429, 'local_rate_limited'), new MercadoPagoErrorApi(500), new RuntimeException('Timeout simulado')] as $errorOAuth) {
+            $pdo->prepare('UPDATE mercadopago_cuentas SET vence_en=0 WHERE id_usuario=?')->execute([$creadorId]);
+            $assertThrows(static fn () => $servicio->token($creadorId), 'El error temporal o de configuración se propaga.');
+            TestUtils::comprobar(!$repo->cuenta($creadorId)['requiere_reautorizar'], 'No confunde un fallo temporal o del cliente con revocación del vendedor.');
+        }
+        foreach (['invalid_grant', 'unauthorized_client'] as $codigoOAuth) {
+            $errorOAuth = new MercadoPagoErrorApi(400, $codigoOAuth);
+            $pdo->prepare('UPDATE mercadopago_cuentas SET vence_en=0 WHERE id_usuario=?')->execute([$creadorId]);
+            $assertThrows(static fn () => $servicio->token($creadorId), 'El refresh rechazado exige reconexión.');
+            TestUtils::comprobar((bool) $repo->cuenta($creadorId)['requiere_reautorizar'], 'Conserva el estado de reconexión después de lanzar el error.');
+            $antes = count($llamadas);
+            $assertThrows(static fn () => $servicio->token($creadorId), 'Una cuenta pendiente de reconexión no vuelve a utilizar tokens.');
+            TestUtils::comprobar(count($llamadas) === $antes, 'No reintenta un refresh conocido como inválido.');
+            $_SERVER['REQUEST_METHOD'] = 'GET';
+            $html = $capturar(static fn () => $control->atender('mercadopago', $creador));
+            TestUtils::comprobar(str_contains($html, 'Volvé a conectar Mercado Pago') && !str_contains($html, '<h2>Mercado Pago conectado</h2>'), 'La pantalla distingue una autorización que necesita reconexión.');
+            $errorOAuth = null;
+            $reconectar();
+            TestUtils::comprobar(!$repo->cuenta($creadorId)['requiere_reautorizar'], 'Reautorizar la misma cuenta recupera su estado operativo.');
+        }
+        foreach ([['scope' => 'read write'], ['user_id' => '999999']] as $cambio) {
+            $respuestaOAuth = array_replace($respuestaValida, $cambio);
+            $cuentaAntes = $repo->cuenta($creadorId);
+            $pdo->prepare('UPDATE mercadopago_cuentas SET vence_en=0 WHERE id_usuario=?')->execute([$creadorId]);
+            $assertThrows(static fn () => $servicio->token($creadorId), 'La renovación rechaza permisos insuficientes o un receptor diferente.');
+            TestUtils::comprobar($repo->cuenta($creadorId)['requiere_reautorizar'] && $repo->cuenta($creadorId)['access_cifrado'] === $cuentaAntes['access_cifrado'], 'No guarda una renovación incompatible y solicita reconexión.');
+            $respuestaOAuth = $respuestaValida;
+            $reconectar();
+        }
+        foreach ([403, 429, 500, 401] as $estadoHttp) {
+            $errorOrder = new MercadoPagoErrorApi($estadoHttp);
+            $refError = MercadoPagoSeguridad::uuid();
+            $assertThrows(static fn () => $servicio->crearPago($donanteId, $donante->getEmail(), $f['mesa'], '10.00', $refError), 'La respuesta de error de Orders no acredita dinero.');
+            TestUtils::comprobar((bool) $repo->cuenta($creadorId)['requiere_reautorizar'] === ($estadoHttp === 401), 'Solo el rechazo de autenticación marca la cuenta, fuera del rollback del pago.');
+            TestUtils::comprobar($repo->pago($refError)['acreditado'] === '0.00', 'Conserva el intento sin acreditar.');
+        }
+        $errorOrder = null;
+        $reconectar();
+        $errorOrder = new MercadoPagoErrorApi(401);
+        $assertThrows(static fn () => $servicio->sincronizar($ref), 'La consulta de una order también detecta autorización rechazada.');
+        TestUtils::comprobar((bool) $repo->cuenta($creadorId)['requiere_reautorizar'], 'Persiste la reconexión cuando falla la consulta de una order.');
+        $errorOrder = null;
     } finally {
         $pdo->rollBack();
         if ($temporales) {

@@ -6,9 +6,11 @@ El código incluye vinculación, renovación de tokens, inicio de aportes, retor
 
 ## 1. Preparar la base
 
-En una base existente, hacer un respaldo e importar `database/migrations/20261031_mercadopago.sql` y luego `database/migrations/20261031_donaciones_invitados.sql`, seleccionando esa base. Crea `mercadopago_cuentas` y `mercadopago_pagos` sin borrar datos.
+En una base existente, hacer un respaldo e importar `database/migrations/20261031_mercadopago.sql`, `database/migrations/20261031_donaciones_invitados.sql` y `database/migrations/20261103_mercadopago_autorizacion.sql`, en ese orden, seleccionando esa base. Crea `mercadopago_cuentas` y `mercadopago_pagos` sin borrar datos. Aplicar solamente las migraciones pendientes.
 
 Para una base nueva, `database/schema.sql` ya incluye esas tablas. El usuario habitual de la aplicación necesita permisos de consulta y modificación; la importación debe hacerla un usuario que pueda crear tablas.
+
+Si `mercadopago_cuentas` fue creada antes de agregar el estado de autorización, importar una sola vez `database/migrations/20261103_mercadopago_autorizacion.sql`. Agrega los permisos recibidos y el indicador de reconexión sin borrar cuentas ni pagos. No ejecutar esta migración si se usó el esquema nuevo, que ya incluye las columnas.
 
 ## 2. Crear la aplicación de Mercado Pago
 
@@ -76,6 +78,14 @@ Requiere PHP con `curl`, `sodium`, `pdo_mysql` y las extensiones habituales del 
 En pruebas se verifica que el receptor tenga la etiqueta `test_user` mediante `/users/me`. El prefijo `APP_USR` o el campo OAuth `live_mode` por sí solos no distinguen cuentas reales de prueba. El entorno de prueba rechaza receptores reales.
 
 Una cuenta externa solo se vincula a un usuario local. La renovación debe mantener esa identidad y el entorno. No se ofrece reemplazarla por otra cuenta con pagos anteriores pendientes.
+
+La respuesta OAuth debe indicar `token_type=bearer` y conceder `read`, `write` y `offline_access`. Se comprueba tanto al conectar como al renovar y se guardan los permisos recibidos. Las cuentas anteriores, con `scope` nulo, se validan en su próxima renovación o reconexión.
+
+La renovación conserva el bloqueo de la cuenta y guarda ambos tokens sin consultar nuevamente `/users/me`; la identidad argentina y el entorno se verifican durante el consentimiento inicial y la reconexión. El `user_id` devuelto al renovar debe coincidir con la cuenta existente. Un fallo de almacenamiento sigue requiriendo recuperación: la transacción local no puede deshacer una rotación realizada por Mercado Pago.
+
+Un `invalid_grant` o `unauthorized_client` HTTP 400 al renovar, o un HTTP 401 al operar con Orders, marca la cuenta como pendiente de reconexión. Se conserva su identidad y el historial, se bloquea el uso de sus tokens y la pantalla solicita autorizar nuevamente la misma cuenta. Un error de red, HTTP 429/5xx o credenciales incorrectas de la aplicación no se interpreta como revocación del vendedor. Los errores almacenan únicamente el estado HTTP y códigos conocidos, nunca el cuerpo ni el mensaje del proveedor.
+
+La detección ocurre al renovar o consultar/crear una order; todavía no se reciben eventos OAuth de desautorización. No se puede conocer una revocación externa antes de una llamada a la API. Un HTTP 401 indica una autorización rechazada, no demuestra por sí solo que el vendedor haya revocado el consentimiento.
 
 ## 6. Probar un aporte
 

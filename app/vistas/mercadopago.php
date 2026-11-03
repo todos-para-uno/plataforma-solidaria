@@ -8,7 +8,10 @@ require __DIR__ . '/parciales/cabecera.php';
     <?php if ($mensaje): ?><div class="alerta alerta-exito" role="status"><?= escapar($mensaje) ?></div><?php endif; ?>
     <?php if ($error): ?><div class="alerta alerta-aviso" role="status"><?= escapar($error) ?></div><?php endif; ?>
     <div class="tarjeta">
-        <?php if ($cuenta): ?>
+        <?php if ($cuenta && $cuenta['requiere_reautorizar']): ?>
+            <h2>Volvé a conectar Mercado Pago</h2>
+            <p>La autorización ya no permite operar. Conectá nuevamente la misma cuenta para recibir y verificar aportes. Tus operaciones anteriores se conservan.</p>
+        <?php elseif ($cuenta): ?>
             <h2>Mercado Pago conectado</h2>
             <p>Las donaciones se cobrarán en la cuenta que autorizaste. No compartís tu contraseña con todospara.uno.</p>
             <p class="texto-secundario">Podés renovar la autorización de esa misma cuenta cuando lo necesites.</p>
@@ -20,7 +23,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <?php if (!$config['produccion']): ?><p class="alerta alerta-aviso">Entorno de pruebas: conectá una cuenta de prueba.</p><?php endif; ?>
             <form action="<?= escapar($rutas['mp_conectar']) ?>" method="post">
                 <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
-                <button class="boton" type="submit"><?= $cuenta ? 'Renovar conexión' : 'Conectar Mercado Pago' ?></button>
+                <button class="boton" type="submit"><?= $cuenta && $cuenta['requiere_reautorizar'] ? 'Volver a conectar' : ($cuenta ? 'Renovar conexión' : 'Conectar Mercado Pago') ?></button>
             </form>
         <?php endif; ?>
     </div>
