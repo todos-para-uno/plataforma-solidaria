@@ -11,5 +11,6 @@ function configuracionMercadoPago(): array
         'clave_cifrado' => getenv('MP_CLAVE_CIFRADO') ?: '',
         'webhook_secret' => getenv('MP_WEBHOOK_SECRET') ?: '',
         'produccion' => filter_var(getenv('MP_PRODUCCION') ?: 'false', FILTER_VALIDATE_BOOLEAN),
+        'diagnostico_oauth' => false,
     ], $local);
 }

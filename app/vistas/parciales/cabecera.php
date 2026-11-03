@@ -85,6 +85,7 @@ $cuentaParaModal = $usuario ?? $usuarioActual;
                                 <li><a href="<?= escapar($rutas['perfil']) ?>" data-abrir-cuenta aria-haspopup="dialog" aria-controls="modal-cuenta"<?= marcarActual('perfil', $paginaActual) ?>>Mi cuenta</a></li>
                                 <li><a href="<?= escapar($rutas['mis_campanas']) ?>"<?= marcarActual('mis_campanas', $paginaActual) ?>>Mis campañas</a></li>
                                 <li><a href="<?= escapar($rutas['mis_donaciones']) ?>"<?= marcarActual('mis_donaciones', $paginaActual) ?>>Mis donaciones</a></li>
+                                <li><a href="<?= escapar($rutas['mercadopago']) ?>"<?= marcarActual('mercadopago', $paginaActual) ?>>Mercado Pago</a></li>
                                 <?php if (!empty($usuarioActual['admin'])): ?>
                                     <li><a href="<?= escapar($rutas['administracion']) ?>"<?= marcarActual('administracion', $paginaActual) ?>>Administración</a></li>
                                 <?php endif; ?>

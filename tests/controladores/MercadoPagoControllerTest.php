@@ -134,6 +134,35 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $_SERVER['REQUEST_METHOD'] = 'POST'; $_POST = ['csrf_token' => 'inválido'];
         $capturar(static fn () => $control->atender('mp_conectar', $creador));
         TestUtils::comprobar(http_response_code() === 403, 'La conexión exige CSRF.');
+
+        $controlDiagnostico = new MercadoPagoController($repo, $servicio, $config + ['diagnostico_oauth' => true], new BaneoRepository($pdo));
+        $_POST = ['csrf_token' => Csrf::generar()];
+        $html = $capturar(static fn () => $controlDiagnostico->atender('mp_conectar', $creador));
+        $intentoDiagnostico = $_SESSION['mp_oauth'];
+        parse_str(parse_url($intentoDiagnostico['url_diagnostico'], PHP_URL_QUERY), $parametrosDiagnostico);
+        TestUtils::comprobar(http_response_code() === 200 && str_contains($html, 'https://ejemplo.test/mercadopago-retorno.php')
+            && str_contains($html, 'Continuar a Mercado Pago'), 'El diagnóstico muestra el callback y permite continuar.');
+        foreach ([$intentoDiagnostico['state'], $intentoDiagnostico['verifier'], $parametrosDiagnostico['code_challenge'],
+            $config['client_secret'], $config['clave_cifrado'], $config['webhook_secret']] as $secreto) {
+            TestUtils::comprobar(!str_contains($html, $secreto), 'El diagnóstico no expone valores sensibles del intento o la configuración.');
+        }
+        $_POST['continuar_oauth'] = '1';
+        $_POST['url_diagnostico'] = 'https://ejemplo-malicioso.test';
+        $html = $capturar(static fn () => $controlDiagnostico->atender('mp_conectar', $creador));
+        TestUtils::comprobar(http_response_code() === 303 && $html === ''
+            && $_SESSION['mp_oauth']['state'] === $intentoDiagnostico['state']
+            && $_SESSION['mp_oauth']['verifier'] === $intentoDiagnostico['verifier']
+            && !isset($_SESSION['mp_oauth']['url_diagnostico']), 'Continuar reutiliza el intento guardado y consume la continuación.');
+        $capturar(static fn () => $controlDiagnostico->atender('mp_conectar', $creador));
+        TestUtils::comprobar(http_response_code() === 422, 'No permite reutilizar la continuación del diagnóstico.');
+        $_POST = ['csrf_token' => Csrf::generar()];
+        $capturar(static fn () => $controlDiagnostico->atender('mp_conectar', $creador));
+        $_POST['continuar_oauth'] = '1';
+        $capturar(static fn () => $controlDiagnostico->atender('mp_conectar', $donante));
+        TestUtils::comprobar(http_response_code() === 422, 'Otro usuario no puede continuar el diagnóstico pendiente.');
+        $_SESSION['mp_oauth']['creado'] = time() - 601;
+        $capturar(static fn () => $controlDiagnostico->atender('mp_conectar', $creador));
+        TestUtils::comprobar(http_response_code() === 422, 'El diagnóstico respeta el vencimiento del intento OAuth.');
         $_GET = ['data_id' => 'ORDTSTPRUEBA123']; $_SERVER['HTTP_X_SIGNATURE'] = 'inválida';
         $capturar(static fn () => $control->webhook());
         TestUtils::comprobar(http_response_code() === 401, 'El webhook rechaza solicitudes sin firma válida.');

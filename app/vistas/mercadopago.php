@@ -1,6 +1,6 @@
 <?php
 $tituloPagina = 'Conectar Mercado Pago';
-$paginaActual = 'perfil';
+$paginaActual = 'mercadopago';
 require __DIR__ . '/parciales/cabecera.php';
 ?>
 <section class="seccion"><div class="contenedor">

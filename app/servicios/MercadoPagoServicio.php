@@ -42,7 +42,7 @@ final class MercadoPagoServicio
         $verifier = rtrim(strtr(base64_encode(random_bytes(48)), '+/', '-_'), '=');
         $_SESSION['mp_oauth'] = ['state' => $state, 'verifier' => $verifier, 'usuario' => $usuario, 'creado' => time(),
             'volver' => $volver === 'crear_campana' ? 'crear_campana' : 'mercadopago'];
-        return 'https://auth.mercadopago.com.ar/authorization?' . http_build_query([
+        return 'https://auth.mercadopago.com/authorization?' . http_build_query([
             'client_id' => $this->config['client_id'], 'response_type' => 'code', 'platform_id' => 'mp',
             'redirect_uri' => $this->url('mp_retorno'), 'state' => $state,
             'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),

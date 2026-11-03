@@ -26,7 +26,44 @@ final class MercadoPagoController
         unset($_SESSION['mp_mensaje']);
         try {
             if ($ruta === 'mp_conectar') {
+                if (($this->config['diagnostico_oauth'] ?? false) && ($_POST['continuar_oauth'] ?? null) === '1') {
+                    $pendiente = $_SESSION['mp_oauth'] ?? null;
+                    if (!is_array($pendiente) || ($pendiente['usuario'] ?? null) !== $usuario->getId()
+                        || time() - ($pendiente['creado'] ?? 0) > 600 || !is_string($pendiente['url_diagnostico'] ?? null)) {
+                        throw new InvalidArgumentException('El diagnóstico venció. Iniciá nuevamente la conexión.');
+                    }
+                    $url = $pendiente['url_diagnostico'];
+                    unset($_SESSION['mp_oauth']['url_diagnostico']);
+                    header('Location: ' . $url, true, 303);
+                    return;
+                }
                 $url = $this->servicio->iniciarOAuth($usuario->getId(), is_string($_POST['volver'] ?? null) ? $_POST['volver'] : 'mercadopago');
+                if ($this->config['diagnostico_oauth'] ?? false) {
+                    // Analizar el enlace real generado; nunca volcar la URL ni la sesión completas.
+                    $_SESSION['mp_oauth']['url_diagnostico'] = $url;
+                    $partes = parse_url($url);
+                    parse_str($partes['query'] ?? '', $parametros);
+                    $pendiente = $_SESSION['mp_oauth'];
+                    $challenge = rtrim(strtr(base64_encode(hash('sha256', $pendiente['verifier'], true)), '+/', '-_'), '=');
+                    $diagnostico = [
+                        'Fecha UTC' => gmdate('Y-m-d H:i:s', $pendiente['creado']),
+                        'Endpoint' => ($partes['scheme'] ?? '') . '://' . ($partes['host'] ?? '') . ($partes['path'] ?? ''),
+                        'client_id' => $parametros['client_id'] ?? '(ausente)',
+                        'redirect_uri (decodificado)' => $parametros['redirect_uri'] ?? '(ausente)',
+                        'response_type' => $parametros['response_type'] ?? '(ausente)',
+                        'platform_id' => $parametros['platform_id'] ?? '(ausente)',
+                        'code_challenge_method' => $parametros['code_challenge_method'] ?? '(ausente)',
+                        'Entorno local' => $this->config['produccion'] ? 'Producción' : 'Prueba',
+                        'Client ID numérico y sin espacios' => ctype_digit($parametros['client_id'] ?? '') ? 'Correcto' : 'Falla',
+                        'Callback coincide con el configurado localmente' => ($parametros['redirect_uri'] ?? null) === $this->servicio->url('mp_retorno') ? 'Correcto' : 'Falla',
+                        'State coincide con la sesión' => hash_equals($pendiente['state'], $parametros['state'] ?? '') ? 'Correcto' : 'Falla',
+                        'Verifier: formato y longitud PKCE' => preg_match('/^[A-Za-z0-9._~-]{43,128}$/D', $pendiente['verifier']) ? 'Correcto' : 'Falla',
+                        'Challenge S256 coincide con el verifier' => ($parametros['code_challenge_method'] ?? null) === 'S256'
+                            && hash_equals($challenge, $parametros['code_challenge'] ?? '') ? 'Correcto' : 'Falla',
+                    ];
+                    require __DIR__ . '/../vistas/mercadopago_diagnostico.php';
+                    return;
+                }
                 header('Location: ' . $url, true, 303);
                 return;
             }
