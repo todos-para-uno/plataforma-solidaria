@@ -4,7 +4,7 @@
  * Ubicación sugerida: app/vistas/parciales/modal_cuenta.php
  *
  * Solo presentación. Espera (opcional) un array $usuario con:
- *   nombre, apellido, mail, avatar (URL), dispositivos (array)
+ *   nombre, apellido, mail, avatar (URL)
  * Las acciones de guardado quedan deshabilitadas hasta integrar sus controladores.
  *
  * Uso:
@@ -44,8 +44,6 @@ $apellido = htmlspecialchars((string) dato_cuenta($usuarioCuenta, 'apellido'), E
 $mail     = htmlspecialchars((string) (dato_cuenta($usuarioCuenta, 'mail') ?: dato_cuenta($usuarioCuenta, 'email')), ENT_QUOTES, 'UTF-8');
 $avatar   = htmlspecialchars((string) dato_cuenta($usuarioCuenta, 'avatar'), ENT_QUOTES, 'UTF-8');
 $inicial  = htmlspecialchars(mb_strtoupper(mb_substr($cuentaNombre !== '' ? $cuentaNombre : '?', 0, 1)), ENT_QUOTES, 'UTF-8');
-$dispositivos = dato_cuenta($usuarioCuenta, 'dispositivos', []);
-if (!is_array($dispositivos)) { $dispositivos = []; }
 ?>
 <dialog class="modal-cuenta" id="modal-cuenta" aria-labelledby="modal-cuenta-titulo">
   <div class="modal-cuenta__caja">
@@ -59,10 +57,6 @@ if (!is_array($dispositivos)) { $dispositivos = []; }
         <button type="button" class="boton boton-secundario boton-chico modal-cuenta__pestana" role="tab"
                 id="pestana-perfil" aria-controls="seccion-perfil" aria-selected="true">
           <span class="modal-cuenta__icono" aria-hidden="true">●</span> Perfil
-        </button>
-        <button type="button" class="boton boton-secundario boton-chico modal-cuenta__pestana" role="tab"
-                id="pestana-seguridad" aria-controls="seccion-seguridad" aria-selected="false" tabindex="-1">
-          <span class="modal-cuenta__icono" aria-hidden="true">■</span> Seguridad
         </button>
       </nav>
     </aside>
@@ -151,8 +145,6 @@ if (!is_array($dispositivos)) { $dispositivos = []; }
               <?= $mail ?>
               <span class="insignia">Principal</span>
             </p>
-            <button type="button" class="boton boton-secundario boton-chico" disabled>Agregar otro correo</button>
-            <p class="campo-ayuda">Próximamente.</p>
           </div>
         </div>
         <div class="fila-cuenta">
@@ -166,47 +158,6 @@ if (!is_array($dispositivos)) { $dispositivos = []; }
               <button type="button" class="boton boton-secundario boton-chico" disabled aria-describedby="cuenta-mercadopago-ayuda">Conectar Mercado Pago</button>
               <p class="campo-ayuda" id="cuenta-mercadopago-ayuda">La conexión estará disponible próximamente.</p>
             <?php endif; ?>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== SEGURIDAD ===== -->
-      <section class="modal-cuenta__seccion" id="seccion-seguridad" role="tabpanel" aria-labelledby="pestana-seguridad" hidden>
-        <h3 class="modal-cuenta__seccion-titulo">Seguridad</h3>
-
-        <div class="fila-cuenta">
-          <span class="fila-cuenta__etiqueta">Contraseña</span>
-          <div class="fila-cuenta__valor">
-            <button type="button" class="boton boton-secundario boton-chico" disabled>Cambiar contraseña</button>
-            <p class="campo-ayuda">Próximamente.</p>
-          </div>
-        </div>
-
-        <div class="fila-cuenta">
-          <span class="fila-cuenta__etiqueta">Dispositivos activos</span>
-          <div class="fila-cuenta__valor">
-            <?php if (!$dispositivos): ?>
-              <p class="campo-ayuda">La consulta de dispositivos todavía no está disponible.</p>
-            <?php endif; ?>
-            <?php foreach ($dispositivos as $d): ?>
-              <div class="dispositivo">
-                <p class="cuenta-dato">
-                  <?= htmlspecialchars($d['sistema'] ?? '', ENT_QUOTES, 'UTF-8') ?>
-                  <?php if (!empty($d['actual'])): ?><span class="insignia">Este dispositivo</span><?php endif; ?>
-                </p>
-                <p class="campo-ayuda"><?= htmlspecialchars($d['navegador'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
-                <p class="campo-ayuda"><?= htmlspecialchars($d['ubicacion'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
-                <p class="campo-ayuda">Último acceso: <?= htmlspecialchars($d['ultimo_acceso'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-
-        <div class="fila-cuenta fila-cuenta--peligro">
-          <span class="fila-cuenta__etiqueta">Eliminar cuenta</span>
-          <div class="fila-cuenta__valor">
-            <p class="campo-ayuda">La eliminación de cuentas todavía no está disponible.</p>
-            <button type="button" class="boton boton-secundario boton-chico" disabled>Eliminar cuenta</button>
           </div>
         </div>
       </section>

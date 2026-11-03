@@ -38,7 +38,7 @@
     if (devolverFoco) devolverFoco.focus();
   });
 
-  // ---------- Pestañas Perfil / Seguridad ----------
+  // ---------- Pestañas de navegación (hoy solo Perfil) ----------
   var pestanas = modal.querySelectorAll('[role="tab"]');
 
   function activarPestana(pestana) {
