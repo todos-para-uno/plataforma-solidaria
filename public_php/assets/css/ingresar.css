@@ -15,3 +15,13 @@ main {
 .ingresar-registro {
     margin-top: var(--e-6);
 }
+/* Zoom suave al pasar el cursor sobre el recuadro "Ingresá a tu cuenta". */
+.ingresar-interior > .tarjeta {
+    transition: transform 0.25s ease;
+}
+.ingresar-interior > .tarjeta:hover {
+    transform: scale(1.02);
+}
+@media (prefers-reduced-motion: reduce) {
+    .ingresar-interior > .tarjeta:hover { transform: none; }
+}
