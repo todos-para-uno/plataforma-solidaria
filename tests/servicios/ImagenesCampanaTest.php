@@ -43,8 +43,7 @@ function imagenesCampanaTest(): void
     $servicio = new ImagenesCampana(
         $destino,
         'subidas/campanas',
-        static fn (string $ruta): bool => str_starts_with($ruta, sys_get_temp_dir()),
-        static fn (string $origen, string $destino): bool => copy($origen, $destino)
+        static fn (string $ruta): bool => str_starts_with($ruta, sys_get_temp_dir())
     );
 
     try {

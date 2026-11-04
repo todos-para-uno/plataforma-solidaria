@@ -496,6 +496,7 @@ Las campañas sin fotos continúan funcionando mientras se importa la migración
 
 - Hasta 4 fotos opcionales PNG, JPG o WEBP, con el límite efectivo que permita PHP (máximo de aplicación: 5 MB por foto). Permite arrastrar, quitar y elegir portada.
 - Se validan los archivos en el servidor y se guardan con nombres aleatorios en `public_php/subidas/campanas/`. PHP necesita permiso para escribir allí. Las fotos no se versionan.
+- La recodificación con GD es obligatoria: si falta el soporte del formato, EXIF para JPEG o falla la conversión, se rechaza la subida y se limpian los archivos parciales. Nunca se conserva el original como alternativa. Se limita también la resolución y el presupuesto de memoria antes de decodificar. Campañas y perfiles comparten `ImagenesSubidas`.
 - Se corrigieron los nombres del PR: `campanas` es una carpeta real, y los archivos de configuración son `.gitignore` y `.htaccess`, con punto inicial. Apache usa este último para desactivar el listado y bloquear archivos ejecutables. En otros servidores debe configurarse la protección equivalente; el servidor de desarrollo de PHP no procesa `.htaccess`.
 - La campaña, sus objetivos y sus filas de imágenes se guardan en una transacción. Si falla, se revierten las filas y se limpian los archivos creados. Si hay errores del formulario, se conservan los campos de texto y se solicita volver a elegir las fotos.
 - La portada se muestra en inicio, resultados de búsqueda y Mis donaciones. El detalle muestra la portada y las fotos adicionales. No se reemplazan las imágenes ilustrativas previas.
@@ -525,3 +526,31 @@ sudo -u daemon test -w public_php/subidas/campanas && echo "Apache puede escribi
 Si las directivas indican otros nombres, reemplazá el grupo en `chgrp` y el usuario en `sudo -u`. El modo `2775` permite escribir al dueño y al grupo, mantiene la lectura pública de las fotos y hace que los nuevos archivos hereden el grupo de la carpeta. Los directorios superiores también deben permitirle a Apache recorrer la ruta.
 
 Volvé a elegir las fotos y publicá de nuevo. Este ajuste es local a cada máquina: actualizar la rama no cambia los permisos. Limitá el cambio a la carpeta de imágenes; no hace falta usar `chmod 777` ni cambiar permisos de todo el proyecto. Durante el desarrollo, el formulario muestra el detalle técnico del error, incluida la ruta afectada, y el controlador también lo registra en PHP/Apache. Se mantienen los warnings de escritura de PHP sin suprimir; su visualización depende de `display_errors` y `error_reporting` del servidor.
+
+## Guardado del perfil y foto de usuario
+
+**Mi cuenta → Actualizar perfil** y la página **Mi perfil** permiten guardar nombre, apellido opcional y foto opcional, reemplazarla o quitarla. La página funciona sin JavaScript; la previsualización del navegador es opcional. El guardado requiere sesión, POST y CSRF, y solo modifica la cuenta autenticada: ignora identificadores, permisos, correo y rutas enviados por el navegador.
+
+Para una base existente, importar [`database/migrations/20261104_imagen_perfil.sql`](database/migrations/20261104_imagen_perfil.sql) con un administrador. Agrega `usuarios.apellido` y `usuarios.avatar`, conserva los datos y se puede repetir. Las bases nuevas ya incluyen estas columnas en `database/schema.sql`.
+
+- Se admite una foto JPG/JPEG o WebP, hasta 5 MB (o el límite menor de PHP) y 12 megapíxeles. También se comprueba que alcance la memoria disponible antes de decodificarla; algunas resoluciones pueden superar ese presupuesto.
+- Se comprueban la subida HTTP real, los errores de transferencia, el tamaño real, la extensión y el contenido con Fileinfo y `getimagesize`. No se confía en el MIME del navegador. PNG, GIF, SVG y otros formatos se rechazan para el perfil.
+- GD debe decodificar y recodificar la foto. Se corrige la orientación EXIF, se recorta desde el centro sin deformarla y se genera únicamente un WebP de **250 × 250 píxeles**, sin copiar metadatos EXIF/GPS ni datos anexos. Si falla, no se guarda el original y el perfil anterior se conserva.
+- Los avatares quedan en `data/usuarios/`, fuera de `public_php`, con nombres aleatorios y permisos privados. La base guarda solo una ruta interna relativa. PHP necesita leer y escribir esa carpeta; no usar permisos `777`. Si PHP corre con otro usuario, asignarle la carpeta como propietario y usar permisos `700` para la carpeta y `600` para las imágenes.
+- Publicar únicamente `public_php` como raíz del servidor. Si Apache publica todo el repositorio, `data/usuarios/.htaccess` bloquea el acceso directo; otros servidores requieren una regla equivalente para impedir publicar `data/`. El servidor de desarrollo de PHP no interpreta `.htaccess`.
+- La foto se entrega mediante `?ruta=imagen_perfil`: requiere sesión, sirve exclusivamente el avatar propio, no acepta rutas ni IDs externos y usa `Content-Type: image/webp`, `nosniff` y caché privada deshabilitada. Sin foto se muestran las iniciales.
+- Al reemplazar o quitar una foto, el archivo anterior se elimina después de guardar el cambio. Si falla el guardado en la base, se limpia la imagen nueva.
+
+### Bibliotecas necesarias
+
+**GD de PHP con soporte JPEG y WebP**, más las extensiones **EXIF**, **Fileinfo** y **Mbstring** (esta última ya se utiliza en la aplicación). No se necesita Composer ni ImageMagick. La instalación de GD y sus formatos está documentada en el [manual de PHP](https://www.php.net/manual/en/image.installation.php).
+
+En Debian/Ubuntu, el paquete habitual es `php-gd` (o el paquete de GD que corresponda a la versión de PHP utilizada). En XAMPP para Windows, habilitar `extension=gd`, `extension=exif` y `extension=fileinfo` en el `php.ini` que usa Apache. Reiniciar Apache o PHP-FPM después de habilitar extensiones. Comprobar que se habiliten en el PHP del servidor web; la consola puede utilizar otra configuración.
+
+Comprobación desde la consola:
+
+```bash
+php -r 'var_export(["GD" => extension_loaded("gd"), "JPEG" => function_exists("imagecreatefromjpeg"), "WebP" => function_exists("imagewebp"), "EXIF" => extension_loaded("exif"), "Fileinfo" => extension_loaded("fileinfo")]);'
+php tests/run_tests.php servicios ImagenPerfil
+php tests/run_tests.php controladores PerfilImagenController
+```

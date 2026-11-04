@@ -22,6 +22,8 @@ INSERT INTO validaciones (nivel, nombre, descripcion)
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NULL,
+    avatar VARCHAR(80) NULL,
     mail VARCHAR(150) NOT NULL UNIQUE, -- la cuenta estará asociada al mail pero no será la ID obviamente!
     telefono VARCHAR(30),
     -- documento es varchar porque puede ser un pasaporte. 

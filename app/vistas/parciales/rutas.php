@@ -23,6 +23,8 @@ return [
     'mensajes'        => '#',
     'administracion'  => $rutaEntrada . '?ruta=administracion',
     'perfil'          => $rutaEntrada . '?ruta=perfil',
+    'actualizar_perfil' => $rutaEntrada . '?ruta=actualizar_perfil',
+    'imagen_perfil' => $rutaEntrada . '?ruta=imagen_perfil',
     'salir'           => $rutaEntrada . '?ruta=salir',
     'preguntas'       => $rutaEntrada . '?ruta=preguntas_frecuentes',
 ];

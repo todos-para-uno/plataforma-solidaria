@@ -16,6 +16,8 @@ $rutasConControlador = [
     'crear_campana',
     'perfil',
     'actualizar_documento',
+    'actualizar_perfil',
+    'imagen_perfil',
     'mis_donaciones',
     'recepcion_insumos',
     'punto_entrega',
@@ -44,7 +46,7 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento'], true);
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento', 'actualizar_perfil'], true);
 $aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'crear_campana', 'punto_entrega', 'recepcion_insumos'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
@@ -97,6 +99,8 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
             $usuario = $usuarios->findById($usuario->getId());
             $usuarioActual = [
                 'nombre' => $usuario->getNombre(),
+                'apellido' => $usuario->getApellido(),
+                'avatar' => $usuario->getAvatar(),
                 'mail' => $usuario->getEmail(),
                 'admin' => $usuario->getAdmin(),
             ];
@@ -219,10 +223,13 @@ if (in_array($ruta, ['buscador', 'resultados_buscar'], true)) {
     return;
 }
 
-if (in_array($ruta, ['perfil', 'actualizar_documento'], true)) {
+if (in_array($ruta, ['perfil', 'actualizar_documento', 'actualizar_perfil', 'imagen_perfil'], true)) {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/PerfilController.php';
-    (new PerfilController(conectarBd()))->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
+    $controlador = new PerfilController(conectarBd());
+    if ($ruta === 'actualizar_perfil') $controlador->actualizar($usuario ?? null, $rutaBase, $rutaAssets);
+    elseif ($ruta === 'imagen_perfil') $controlador->imagen($usuario ?? null);
+    else $controlador->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
     return;
 }
 

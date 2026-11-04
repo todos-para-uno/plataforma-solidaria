@@ -17,7 +17,7 @@ function crearCampanaImagenesTest(PDO $pdo): void
         $usuario=(new UsuariosRepository($pdo))->findById($owner);
         $stmt=$pdo->prepare('INSERT INTO categoria_insumos (nombre) VALUES (?)');$stmt->execute([$f['prefijo'].' Insumos']);$cat=(string)$pdo->lastInsertId();
         $foto=$tmp.'/foto.png';$img=imagecreatetruecolor(30,20);imagepng($img,$foto);
-        $archivos=new ImagenesCampana($tmp.'/destino','subidas/campanas',static fn($ruta)=>is_file($ruta),static fn($a,$b)=>copy($a,$b));
+        $archivos=new ImagenesCampana($tmp.'/destino','subidas/campanas',static fn($ruta)=>is_file($ruta));
         $controller=new CrearCampanaController($pdo,$archivos);
         $render=static function() use(&$controller,$usuario): array {http_response_code(200);ob_start();try{$controller->mostrar($usuario);return [http_response_code(),ob_get_contents()];}finally{ob_end_clean();}};
         $_SERVER['REQUEST_METHOD']='GET';$_POST=[];$_FILES=[];unset($_SERVER['CONTENT_LENGTH']);
@@ -42,7 +42,7 @@ function crearCampanaImagenesTest(PDO $pdo): void
         $_FILES=['imagenes'=>['name'=>['script.php'],'tmp_name'=>[$foto],'error'=>[0],'size'=>[filesize($foto)]]];[$codigo]=$render();
         TestUtils::comprobar($codigo===422&&count(glob($tmp.'/destino/*'))===$antes,'Una foto inválida no genera archivos ni campañas');
         // Un fallo después de escribir la foto debe limpiar también el archivo físico.
-        $controller=new CrearCampanaController($pdo,new ImagenesCampana($tmp.'/fallidas','subidas/../invalida',static fn($ruta)=>is_file($ruta),static fn($a,$b)=>copy($a,$b)));
+        $controller=new CrearCampanaController($pdo,new ImagenesCampana($tmp.'/fallidas','subidas/../invalida',static fn($ruta)=>is_file($ruta)));
         $_SERVER['REQUEST_METHOD']='GET';$_POST=[];$_FILES=[];[$codigo,$html]=$render();preg_match('/name="clave" value="([a-f0-9]{64})"/',$html,$clave);
         $_SERVER['REQUEST_METHOD']='POST';$_POST=$datosValidos;$_POST['clave']=$clave[1];$_POST['nombre']=$f['prefijo'].' Debe revertirse';
         $_FILES=['imagenes'=>['name'=>['foto.png'],'tmp_name'=>[$foto],'error'=>[0],'size'=>[filesize($foto)]]];
