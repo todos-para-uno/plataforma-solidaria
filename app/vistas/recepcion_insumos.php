@@ -10,7 +10,7 @@ require __DIR__ . '/parciales/cabecera.php';
 <?php if ($campana->getEstado() === EstadoCamp::Activa && $objetivos): ?>
 <form method="post" action="<?= escapar($rutaBase) ?>/index.php?ruta=recepcion_insumos&amp;id=<?= $id ?>">
 <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>"><input type="hidden" name="clave" value="<?= escapar($clave) ?>">
-<div class="campo"><label for="correo">Correo de la cuenta del donante</label><input type="email" id="correo" name="correo" required maxlength="150" value="<?= escapar(is_string($_POST['correo'] ?? null) ? $_POST['correo'] : '') ?>"><p>El donante debe estar registrado en la plataforma.</p></div>
+<div class="campo"><label for="correo">Correo del donante</label><input type="email" id="correo" name="correo" required maxlength="150" value="<?= escapar(is_string($_POST['correo'] ?? null) ? $_POST['correo'] : '') ?>"><p>No necesita estar registrado. Si el correo coincide con una cuenta, la donación se asociará a ese usuario.</p></div>
 <div class="campo"><label for="id_objetivo">Insumo recibido</label><select id="id_objetivo" name="id_objetivo" required>
 <?php foreach ($objetivos as $o): if (!$o['id_categoria_insumos']) continue; ?><option value="<?= (int) $o['id'] ?>" <?= (is_string($_POST['id_objetivo'] ?? null) ? $_POST['id_objetivo'] : '') === (string) $o['id'] ? 'selected' : '' ?>><?= escapar($o['subcategoria_nombre'] ?? $o['categoria_insumos_nombre'] ?? 'Insumos') ?> — <?= escapar((string) $o['parcial']) ?> de <?= escapar((string) $o['objetivo']) ?></option><?php endforeach; ?>
 </select></div>

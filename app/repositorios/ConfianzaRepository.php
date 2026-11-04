@@ -4,7 +4,7 @@ final class ConfianzaRepository
 {
     public function __construct(private PDO $pdo) {}
 
-    /** Recalcula también para usuarios con donaciones anteriores a esta funcionalidad. */
+    /** Recalcula también donaciones anteriores; solo las asociadas a cuentas aportan confianza. */
     public function actualizar(int $usuario): array
     {
         $stmt = $this->pdo->prepare('SELECT u.tipo_documento, u.documento,

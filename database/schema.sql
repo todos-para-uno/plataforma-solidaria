@@ -11,7 +11,7 @@ CREATE TABLE validaciones (
 
 INSERT INTO validaciones (nivel, nombre, descripcion)
     VALUES (1, 'Blanco', 'Usuario sin DNI o pasaporte cargado'),
-    (2, 'Celeste', 'Usuario con documento y sin donaciones'),
+    (2, 'Celeste', 'Usuario con documento y sin donaciones de usuarios registrados'),
     (3, 'Azul', 'Usuario con documento y una o dos donaciones'),
     (4, 'Violeta', 'Usuario con documento y tres o más donaciones');
 
@@ -140,7 +140,7 @@ CREATE TABLE objetivos (
 -- donaciones
 CREATE TABLE donacion (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    id_usuario INT NOT NULL,
+    id_usuario INT NULL,
     id_camp INT NOT NULL,
     id_categoria_insumos INT,
     id_sub_categoria_insumos INT,
