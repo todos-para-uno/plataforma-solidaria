@@ -21,8 +21,9 @@ require __DIR__ . '/parciales/cabecera.php';
             <input type="number" id="aporte-monto" name="monto" min="0.01" max="9999999999.99" step="0.01" value="<?= escapar($monto) ?>" required aria-describedby="aporte-ayuda">
             <span class="campo-ayuda" id="aporte-ayuda">Continuarás en Mercado Pago para completar el pago. El aporte se sumará cuando se confirme.</span>
         </div>
-        <button class="boton boton-donar" type="submit">Continuar a Mercado Pago</button>
+        <button class="boton boton-donar" type="submit" data-mp-checkout-cta="checkout-pro" data-mp-marketplace-checkout="checkout-pro">Donar con Mercado Pago</button>
     </form>
     <p style="margin-top:var(--e-8)"><a href="<?= escapar($rutas['campana'] . '&id=' . $campana['id']) ?>">Volver a la campaña</a></p>
 </div></section>
+<script src="<?= escapar($rutaAssets) ?>/js/donar.js" defer></script>
 <?php require __DIR__ . '/parciales/pie.php'; ?>

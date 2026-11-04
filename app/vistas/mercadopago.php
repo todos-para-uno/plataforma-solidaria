@@ -3,7 +3,7 @@ $tituloPagina = 'Conectar Mercado Pago';
 $paginaActual = 'mercadopago';
 require __DIR__ . '/parciales/cabecera.php';
 ?>
-<section class="seccion"><div class="contenedor">
+<section class="seccion" data-mp-marketplace-page="checkout-pro"><div class="contenedor">
     <div class="seccion-encabezado"><h1>Recibí aportes en tu cuenta</h1><p class="bajada">Conectá Mercado Pago una vez para recibir las donaciones de tus campañas de dinero.</p></div>
     <?php if ($mensaje): ?><div class="alerta alerta-exito" role="status"><?= escapar($mensaje) ?></div><?php endif; ?>
     <?php if ($error): ?><div class="alerta alerta-aviso" role="status"><?= escapar($error) ?></div><?php endif; ?>
@@ -23,7 +23,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <?php if (!$config['produccion']): ?><p class="alerta alerta-aviso">Entorno de pruebas: conectá una cuenta de prueba.</p><?php endif; ?>
             <form action="<?= escapar($rutas['mp_conectar']) ?>" method="post">
                 <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
-                <button class="boton" type="submit"><?= $cuenta && $cuenta['requiere_reautorizar'] ? 'Volver a conectar' : ($cuenta ? 'Renovar conexión' : 'Conectar Mercado Pago') ?></button>
+                <button class="boton" type="submit" data-mp-marketplace-connect="oauth"><?= $cuenta && $cuenta['requiere_reautorizar'] ? 'Volver a conectar' : ($cuenta ? 'Renovar conexión' : 'Conectar Mercado Pago') ?></button>
             </form>
         <?php endif; ?>
     </div>

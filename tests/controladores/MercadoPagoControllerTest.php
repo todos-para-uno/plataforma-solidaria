@@ -9,7 +9,10 @@ function mercadoPagoControllerTest(PDO $pdo): void
     // Las pruebas revierten sus datos. Si falta la migración, pueden usar tablas temporales.
     $temporales = false;
     try {
-        $pdo->query('SELECT referencia FROM mercadopago_pagos LIMIT 0');
+        $pdo->query('SELECT referencia,preference_id FROM mercadopago_pagos LIMIT 0');
+        $pdo->query('SELECT state_hash FROM mercadopago_oauth_estados LIMIT 0');
+        $pdo->query('SELECT payment_id FROM mercadopago_transacciones LIMIT 0');
+        $pdo->query('SELECT payment_id FROM mercadopago_notificaciones LIMIT 0');
         $pdo->query('SELECT id_usuario FROM mercadopago_cuentas LIMIT 0');
     } catch (PDOException $e) {
         $sql = file_get_contents(__DIR__ . '/../../database/migrations/20261031_mercadopago.sql');
@@ -17,6 +20,10 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $sql = str_replace('CREATE TABLE IF NOT EXISTS', 'CREATE TEMPORARY TABLE', $sql);
         foreach (explode(';', $sql) as $sentencia) if (trim($sentencia) !== '') $pdo->exec($sentencia);
         $pdo->exec(file_get_contents(__DIR__ . '/../../database/migrations/20261103_mercadopago_autorizacion.sql'));
+        $sql = file_get_contents(__DIR__ . '/../../database/migrations/20261104_mercadopago_preferences.sql');
+        $sql = preg_replace('/,\n    FOREIGN KEY[^;]+(?=\n\);)/s', '', $sql);
+        $sql = str_replace('CREATE TABLE IF NOT EXISTS', 'CREATE TEMPORARY TABLE', $sql);
+        foreach (explode(';', $sql) as $sentencia) if (trim($sentencia) !== '') $pdo->exec($sentencia);
         $temporales = true;
     }
     $pdo->beginTransaction();
@@ -40,11 +47,11 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $config = ['habilitado' => true, 'client_id' => '123456', 'client_secret' => 'solo-ficticio', 'url_publica' => 'https://ejemplo.test',
             'clave_cifrado' => base64_encode(random_bytes(32)), 'webhook_secret' => 'firma-ficticia', 'produccion' => false];
         $repo = new MercadoPagoRepository($pdo);
-        $llamadas = []; $fallar = false; $estado = 'created'; $detalle = 'created'; $version = 1; $ref = null;
-        $orderId = 'ORDTSTPRUEBA123'; $receptor = '123456789'; $identidadReal = false; $manipular = null;
+        $llamadas = []; $fallar = false; $estado = 'pending'; $detalle = 'created'; $version = 1; $ref = null;
+        $paymentId = '100123'; $receptor = '123456789'; $identidadReal = false; $manipular = null;
         $respuestaOAuth = ['access_token' => 'token-vendedor-ficticio', 'refresh_token' => 'refresh-ficticio', 'expires_in' => 3600, 'live_mode' => true, 'token_type' => 'bearer', 'scope' => 'read write offline_access'];
-        $errorOAuth = null; $errorOrder = null; $fallarIdentidad = false;
-        $cliente = new MercadoPagoCliente(static function ($metodo, $ruta, $datos, $token, $clave) use (&$llamadas, &$fallar, &$estado, &$detalle, &$version, &$ref, &$receptor, &$identidadReal, &$manipular, &$orderId, &$respuestaOAuth, &$errorOAuth, &$errorOrder, &$fallarIdentidad): array {
+        $errorOAuth = null; $errorPago = null; $fallarIdentidad = false;
+        $cliente = new MercadoPagoCliente(static function ($metodo, $ruta, $datos, $token, $clave) use (&$llamadas, &$fallar, &$estado, &$detalle, &$version, &$ref, &$receptor, &$identidadReal, &$manipular, &$paymentId, &$respuestaOAuth, &$errorOAuth, &$errorPago, &$fallarIdentidad): array {
             $llamadas[] = compact('metodo', 'ruta', 'datos', 'token', 'clave');
             if ($ruta === '/oauth/token') {
                 if ($errorOAuth !== null) throw $errorOAuth;
@@ -52,12 +59,16 @@ function mercadoPagoControllerTest(PDO $pdo): void
             }
             if ($ruta === '/users/me' && $fallarIdentidad) throw new RuntimeException('Identidad no disponible.');
             if ($ruta === '/users/me') return ['id' => $receptor, 'site_id' => 'MLA', 'tags' => $identidadReal ? [] : ['test_user']];
-            if ($errorOrder !== null) throw $errorOrder;
+            if ($errorPago !== null) throw $errorPago;
             if ($fallar) throw new RuntimeException('Error de transporte simulado.');
-            $respuesta = ['id' => $orderId, 'checkout_url' => 'https://www.mercadopago.com.ar/checkout/v1/redirect?order_id=' . $orderId,
-                'external_reference' => $ref, 'user_id' => $receptor, 'currency' => 'ARS', 'type' => 'online', 'total_amount' => '1000.01',
-                'total_paid_amount' => '1000.01', 'status' => $estado, 'status_detail' => $detalle, 'version' => $version,
-                'integration_data' => ['application_id' => '123456'], 'transactions' => ['refunds' => [['amount' => '100.01']]]];
+            if ($ruta === '/checkout/preferences') return ['id' => '123-' . $ref,
+                'init_point' => 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=123-' . $ref,
+                'collector_id' => $receptor, 'external_reference' => $ref];
+            if (str_starts_with($ruta, '/v1/payments/search?')) return ['results' => [['id' => $paymentId]], 'paging' => ['total' => 1]];
+            $respuesta = ['id' => $paymentId, 'external_reference' => $ref, 'collector_id' => $receptor,
+                'currency_id' => 'ARS', 'transaction_amount' => 1000.01, 'status' => $estado, 'status_detail' => $detalle,
+                'date_last_updated' => '2026-11-04T12:00:0' . $version . '.123-03:00',
+                'transaction_amount_refunded' => $detalle === 'partially_refunded' ? 100.01 : ($estado === 'refunded' ? 1000.01 : 0)];
             if ($manipular !== null) $respuesta[$manipular] = 'incorrecto';
             return $respuesta;
         });
@@ -77,12 +88,15 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $assertThrows(static fn () => $servicio->terminarOAuth($creadorId, ['state' => $state, 'code' => 'x']), 'El entorno de pruebas rechaza cuentas reales.');
         $identidadReal = false;
         $servicio->iniciarOAuth($creadorId, 'crear_campana'); $state = $_SESSION['mp_oauth']['state'];
+        $sesionOAuth = $_SESSION['mp_oauth'];
         TestUtils::comprobar($servicio->terminarOAuth($creadorId, ['state' => $state, 'code' => 'x']) === 'crear_campana', 'Completa la vinculación y conserva un destino interno.');
         $intercambios = array_values(array_filter($llamadas, static fn ($l) => $l['ruta'] === '/oauth/token' && ($l['datos']['grant_type'] ?? '') === 'authorization_code'));
         $intercambio = $intercambios[array_key_last($intercambios)]['datos'];
         TestUtils::comprobar($intercambio['test_token'] === true && $intercambio['redirect_uri'] === $parametros['redirect_uri']
             && isset($intercambio['code_verifier']), 'El intercambio solicita un token de prueba y conserva el retorno y PKCE.');
         $assertThrows(static fn () => $servicio->terminarOAuth($creadorId, ['state' => $state, 'code' => 'x']), 'No permite reutilizar el callback OAuth.');
+        $_SESSION['mp_oauth'] = $sesionOAuth;
+        $assertThrows(static fn () => $servicio->terminarOAuth($creadorId, ['state' => $state, 'code' => 'x']), 'El estado persistente impide el replay incluso restaurando una sesión anterior.');
         TestUtils::comprobar(!str_contains($repo->cuenta($creadorId)['access_cifrado'], 'token-vendedor') && $servicio->token($creadorId) === 'token-vendedor-ficticio', 'Guarda la autorización cifrada y la recupera en backend.');
         $cuentaOriginal = $repo->cuenta($creadorId);
         $servicio->iniciarOAuth($donanteId, 'mercadopago'); $state = $_SESSION['mp_oauth']['state'];
@@ -96,35 +110,54 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $pdo->prepare('UPDATE mercadopago_cuentas SET vence_en=0 WHERE id_usuario=?')->execute([$creadorId]);
         $fallar = true;
         $assertThrows(static fn () => $servicio->crearPago($donanteId, $donante->getEmail(), $f['mesa'], '1000.01', $ref), 'Un fallo de red conserva el intento sin acreditar.');
-        TestUtils::comprobar($repo->pago($ref)['order_id'] === null && $repo->pago($ref)['acreditado'] === '0.00', 'No inventa una aprobación si falla Mercado Pago.');
+        TestUtils::comprobar($repo->pago($ref)['preference_id'] === null && $repo->pago($ref)['acreditado'] === '0.00', 'No inventa una aprobación si falla Mercado Pago.');
         TestUtils::comprobar((int) $repo->cuenta($creadorId)['vence_en'] > time(), 'El fallo del cobro no revierte una renovación de token ya confirmada.');
         $fallar = false;
         $checkout = $servicio->crearPago($donanteId, $donante->getEmail(), $f['mesa'], '1000.01', $ref);
-        $posts = array_values(array_filter($llamadas, static fn ($l) => $l['ruta'] === '/v1/orders'));
+        $posts = array_values(array_filter($llamadas, static fn ($l) => $l['ruta'] === '/checkout/preferences'));
         TestUtils::comprobar($posts[0]['clave'] === $posts[1]['clave'] && $posts[1]['token'] === 'token-vendedor-ficticio', 'El reintento conserva la idempotencia y usa el token del creador.');
+        $datosPreferencia = $posts[1]['datos'];
+        TestUtils::comprobar($datosPreferencia['items'][0]['currency_id'] === 'ARS'
+            && $datosPreferencia['items'][0]['unit_price'] === 1000.01 && $datosPreferencia['marketplace_fee'] === 0
+            && $datosPreferencia['external_reference'] === $ref && !isset($datosPreferencia['collector_id'])
+            && $datosPreferencia['back_urls']['success'] === $servicio->url('pago_resultado', ['referencia' => $ref]),
+            'La preferencia usa el importe persistido, comisión cero y retornos de la aplicación sin elegir receptor desde el navegador.');
         $n = count($llamadas);
         TestUtils::comprobar($servicio->crearPago($donanteId, $donante->getEmail(), $f['mesa'], '1000.01', $ref) === $checkout && count($llamadas) === $n, 'Un POST repetido reutiliza el checkout sin crear otro cobro.');
         $assertThrows(static fn () => $servicio->crearPago($donanteId, $donante->getEmail(), $f['mesa'], '2000', $ref), 'No reutiliza el intento con otro monto.');
         $assertThrows(static fn () => $servicio->crearPago($creadorId, $creador->getEmail(), $f['mesa'], '1000.01', $ref), 'No permite apropiarse de un intento ajeno.');
         $assertThrows(static fn () => $servicio->crearPago($donanteId, $donante->getEmail(), $f['ropa'], '1000.01', MercadoPagoSeguridad::uuid()), 'No procesa dinero para una campaña de insumos.');
-        foreach (['user_id', 'currency', 'total_amount', 'external_reference'] as $campo) {
+        foreach (['collector_id', 'currency_id', 'transaction_amount', 'external_reference'] as $campo) {
             $manipular = $campo;
-            $assertThrows(static fn () => $servicio->sincronizar($ref), 'No acredita una order con datos ajenos al aporte.');
+            $assertThrows(static fn () => $servicio->sincronizar($ref), 'No acredita un pago con datos ajenos al aporte.');
         }
         $manipular = null;
         $servicio->sincronizar($ref);
-        TestUtils::comprobar($repo->pago($ref)['acreditado'] === '0.00', 'Una order creada no es una donación acreditada.');
-        $estado = 'processed'; $detalle = 'accredited'; $version = 2;
+        TestUtils::comprobar($repo->pago($ref)['acreditado'] === '0.00', 'Un pago pendiente no es una donación acreditada.');
+        $estado = 'approved'; $detalle = 'accredited'; $version = 2;
         $servicio->sincronizar($ref); $servicio->sincronizar($ref);
         $q = $pdo->prepare('SELECT logrado FROM camp WHERE id=?'); $q->execute([$f['mesa']]);
         TestUtils::comprobar($q->fetchColumn() === '1000.01' && $repo->pago($ref)['id_donacion'] !== null, 'Acredita una sola vez y actualiza el progreso en la misma transacción.');
-        $estado = 'created'; $detalle = 'created'; $version = 1; $servicio->sincronizar($ref);
+        $estado = 'pending'; $detalle = 'created'; $version = 1; $servicio->sincronizar($ref);
         TestUtils::comprobar($repo->pago($ref)['acreditado'] === '1000.01', 'Una notificación antigua no revierte un pago confirmado.');
-        $estado = 'processed'; $detalle = 'partially_refunded'; $version = 3; $servicio->sincronizar($ref);
+        $estado = 'approved'; $detalle = 'partially_refunded'; $version = 3; $servicio->sincronizar($ref);
         TestUtils::comprobar($repo->pago($ref)['acreditado'] === '900.00', 'Descuenta un reembolso parcial confirmado.');
         $estado = 'refunded'; $detalle = 'refunded'; $version = 4; $servicio->sincronizar($ref); $servicio->sincronizar($ref);
         $q->execute([$f['mesa']]);
         TestUtils::comprobar($q->fetchColumn() === '0.00' && $repo->pago($ref)['id_donacion'] !== null, 'El reembolso total corrige el progreso sin borrar el historial.');
+
+        $paymentId = '100125'; $estado = 'approved'; $detalle = 'accredited'; $version = 5;
+        $servicio->sincronizar($ref); $servicio->sincronizar($ref);
+        TestUtils::comprobar($repo->pago($ref)['acreditado'] === '1000.01', 'Otro pago de la misma preferencia se registra una sola vez en su propia transacción.');
+        $paymentId = '100126'; $estado = 'rejected'; $detalle = 'cc_rejected_other_reason';
+        $servicio->sincronizar($ref);
+        TestUtils::comprobar($repo->pago($ref)['acreditado'] === '1000.01' && $repo->pago($ref)['estado'] === 'approved', 'Un intento rechazado no oculta otro pago aprobado.');
+        $paymentId = '100123'; $estado = 'refunded'; $detalle = 'refunded'; $version = 4;
+        $servicio->sincronizar($ref);
+        TestUtils::comprobar($repo->pago($ref)['acreditado'] === '1000.01', 'El reembolso de un pago anterior no resta dinero de otro pago.');
+        $paymentId = '100125'; $version = 6; $servicio->sincronizar($ref);
+        $paymentId = '100123'; $version = 4;
+        TestUtils::comprobar($repo->pago($ref)['acreditado'] === '0.00', 'La suma acreditada contempla el reembolso de cada payment ID.');
 
         $_SERVER['REQUEST_METHOD'] = 'GET'; $_GET = ['referencia' => $ref, 'status' => 'approved'];
         $html = $capturar(static fn () => $control->atender('pago_resultado', $donante));
@@ -163,13 +196,32 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $_SESSION['mp_oauth']['creado'] = time() - 601;
         $capturar(static fn () => $controlDiagnostico->atender('mp_conectar', $creador));
         TestUtils::comprobar(http_response_code() === 422, 'El diagnóstico respeta el vencimiento del intento OAuth.');
-        $_GET = ['data_id' => 'ORDTSTPRUEBA123']; $_SERVER['HTTP_X_SIGNATURE'] = 'inválida';
+        $_GET = ['data_id' => '100123']; $_SERVER['HTTP_X_SIGNATURE'] = 'inválida';
         $capturar(static fn () => $control->webhook());
         TestUtils::comprobar(http_response_code() === 401, 'El webhook rechaza solicitudes sin firma válida.');
         $ts = (string) time(); $_SERVER['HTTP_X_REQUEST_ID'] = 'request-123';
-        $_SERVER['HTTP_X_SIGNATURE'] = 'ts=' . $ts . ',v1=' . hash_hmac('sha256', 'id:ordtstprueba123;request-id:request-123;ts:' . $ts . ';', $config['webhook_secret']);
-        $html = $capturar(static fn () => $control->webhook());
-        TestUtils::comprobar(http_response_code() === 200 && str_contains($html, 'true'), 'El webhook firmado consulta la order y reconoce el reintento.');
+        $_SERVER['HTTP_X_SIGNATURE'] = 'ts=' . $ts . ',v1=' . hash_hmac('sha256', 'id:100123;request-id:request-123;ts:' . $ts . ';', $config['webhook_secret']);
+        $cuerpoWebhook = json_encode(['type' => 'payment', 'data' => ['id' => '100123'], 'user_id' => $receptor]);
+        $antes = count($llamadas);
+        $html = $capturar(static fn () => $control->webhook($cuerpoWebhook));
+        TestUtils::comprobar(count($llamadas) === $antes, 'El webhook persiste el evento y responde sin llamadas a Mercado Pago.');
+        TestUtils::comprobar($repo->procesarSiguienteNotificacion(fn ($evento) => $servicio->procesarNotificacion($evento)) === true,
+            'El worker verifica el pago firmado con el token del receptor.');
+        TestUtils::comprobar($repo->procesarSiguienteNotificacion(fn ($evento) => $servicio->procesarNotificacion($evento)) === null,
+            'Un evento procesado no se consume nuevamente sin una notificación nueva.');
+        $capturar(static fn () => $control->webhook($cuerpoWebhook));
+        $fallar = true;
+        TestUtils::comprobar($repo->procesarSiguienteNotificacion(fn ($evento) => $servicio->procesarNotificacion($evento)) === false,
+            'Un fallo remoto conserva la notificación para reintentar.');
+        $fallar = false;
+        TestUtils::comprobar($repo->procesarSiguienteNotificacion(fn ($evento) => $servicio->procesarNotificacion($evento)) === null,
+            'La cola respeta la espera entre reintentos.');
+        $capturar(static fn () => $control->webhook($cuerpoWebhook));
+        TestUtils::comprobar($repo->procesarSiguienteNotificacion(fn ($evento) => $servicio->procesarNotificacion($evento)) === true,
+            'Una nueva notificación permite recuperar un pago pendiente de reintento.');
+        $capturar(static fn () => $control->webhook(json_encode(['type' => 'payment', 'data' => ['id' => '100124'], 'user_id' => $receptor])));
+        TestUtils::comprobar(http_response_code() === 400, 'La firma de un ID no autoriza otro ID enviado en el cuerpo.');
+        TestUtils::comprobar(str_contains($html, 'true'), 'El webhook firmado reconoce el evento guardado.');
         $historial = $repo->historial($donanteId);
         TestUtils::comprobar(count($historial) === 1 && $historial[0]['estado'] === 'refunded' && $repo->historial($creadorId) === [], 'El historial no duplica el pago y pertenece al usuario autenticado.');
 
@@ -188,8 +240,8 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $_POST['csrf_token'] = Csrf::generar(); $_POST['mail'] = ['invalido'];
         $capturar(static fn () => $control->atender('donar', null));
         TestUtils::comprobar(http_response_code() === 422 && $repo->pago($ref) === null, 'El correo inválido no inicia un pago de invitado.');
-        $_POST['mail'] = 'invitado@example.test'; $orderId = 'ORDTSTINVITADO123';
-        $estado = 'created'; $detalle = 'created'; $version = 1;
+        $_POST['mail'] = 'invitado@example.test'; $paymentId = '100124';
+        $estado = 'pending'; $detalle = 'created'; $version = 1;
         $capturar(static fn () => $control->atender('donar', null));
         $pagoInvitado = $repo->pago($ref);
         TestUtils::comprobar(http_response_code() === 303 && $pagoInvitado['id_usuario'] === null && $pagoInvitado['invitado_hash'] === hash('sha256', $_SESSION['mp_invitado']), 'El checkout no exige registro ni inventa un usuario para el visitante.');
@@ -198,7 +250,7 @@ function mercadoPagoControllerTest(PDO $pdo): void
         TestUtils::comprobar(http_response_code() === 303 && count($llamadas) === $n, 'El envío repetido de un invitado reutiliza el mismo checkout.');
         $assertThrows(static fn () => $servicio->crearPago(null, 'otro@example.test', $f['mesa'], '1000.01', $ref, $pagoInvitado['invitado_hash']), 'No cambia el correo del intento al reintentarlo.');
         $assertThrows(static fn () => $servicio->crearPago(null, 'invitado@example.test', $f['mesa'], '1000.01', $ref, hash('sha256', 'otro-navegador')), 'Otra sesión no reutiliza el intento de un invitado.');
-        $estado = 'processed'; $detalle = 'accredited'; $version = 2;
+        $estado = 'approved'; $detalle = 'accredited'; $version = 2;
         $servicio->sincronizar($ref); $servicio->sincronizar($ref);
         $pagoInvitado = $repo->pago($ref);
         $consulta = $pdo->prepare('SELECT id_usuario FROM donacion WHERE id=?'); $consulta->execute([$pagoInvitado['id_donacion']]);
@@ -225,6 +277,12 @@ function mercadoPagoControllerTest(PDO $pdo): void
             $servicio->terminarOAuth($creadorId, ['state' => $_SESSION['mp_oauth']['state'], 'code' => 'nuevo']);
         };
         $respuestaValida = $respuestaOAuth;
+        $respuestaOAuth = array_replace($respuestaValida, ['scope' => 'offline_access payments write']);
+        $reconectar();
+        TestUtils::comprobar($repo->cuenta($creadorId)['scope'] === 'offline_access payments write',
+            'Acepta los permisos OAuth publicados para Split 1:1 sin exigir el alias read.');
+        $respuestaOAuth = $respuestaValida;
+        $reconectar();
         $cuentaAntes = $repo->cuenta($creadorId);
         foreach ([['scope', 'read write'], ['scope', 'read offline_access'], ['scope', 'write offline_access'], ['scope', null], ['token_type', 'mac'], ['token_type', null]] as [$campo, $valor]) {
             $respuestaOAuth = array_replace($respuestaValida, [$campo => $valor]);
@@ -272,21 +330,22 @@ function mercadoPagoControllerTest(PDO $pdo): void
             $reconectar();
         }
         foreach ([403, 429, 500, 401] as $estadoHttp) {
-            $errorOrder = new MercadoPagoErrorApi($estadoHttp);
+            $errorPago = new MercadoPagoErrorApi($estadoHttp);
             $refError = MercadoPagoSeguridad::uuid();
-            $assertThrows(static fn () => $servicio->crearPago($donanteId, $donante->getEmail(), $f['mesa'], '10.00', $refError), 'La respuesta de error de Orders no acredita dinero.');
+            $assertThrows(static fn () => $servicio->crearPago($donanteId, $donante->getEmail(), $f['mesa'], '10.00', $refError), 'La respuesta de error de Preferences no acredita dinero.');
             TestUtils::comprobar((bool) $repo->cuenta($creadorId)['requiere_reautorizar'] === ($estadoHttp === 401), 'Solo el rechazo de autenticación marca la cuenta, fuera del rollback del pago.');
             TestUtils::comprobar($repo->pago($refError)['acreditado'] === '0.00', 'Conserva el intento sin acreditar.');
         }
-        $errorOrder = null;
+        $errorPago = null;
         $reconectar();
-        $errorOrder = new MercadoPagoErrorApi(401);
-        $assertThrows(static fn () => $servicio->sincronizar($ref), 'La consulta de una order también detecta autorización rechazada.');
-        TestUtils::comprobar((bool) $repo->cuenta($creadorId)['requiere_reautorizar'], 'Persiste la reconexión cuando falla la consulta de una order.');
-        $errorOrder = null;
+        $errorPago = new MercadoPagoErrorApi(401);
+        $assertThrows(static fn () => $servicio->sincronizar($ref), 'La consulta de un pago también detecta autorización rechazada.');
+        TestUtils::comprobar((bool) $repo->cuenta($creadorId)['requiere_reautorizar'], 'Persiste la reconexión cuando falla la consulta de un pago.');
+        $errorPago = null;
     } finally {
         $pdo->rollBack();
         if ($temporales) {
+            foreach (['mercadopago_transacciones', 'mercadopago_notificaciones', 'mercadopago_oauth_estados'] as $tabla) $pdo->exec('DROP TEMPORARY TABLE ' . $tabla);
             $pdo->exec('DROP TEMPORARY TABLE mercadopago_pagos');
             $pdo->exec('DROP TEMPORARY TABLE mercadopago_cuentas');
         }

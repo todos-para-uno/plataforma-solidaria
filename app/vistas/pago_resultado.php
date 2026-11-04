@@ -4,6 +4,7 @@ $paginaActual = 'mis_donaciones';
 require_once __DIR__ . '/parciales/estados_pago.php';
 require __DIR__ . '/parciales/cabecera.php';
 ?>
+<?php if (!empty($errorConsulta)): ?><p class="alerta alerta-aviso" role="status"><?= escapar($errorConsulta) ?></p><?php endif; ?>
 <section class="seccion"><div class="contenedor">
     <div class="seccion-encabezado"><h1>Estado de tu aporte</h1><p class="bajada"><?= escapar(estadoPago($pago['estado'], $pago['detalle'])) ?></p></div>
     <div class="tarjeta">

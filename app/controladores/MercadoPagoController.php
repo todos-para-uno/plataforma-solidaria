@@ -89,6 +89,13 @@ final class MercadoPagoController
                     header('Location: ' . $rutaBase . '/index.php?ruta=pago_resultado&referencia=' . rawurlencode($ref), true, 303);
                     return;
                 }
+                $errorConsulta = null;
+                try {
+                    $this->servicio->sincronizar($ref);
+                    $pago = $this->repositorio->pago($ref);
+                } catch (Throwable $e) {
+                    $errorConsulta = 'Todavía no pudimos actualizar el estado. Usá Consultar estado para reintentar.';
+                }
                 require __DIR__ . '/../vistas/pago_resultado.php';
                 return;
             }
@@ -166,30 +173,37 @@ final class MercadoPagoController
             && hash_equals($pago['invitado_hash'], hash('sha256', $clave));
     }
 
-    public function webhook(): void
+    public function webhook(?string $cuerpo = null): void
     {
         header('Content-Type: application/json; charset=UTF-8');
         header('Cache-Control: no-store');
         try {
             $this->servicio->verificarConfiguracion();
-            // PHP normaliza el punto de data.id a guion bajo al construir $_GET.
+            // PHP normaliza data.id a data_id en la query. Ese es el ID cubierto por la firma.
             $id = $_GET['data_id'] ?? null;
-            if (!MercadoPagoSeguridad::firmaValida($id, $_SERVER['HTTP_X_SIGNATURE'] ?? null,
-                $_SERVER['HTTP_X_REQUEST_ID'] ?? null, $this->config['webhook_secret'])) {
+            if (!is_string($id) || !preg_match('/^[0-9]{1,32}$/D', $id)
+                || !MercadoPagoSeguridad::firmaValida($id, $_SERVER['HTTP_X_SIGNATURE'] ?? null,
+                    $_SERVER['HTTP_X_REQUEST_ID'] ?? null, $this->config['webhook_secret'])) {
                 http_response_code(401); echo '{"recibido":false}'; return;
             }
-            // Solo el ID firmado elige el recurso. No acreditar importes ni estados del cuerpo recibido.
-            $pago = $this->repositorio->pagoPorOrder($id);
-            if ($pago === null) {
-                // Puede llegar antes de que la respuesta de creación se haya guardado: pedir reintento.
-                http_response_code(503); echo '{"recibido":false}'; return;
+            $cuerpo ??= file_get_contents('php://input', false, null, 0, 65537);
+            if (!is_string($cuerpo) || strlen($cuerpo) > 65536) {
+                http_response_code(400); echo '{"recibido":false}'; return;
             }
-            $this->servicio->sincronizar($pago['referencia']);
+            $evento = json_decode($cuerpo, true);
+            if (!is_array($evento) || ($evento['type'] ?? null) !== 'payment'
+                || !is_array($evento['data'] ?? null) || !is_scalar($evento['data']['id'] ?? null)
+                || (string) $evento['data']['id'] !== $id || !is_scalar($evento['user_id'] ?? null)
+                || !preg_match('/^[0-9]{1,32}$/D', (string) $evento['user_id'])) {
+                http_response_code(400); echo '{"recibido":false}'; return;
+            }
+            // Guardar antes de responder; no hacer llamadas a Mercado Pago en esta petición.
+            // user_id solo enruta la consulta: el worker comprueba el receptor y referencia reales.
+            $this->repositorio->encolarNotificacion($id, (string) $evento['user_id']);
+            http_response_code(200);
             echo '{"recibido":true}';
         } catch (Throwable $e) {
-            // El proveedor reintentará. No registrar el cuerpo o los tokens.
-            http_response_code(503);
-            echo '{"recibido":false}';
+            http_response_code(503); echo '{"recibido":false}';
         }
     }
 }

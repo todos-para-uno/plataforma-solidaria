@@ -88,3 +88,19 @@ Todas se ejecutaron con `siteId=MLA` en `search_documentation`. Los resultados s
 | en | `oauth token invalid_request redirect_uri` | 50 | Flujo y buenas prácticas; sin definición del mensaje del validador. |
 
 Como complemento, una búsqueda web restringida a `mercadopago.com` de los términos literales `OauthParamsValidator` e `invalid_redirect_uri` no devolvió resultados. La ausencia de resultados no prueba que el error no exista ni que no tenga documentación interna.
+
+## Seguimiento del 2026-11-04
+
+El usuario confirmó aplicación 6921561117397304, titular de producción 3536116 y API integrada Orders. La implementación actual crea preferencias; el usuario acepta cualquiera de las APIs mientras funcione. Se conserva Preferences mientras se identifica la causa del rechazo OAuth. La documentación actual de Checkout Pro también contiene un flujo de Orders: la afirmación del plugin de que no existe no debe usarse como diagnóstico del mensaje.
+
+El modelo Marketplace aún no fue confirmado en Editar aplicación. Es un dato distinto de API integrada y figura como requisito en la guía de configuración de Split 1:1. No se modificó remotamente la API ni se creó otra aplicación.
+
+La guía de Split 1:1 devuelve como ejemplo scope `offline_access payments write`. Se corrigió la validación local para admitir `payments` o `read` junto con `write` y `offline_access`, con prueba específica. Pasaron 128 comprobaciones del controlador. Este ajuste evita un rechazo posterior al consentimiento, pero no se presenta como solución del error previo al callback.
+
+## Reproducción autenticada y motivo explícito del 2026-11-04
+
+Se reprodujo el fallo en Firefox separado con el vendedor de prueba guardado, sin conceder permisos. La respuesta HTTP 400 contiene expresamente `invalid_redirect_uri` en los datos de la página y `OauthParamsValidator invalidRequest` en su traza de error. Ya no se trata de una equivalencia inferida a partir de documentación: ambos valores fueron observados en esta misma respuesta. El código visible estándar fue PSO16-POQWN8VDDLY8 y el X-Request-ID 473a3689-be51-46de-b5dd-0050514e743c.
+
+La consulta autenticada de metadatos sí pudo completarse: confirmó aplicación activa y sin bloqueo, PKCE y permisos presentes, callback_urls igual al retorno recibido por el navegador, sin doble codificación. callback_url singular está vacío. Se consultó el esquema por OPTIONS y se intentó completar solo ese campo mediante PUT: fue rechazado con 403 y se confirmó que no persistió ningún cambio. Su relación causal con el error continúa sin demostrarse.
+
+Las variantes con scope explícito básico y sin platform_id mantuvieron el rechazo. No se debe repetir como hipótesis pendiente un problema de dominio general/regional, el secreto del webhook, la migración o una discrepancia visible de URL. El caso actualizado y la evidencia están en mercadopago-soporte-oauth.md y mercadopago-oauth-evidencia.json.

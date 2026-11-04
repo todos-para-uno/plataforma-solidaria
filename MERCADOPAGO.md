@@ -1,109 +1,87 @@
-# Mercado Pago: preparación y pruebas
+# Mercado Pago — Marketplace con Checkout Pro · Argentina · preferences · PHP REST
 
-La integración usa **Checkout Pro con Orders API y OAuth**. Cada creador autoriza su cuenta, y los cobros se crean con su token. No se pide ni guarda su contraseña. No se configura comisión para todospara.uno.
+Cada creador vincula su propia cuenta mediante OAuth. Las donaciones se crean con el token de ese creador, en ARS y sin comisión de la plataforma (`marketplace_fee: 0`). El checkout se abre en Mercado Pago mediante `init_point`. Las comisiones propias de Mercado Pago siguen aplicándose.
 
-El código incluye vinculación, renovación de tokens, inicio de aportes, retorno, confirmación por webhook y consulta de historial. La creación de campañas sigue siendo un recorrido separado todavía pendiente; para probar pagos hay que contar con una campaña monetaria existente.
+## 1. Instalación y migración
 
-## 1. Preparar la base
+Se conserva el cliente REST con cURL del proyecto PHP. No se agregaron dependencias de Composer ni npm. Requiere PHP con `curl`, `sodium` y `pdo_mysql`.
 
-En una base existente, hacer un respaldo e importar `database/migrations/20261031_mercadopago.sql`, `database/migrations/20261031_donaciones_invitados.sql` y `database/migrations/20261103_mercadopago_autorizacion.sql`, en ese orden, seleccionando esa base. Crea `mercadopago_cuentas` y `mercadopago_pagos` sin borrar datos. Aplicar solamente las migraciones pendientes.
+En una base existente, respaldar los datos y aplicar **solo las migraciones pendientes**, con un usuario de administración:
 
-Para una base nueva, `database/schema.sql` ya incluye esas tablas. El usuario habitual de la aplicación necesita permisos de consulta y modificación; la importación debe hacerla un usuario que pueda crear tablas.
+1. `database/migrations/20261031_mercadopago.sql`.
+2. `database/migrations/20261031_donaciones_invitados.sql`.
+3. `database/migrations/20261103_mercadopago_autorizacion.sql`.
+4. `database/migrations/20261104_mercadopago_preferences.sql`.
 
-Si `mercadopago_cuentas` fue creada antes de agregar el estado de autorización, importar una sola vez `database/migrations/20261103_mercadopago_autorizacion.sql`. Agrega los permisos recibidos y el indicador de reconexión sin borrar cuentas ni pagos. No ejecutar esta migración si se usó el esquema nuevo, que ya incluye las columnas.
+Para esta actualización, si ya se usaba la rama `feat/mercadopago`, corresponde importar la última migración desde phpMyAdmin. Agrega identificadores de preferencia/pago, estados OAuth persistentes, transacciones individuales y una cola de notificaciones. Conserva las columnas y registros anteriores de Orders. El esquema completo `database/schema.sql` incluye la actualización para instalaciones nuevas; no volver a importarlo en una base con datos.
 
-## 2. Crear la aplicación de Mercado Pago
+**Estado de esta máquina:** el usuario aplicó la migración con permisos de administración. Se verificó después con las 127 comprobaciones de pagos sobre la base habitual; todas pasaron. No se ampliaron los permisos de `solidaria_app`.
 
-En Developers, crear una aplicación de **Pagos online → Checkout Pro → Marketplace**, usando Orders API. Ubicar el par **Client ID / Client Secret** en Credenciales → Producción. Copiar el campo Client ID literalmente: no sustituirlo por el N.º de aplicación ni por el User ID que aparezcan en otra pantalla o entorno. No usar un Access Token fijo de la plataforma para cobrar por otros usuarios.
+## 2. Credenciales y direcciones
 
-Habilitar **PKCE** en la configuración de OAuth: nuestro código envía `code_challenge_method=S256`. Al intercambiar el código por una autorización, envía `test_token=true` si `produccion` es `false`; ese parámetro se manda en el cuerpo de la solicitud al servidor de tokens, no en el enlace de autorización.
+La aplicación seleccionada es `todosparauno` (`6921561117397304`). Se importaron Client ID y Client Secret mediante el plugin al archivo privado `config/mercadopago.local.php`, excluido de Git. Se conservó su clave de cifrado y `produccion=false`. La copia anterior está en `config/.mercadopago.local.php.before-plugin`, también privada. No se usa un Access Token fijo de la plataforma para cobrar por los creadores.
 
-## 3. Darle una URL HTTPS al servidor local
+Para otra instalación, copiar `config/mercadopago.ejemplo.php` al archivo local y completar sus campos allí. `MP_CLIENT_ID`, `MP_CLIENT_SECRET`, `MP_URL_PUBLICA`, `MP_CLAVE_CIFRADO`, `MP_WEBHOOK_SECRET`, `MP_HABILITADO` y `MP_PRODUCCION` también se admiten como variables de entorno; el archivo local tiene prioridad. Nunca compartir ni versionar secretos o tokens de vendedores.
 
-Iniciar la aplicación normalmente:
+Con una URL HTTPS activa que sirva **únicamente `public_php/`**, configurar:
 
-```bash
-php -S 127.0.0.1:8000 -t public_php
-```
-
-Usar un túnel HTTPS de desarrollo o un servidor de pruebas que apunte a ese puerto. El túnel expone la aplicación mientras está abierto: no iniciar otro servidor con la raíz del repositorio como directorio público.
-
-Ejemplo de URL asignada por el túnel: `https://tu-subdominio-de-prueba.example`. Es un ejemplo, no una dirección para pegar literalmente. Usar la URL real que proporcione el túnel.
-
-Abrir la aplicación e iniciar sesión **desde la URL HTTPS**, no desde localhost. Así la cookie de sesión estará presente cuando Mercado Pago regrese de OAuth. Si se abre desde otro dominio, el estado de autorización no podrá validarse.
-
-Configurar en la aplicación de Mercado Pago:
-
-| Configuración | Dirección |
+| Campo | Valor |
 | --- | --- |
-| Redirect URL de OAuth | `https://TU-DOMINIO/mercadopago-retorno.php` |
-| Webhook de Orders | `https://TU-DOMINIO/index.php?ruta=mp_webhook` |
+| `url_publica` | `https://TU-DOMINIO` (incluir subcarpeta si corresponde) |
+| Retorno OAuth registrado en Developers | `https://TU-DOMINIO/mercadopago-retorno.php` |
+| Notificaciones | `https://TU-DOMINIO/index.php?ruta=mp_webhook` |
+| Evento en Developers | **Pagos** (`payment`) |
+| `webhook_secret` | Firma secreta de Webhooks de esa aplicación |
 
-En Webhooks, seleccionar el evento **Order (Mercado Pago)** y guardar la firma secreta. Si la aplicación está bajo una subcarpeta, incluirla en ambas URL y en `url_publica`.
+Túnel temporal activo: `https://mean-councils-camcorders-equity.trycloudflare.com`. Ya está guardado en la configuración privada y registrado por el plugin como webhook de pruebas. Al reiniciar el túnel cambia la dirección y deben actualizarse los callbacks. El secreto local pasó la validación HMAC de una solicitud externa del simulador el 2026-11-04 a las 12:39 ART. La discrepancia previa con el prefijo mostrado por el plugin no debe usarse como prueba de secreto incorrecto. Esa solicitud era de Reclamos y se rechazó por tipo de evento; falta repetir con Pagos (`payment`). El plugin permite registrar webhooks, pero las herramientas disponibles no permiten editar la Redirect URL de OAuth ni la habilitación Marketplace de una aplicación existente. Esas opciones deben comprobarse en Developers. La URL de retorno debe coincidir exactamente y PKCE debe estar habilitado.
 
-Si el túnel cambia de dirección, actualizar la configuración privada y el panel de Mercado Pago. La Redirect URL debe coincidir exactamente, incluida la subcarpeta. El retorno OAuth usa `/mercadopago-retorno.php`, sin `?ruta=...`. Reemplazar el retorno anterior del panel si todavía apunta a `index.php?ruta=mp_retorno`.
+La importación de credenciales no demuestra que la aplicación esté habilitada para OAuth de Marketplace. El rechazo anterior «La aplicación no está preparada para conectarse» sigue requiriendo una autorización externa para verificar su causa.
 
-## 4. Configuración privada
+## 3. Código del servidor
 
-Copiar `config/mercadopago.ejemplo.php` a `config/mercadopago.local.php` y completar sus campos localmente. El segundo archivo está excluido de Git y queda fuera de `public_php`.
+- `app/servicios/MercadoPagoCliente.php`: API HTTPS, OAuth con formulario codificado, creación en `/checkout/preferences`, consultas en `/v1/payments/{id}` y búsqueda por referencia. Nunca registra respuestas o secretos.
+- `app/servicios/MercadoPagoServicio.php`: valida la campaña y el monto elegido por el donante, persiste el intento, resuelve el creador desde la base y usa exclusivamente su token OAuth. Crea una preferencia con moneda ARS, referencia propia, URLs HTTPS y comisión cero.
+- `app/repositorios/MercadoPagoRepository.php`: estados OAuth de un solo uso, tokens cifrados y renovación atómica, bloqueo de intentos y acreditación transaccional por ID de pago.
+- `app/controladores/MercadoPagoController.php`: sesión, CSRF, privacidad del resultado y retorno con consulta real a la API. Ignora el estado de pago recibido en la URL.
 
-- `habilitado`: pasar a `true` cuando estén completas la configuración y la migración.
-- `client_id`: valor del campo **Client ID**, junto al Client Secret, en las credenciales de OAuth. No inferirlo del N.º de aplicación mostrado en otro entorno.
-- `client_secret`: secreto de OAuth de esa aplicación (Client Secret en Credenciales → Producción del panel). Esa ubicación no implica cambiar `produccion` a `true` en nuestra configuración; si el panel exige activar el entorno, seguir sus requisitos de habilitación antes de copiar la clave.
-- `url_publica`: URL HTTPS que sirve `public_php`, sin `/index.php` ni barra final.
-- `clave_cifrado`: clave para cifrar las autorizaciones en la base.
-- `webhook_secret`: firma secreta del webhook de esa misma aplicación.
-- `produccion`: dejar en `false` durante las pruebas.
+Un reenvío del mismo formulario reutiliza la preferencia guardada. Se envía `X-Idempotency-Key`, pero no se presupone que Preferences garantice idempotencia remota: un timeout después de crearla puede producir otra preferencia. Crear una preferencia no cobra dinero. Cada pago confirmado tiene su propia fila y se acredita una sola vez, incluso si se notifican varios pagos para la misma referencia.
 
-Para generar la clave de cifrado, ejecutar localmente:
+## 4. Cliente y recorrido
+
+1. El creador inicia sesión desde la URL HTTPS y abre **Mi cuenta → Mercado Pago**.
+2. Pulsa **Conectar Mercado Pago** y autoriza con su vendedor de prueba. La vinculación exige consentimiento en Mercado Pago; el plugin no puede prestarlo por el vendedor.
+3. El donante abre una campaña monetaria activa y pulsa **Donar a esta campaña**.
+4. Ingresa el monto en ARS. Un visitante también puede donar sin registrarse, indicando su correo.
+5. **Donar con Mercado Pago** envía el formulario real de `app/vistas/donar.php`; se muestra el estado de preparación y se impiden reenvíos durante la redirección.
+6. Al volver, el servidor busca los pagos por su referencia y comprueba ID, receptor, moneda e importe antes de actualizar el progreso. **Consultar estado** permite reintentar si el proveedor todavía no confirmó el pago.
+
+Los tokens, códigos OAuth y datos de tarjeta no se entregan al navegador de la aplicación. El visitante solo puede consultar su aporte desde su propia sesión.
+
+## 5. Webhook y worker
+
+Se aplicó la skill `mp-webhooks`: el receptor valida la firma HMAC-SHA256 de `data.id`, request-id y timestamp, comprueba que el ID del cuerpo coincida, guarda el evento y responde 200 sin llamar a Mercado Pago. Si no puede guardarlo, responde 503 para que se reintente.
+
+El worker consulta el pago con el token del receptor, verifica su referencia y datos reales, y acredita o descuenta reembolsos/contracargos en una transacción. El `user_id` del cuerpo solo enruta la consulta; no acredita dinero por sí mismo. Las notificaciones duplicadas son seguras y un fallo conserva el evento con espera progresiva para reintentar.
+
+Procesar una pasada:
 
 ```bash
-php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'
+php utilidades/procesar_mercadopago.php
 ```
 
-Copiar el resultado en el archivo privado. No compartirlo por chat ni subirlo al repositorio. Conservar una copia segura junto con los respaldos: perderlo impide recuperar las autorizaciones cifradas. Cambiarlo sin migrar los tokens exige volver a vincular las cuentas.
+En desarrollo, mantenerlo abierto en otra terminal:
 
-También se admiten las variables `MP_HABILITADO`, `MP_CLIENT_ID`, `MP_CLIENT_SECRET`, `MP_URL_PUBLICA`, `MP_CLAVE_CIFRADO`, `MP_WEBHOOK_SECRET` y `MP_PRODUCCION`. El archivo local tiene prioridad.
+```bash
+php utilidades/procesar_mercadopago.php --watch
+```
 
-Requiere PHP con `curl`, `sodium`, `pdo_mysql` y las extensiones habituales del proyecto. Se usa cURL directamente, sin dependencia del SDK o de Composer.
+En un servidor, ejecutar por cron cada minuto. No publicar `utilidades/` como directorio web. La renovación de tokens y la cola requieren las migraciones de esta versión.
 
-## 5. Probar la vinculación
+## 6. Pruebas
 
-1. Preparar usuarios de prueba de Argentina en Mercado Pago: creador/vendedor y donante/comprador; configurar la aplicación de integración según el entorno indicado por Developers.
-2. Iniciar sesión como creador en todospara.uno desde la URL HTTPS.
-3. Abrir **Mi cuenta → Gestionar Mercado Pago**, o el enlace de conexión en Crear campaña. El enlace de Crear campaña abre otra pestaña para conservar los datos del formulario.
-4. Tocar **Conectar Mercado Pago** y autorizar con el vendedor de prueba. Si el navegador ya tiene una cuenta real abierta, cerrar esa sesión o usar un perfil de navegador separado, manteniendo en ese perfil también la sesión HTTPS de todospara.uno.
-5. Volver al sitio y comprobar el estado conectado.
+El plugin recuperó un comprador de prueba ya existente y agregó **ARS 1.000 de saldo ficticio**. Sus datos de acceso están en `config/.mercadopago.local.php.comprador.md`, privado y excluido de Git. Son para iniciar sesión en el checkout; no deben usarse como credenciales de la aplicación. Se conserva el vendedor de prueba que ya tiene el usuario.
 
-En pruebas se verifica que el receptor tenga la etiqueta `test_user` mediante `/users/me`. El prefijo `APP_USR` o el campo OAuth `live_mode` por sí solos no distinguen cuentas reales de prueba. El entorno de prueba rechaza receptores reales.
-
-Una cuenta externa solo se vincula a un usuario local. La renovación debe mantener esa identidad y el entorno. No se ofrece reemplazarla por otra cuenta con pagos anteriores pendientes.
-
-La respuesta OAuth debe indicar `token_type=bearer` y conceder `read`, `write` y `offline_access`. Se comprueba tanto al conectar como al renovar y se guardan los permisos recibidos. Las cuentas anteriores, con `scope` nulo, se validan en su próxima renovación o reconexión.
-
-La renovación conserva el bloqueo de la cuenta y guarda ambos tokens sin consultar nuevamente `/users/me`; la identidad argentina y el entorno se verifican durante el consentimiento inicial y la reconexión. El `user_id` devuelto al renovar debe coincidir con la cuenta existente. Un fallo de almacenamiento sigue requiriendo recuperación: la transacción local no puede deshacer una rotación realizada por Mercado Pago.
-
-Un `invalid_grant` o `unauthorized_client` HTTP 400 al renovar, o un HTTP 401 al operar con Orders, marca la cuenta como pendiente de reconexión. Se conserva su identidad y el historial, se bloquea el uso de sus tokens y la pantalla solicita autorizar nuevamente la misma cuenta. Un error de red, HTTP 429/5xx o credenciales incorrectas de la aplicación no se interpreta como revocación del vendedor. Los errores almacenan únicamente el estado HTTP y códigos conocidos, nunca el cuerpo ni el mensaje del proveedor.
-
-La detección ocurre al renovar o consultar/crear una order; todavía no se reciben eventos OAuth de desautorización. No se puede conocer una revocación externa antes de una llamada a la API. Un HTTP 401 indica una autorización rechazada, no demuestra por sí solo que el vendedor haya revocado el consentimiento.
-
-## 6. Probar un aporte
-
-1. Tener una campaña monetaria activa en la base cuyo `owner_id` sea el creador vinculado.
-2. Abrir el detalle de esa campaña. Se puede donar con una cuenta de todospara.uno o como visitante sin registrarse; al visitante se le pide un correo para iniciar el pago.
-3. Tocar **Donar a esta campaña**, ingresar un monto y continuar al checkout.
-4. Pagar con el comprador y los medios de pago de prueba adecuados al entorno de Mercado Pago.
-5. Volver a la pantalla de resultado. No se acredita a partir de `status=approved` en la URL: el estado se verifica consultando Orders con la autorización del receptor.
-6. Comprobar la notificación en el panel de Mercado Pago. También se puede usar **Consultar estado**, que exige sesión y CSRF.
-7. Revisar el progreso y el listado de campañas del creador. Quien tenga cuenta puede usar **Mis donaciones**. El visitante consulta su resultado desde el mismo navegador mientras conserve la sesión; la referencia del aporte no concede acceso por sí sola. No se crea una cuenta ni se agrega automáticamente el aporte a una cuenta que tenga ese correo.
-
-Los intentos conservan su referencia e idempotencia al reintentar el mismo envío. Si Mercado Pago tarda o falla, reintentar el formulario mostrado; no abrir otro aporte para sustituirlo sin revisar antes su estado.
-
-El historial conserva el monto original y el resultado. El progreso usa el importe acreditado. Los reembolsos completos y contracargos restan lo acreditado; un reembolso parcial requiere que Orders informe sus importes en `transactions.refunds`. Si falta información, la operación no se actualiza y se solicita reintento.
-
-El webhook se autentica con HMAC sobre el ID del recurso, request-id y timestamp. Solo ese ID selecciona el pago; no se confía en importes, estados o destinatarios enviados en el cuerpo. Luego se consulta la order y se verifica receptor, moneda, monto y referencia. Si llega antes de guardar la order, responde 503 para que Mercado Pago reintente.
-
-## 7. Ejecutar pruebas automáticas
+Con la base actualizada:
 
 ```bash
 php tests/run_tests.php modelos MercadoPagoSeguridad
@@ -111,23 +89,28 @@ php tests/run_tests.php controladores MercadoPagoController
 php tests/run_tests.php
 ```
 
-Las pruebas de integración usan una base local con el esquema actualizado y revierten los registros al terminar. Si falta la migración, intentan crear tablas temporales: eso requiere el permiso correspondiente en la base de pruebas. No conceder permisos administrativos al usuario habitual solo para ejecutar pruebas.
+La API se sustituye en las pruebas automáticas: no realizan cobros. La suite de pagos pasó en una base aislada y verifica Preferences, receptor, importe, moneda, OAuth/PKCE, replay, renovación, privacidad, CSRF, múltiples pagos por preferencia, acreditación única, reembolsos, cola y recuperación de fallos.
 
-La API se sustituye en las pruebas: no envían correos de pago ni llaman a Mercado Pago. Cubren state, PKCE, expiración, separación de usuarios, cifrado, renovación, colisiones de cuentas, idempotencia, acreditación única, estados fuera de orden, reembolsos, firma y privacidad del historial.
+La prueba externa queda pendiente de la migración en la base habitual, una URL HTTPS activa, el retorno OAuth registrado, la firma secreta correcta y el consentimiento del vendedor. Después, pagar con el comprador de prueba, ejecutar el worker y comprobar la entrega con `notifications_history`. No se hizo ningún cobro real ni se activó producción.
 
-## Límites y paso a producción
+## 7. Documentación
 
-- La prueba externa con OAuth, Orders y webhook queda pendiente hasta disponer del dominio HTTPS y las credenciales privadas. Las pruebas simuladas no certifican la habilitación de marketplace de una aplicación concreta.
-- No se guardan datos de tarjetas o contraseñas de Mercado Pago; sí autorizaciones cifradas que requieren proteger servidor, claves y respaldos.
-- No hay botón de reembolso en todospara.uno. Las devoluciones se gestionan desde Mercado Pago y se reflejan mediante notificaciones/consulta.
-- Mantener las cuentas vinculadas para poder conciliar pagos anteriores. La desvinculación se puede revocar desde Mercado Pago; si se revoca, se necesita reautorizar esa misma cuenta para consultar sus operaciones.
-- No hay tarea programada de conciliación: si se pierde un webhook, revisar el panel del proveedor y usar Consultar estado. Para producción se debe programar la conciliación y revisar límites de solicitudes y operación del servidor.
-- No habilitar `produccion` como forma de sortear errores de pruebas. Preparar la configuración productiva, revisar los requisitos de Mercado Pago y realizar una verificación completa antes de aceptar pagos reales. No mezclar registros y vinculaciones de ambos entornos en la misma base.
+- [Marketplace y Checkout Pro](https://www.mercadopago.com.ar/developers/es/docs/split-payments/split-1-1/integration-configuration/integrate-marketplace).
+- [Obtener información del pago](https://www.mercadopago.com.ar/developers/es/reference/online-payments/checkout-pro-preferences/get-payment/get).
+- [Webhooks y firma](https://www.mercadopago.com.ar/developers/es/docs/your-integrations/notifications/webhooks).
+- [OAuth y PKCE](https://www.mercadopago.com.ar/developers/es/docs/security/oauth/creation).
 
-## Documentación oficial
+## 8. Límites y verificaciones pendientes
 
-- [OAuth y PKCE](https://www.mercadopago.com.ar/developers/es/docs/security/oauth/creation)
-- [Crear una order de Checkout Pro](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/create-order)
-- [URLs de retorno de Orders](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/web-integration/configure-back-urls)
-- [Notificaciones de Orders](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/notifications)
-- [Integración marketplace](https://www.mercadopago.com.ar/developers/es/docs/split-payments/split-1-1/integration-configuration/integrate-marketplace)
+- Checkout Pro usa Preferences. Se eliminó la creación incorrecta de Orders del flujo nuevo. Las filas anteriores se conservan para revisión y no se convierten automáticamente en pagos de Preferences.
+- Las pruebas simuladas no certifican el consentimiento OAuth, la habilitación de Marketplace ni la entrega remota de notificaciones.
+- El validador específico de Checkout Pro del plugin pasó. El validador general de Marketplace reporta varias ausencias porque busca patrones JavaScript y nombres de configuración distintos de este proyecto PHP; esas salidas se documentan en la revisión y no se presentan como una aprobación.
+- No se implementó una tarea periódica de búsqueda de todos los pagos: la cola procesa notificaciones y el retorno/consulta manual concilia por referencia. Antes de producción, definir monitoreo y conciliación periódica.
+- El historial de donaciones conserva los montos originales y muestra el total acreditado para la referencia. Cada pago remoto se concilia por separado, incluso ante reembolsos.
+- No se agregan formularios de tarjetas, SDKs ni nombres, documentos o domicilios ficticios para satisfacer un puntaje de calidad.
+
+## 9. Próximos pasos
+
+1. Webhooks (`mp-webhooks`): aplicar la migración, disponer de HTTPS, registrar el callback con el plugin y comprobar la firma con una notificación real de prueba.
+2. Pruebas (`mp-test-setup`): vincular al vendedor existente y donar con el comprador recuperado y su saldo ficticio.
+3. Revisión (`mp-review`): consultar `docs/investigaciones/mercadopago-revision.md`, evaluar el ID del primer pago de prueba y completar la homologación que corresponda antes de producción.

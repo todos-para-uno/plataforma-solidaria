@@ -21,7 +21,8 @@ final class MercadoPagoServicio
         }
         $url = parse_url($this->config['url_publica']);
         if (!filter_var($this->config['url_publica'], FILTER_VALIDATE_URL) || ($url['scheme'] ?? '') !== 'https'
-            || isset($url['query']) || isset($url['fragment']) || isset($url['user'])) {
+            || isset($url['query']) || isset($url['fragment']) || isset($url['user'])
+            || in_array(strtolower($url['host'] ?? ''), ['localhost', '127.0.0.1', '0.0.0.0', '[::1]'], true)) {
             throw new RuntimeException('La URL pública de Mercado Pago debe usar HTTPS y no contener parámetros.');
         }
         $this->seguridad->cifrar('comprobar');
@@ -40,6 +41,8 @@ final class MercadoPagoServicio
         $this->verificarConfiguracion();
         $state = bin2hex(random_bytes(32));
         $verifier = rtrim(strtr(base64_encode(random_bytes(48)), '+/', '-_'), '=');
+        $this->repositorio->guardarEstado($state, $usuario, $this->seguridad->cifrar($verifier),
+            $volver === 'crear_campana' ? 'crear_campana' : 'mercadopago');
         $_SESSION['mp_oauth'] = ['state' => $state, 'verifier' => $verifier, 'usuario' => $usuario, 'creado' => time(),
             'volver' => $volver === 'crear_campana' ? 'crear_campana' : 'mercadopago'];
         return 'https://auth.mercadopago.com/authorization?' . http_build_query([
@@ -59,6 +62,7 @@ final class MercadoPagoServicio
             || time() - $pendiente['creado'] > 600) {
             throw new InvalidArgumentException('La vinculación venció o no corresponde a esta sesión. Iniciala nuevamente.');
         }
+        $estado = $this->repositorio->consumirEstado($query['state'], $usuario);
         unset($_SESSION['mp_oauth']); // Consumir antes de intercambiar: un solo uso.
         if (isset($query['error'])) throw new InvalidArgumentException('La conexión con Mercado Pago no fue autorizada. Podés intentarlo nuevamente.');
         if (!is_string($query['code'] ?? null) || $query['code'] === '' || strlen($query['code']) > 2048) {
@@ -67,7 +71,7 @@ final class MercadoPagoServicio
         $datos = $this->cliente->solicitar('POST', '/oauth/token', [
             'client_id' => $this->config['client_id'], 'client_secret' => $this->config['client_secret'],
             'grant_type' => 'authorization_code', 'code' => $query['code'],
-            'redirect_uri' => $this->url('mp_retorno'), 'code_verifier' => $pendiente['verifier'],
+            'redirect_uri' => $this->url('mp_retorno'), 'code_verifier' => $this->seguridad->descifrar($estado['verifier_cifrado']),
             'test_token' => !$this->config['produccion'],
         ]);
         $this->repositorio->transaccion(function () use ($usuario, $datos): void {
@@ -83,8 +87,10 @@ final class MercadoPagoServicio
             if (!array_key_exists($campo, $datos)) throw new RuntimeException('La autorización de Mercado Pago llegó incompleta.');
         }
         $scopes = is_string($datos['scope'] ?? null) ? preg_split('/\s+/', trim($datos['scope'])) : [];
+        // Split 1:1 documenta "offline_access payments write"; otras respuestas usan read.
+        $lecturaPermitida = in_array('read', $scopes, true) || in_array('payments', $scopes, true);
         if (!is_string($datos['token_type'] ?? null) || strtolower($datos['token_type']) !== 'bearer'
-            || array_diff(['read', 'write', 'offline_access'], $scopes) !== []) {
+            || !$lecturaPermitida || array_diff(['write', 'offline_access'], $scopes) !== []) {
             throw new InvalidArgumentException('La autorización necesita un token Bearer con permisos de lectura, escritura y renovación. Volvé a conectar Mercado Pago.');
         }
         if (!is_string($datos['access_token']) || $datos['access_token'] === '' || preg_match('/[\r\n]/', $datos['access_token'])
@@ -199,21 +205,28 @@ final class MercadoPagoServicio
         $token = $this->token((int) $campana['owner_id'], $cuenta['mp_usuario']);
         return $this->conAutorizacion((int) $campana['owner_id'], $token, fn () => $this->repositorio->transaccion(function () use ($referencia, $mail, $campana, $token): string {
             $pago = $this->repositorio->pago($referencia, true);
-            if ($pago['order_id'] !== null) return $pago['checkout_url'];
+            if ($pago['preference_id'] !== null) return $pago['checkout_url'];
+            if ($pago['order_id'] !== null) throw new RuntimeException('Este aporte pertenece a la integración anterior. Consultá su estado antes de iniciar otro.');
             $retorno = $this->url('pago_resultado', ['referencia' => $referencia]);
-            $order = $this->cliente->solicitar('POST', '/v1/orders', [
-                'type' => 'online', 'processing_mode' => 'manual', 'total_amount' => $pago['monto'],
-                'external_reference' => $referencia, 'payer' => ['email' => $pago['correo_donante']],
-                'items' => [['title' => 'Aporte a ' . $campana['nombre'], 'unit_price' => $pago['monto'], 'quantity' => 1]],
-                'config' => ['online' => ['success_url' => $retorno, 'failure_url' => $retorno, 'pending_url' => $retorno, 'auto_return' => 'all']],
+            $preferencia = $this->cliente->solicitar('POST', '/checkout/preferences', [
+                'items' => [['id' => (string) $campana['id'], 'title' => 'Donación a ' . $campana['nombre'],
+                    'description' => 'Aporte solidario a la campaña ' . $campana['nombre'],
+                    'unit_price' => (float) $pago['monto'], 'quantity' => 1, 'currency_id' => 'ARS']],
+                'payer' => ['email' => $pago['correo_donante']],
+                'external_reference' => $referencia, 'marketplace_fee' => 0,
+                'statement_descriptor' => 'TODOSPARAUNO',
+                'back_urls' => ['success' => $retorno, 'failure' => $retorno, 'pending' => $retorno],
+                'auto_return' => 'approved',
+                'notification_url' => $this->url('mp_webhook'),
             ], $token, $referencia);
-            $id = $order['id'] ?? null;
-            $url = $order['checkout_url'] ?? null;
-            if (!is_string($id) || !preg_match('/^ORD[A-Z0-9]{1,60}$/D', $id) || !self::checkoutValido($url)) {
+            $id = $preferencia['id'] ?? null;
+            $url = $preferencia['init_point'] ?? null;
+            if (!is_string($id) || !preg_match('/^[A-Za-z0-9-]{1,100}$/D', $id) || !self::checkoutValido($url)
+                || ($preferencia['external_reference'] ?? null) !== $referencia
+                || (string) ($preferencia['collector_id'] ?? '') !== $pago['mp_receptor']) {
                 throw new RuntimeException('No se recibió un enlace de pago válido. Reintentá este mismo aporte.');
             }
-            $this->verificarOrder($pago, $order, $id);
-            $this->repositorio->guardarOrder($referencia, $id, $url);
+            $this->repositorio->guardarPreferencia($referencia, $id, $url);
             return $url;
         }));
     }
@@ -226,59 +239,81 @@ final class MercadoPagoServicio
             && !isset($partes['user']) && !isset($partes['port']) && str_starts_with($partes['path'] ?? '', '/checkout/');
     }
 
-    private function verificarOrder(array $pago, array $order, string $id): void
+    /** La API puede devolver dinero como número JSON; normalizar sin redondear entradas de usuario. */
+    private static function centavosApi(mixed $valor): int
     {
-        if (($order['id'] ?? null) !== $id || ($order['external_reference'] ?? null) !== $pago['referencia']
-            || (string) ($order['user_id'] ?? '') !== $pago['mp_receptor'] || ($order['currency'] ?? null) !== 'ARS'
-            || ($order['type'] ?? null) !== 'online' || MercadoPagoSeguridad::centavos($order['total_amount'] ?? null) !== MercadoPagoSeguridad::centavos($pago['monto'])
-            || (isset($order['integration_data']['application_id']) && (string) $order['integration_data']['application_id'] !== $this->config['client_id'])
-            || (bool) $pago['produccion'] !== $this->config['produccion']) {
-            throw new RuntimeException('La operación no coincide con el aporte registrado. No se acreditó.');
-        }
+        if (is_int($valor) || is_float($valor)) $valor = (string) $valor;
+        return MercadoPagoSeguridad::centavos($valor);
     }
 
-    public function sincronizar(string $referencia): void
+    public function sincronizar(string $referencia, ?string $paymentId = null): void
     {
         $this->verificarConfiguracion();
         $actual = $this->repositorio->pago($referencia);
-        if ($actual === null || $actual['order_id'] === null) return;
+        if ($actual === null || $actual['preference_id'] === null) return;
         $token = $this->token((int) $actual['id_creador'], $actual['mp_receptor']);
-        $this->conAutorizacion((int) $actual['id_creador'], $token, fn () => $this->repositorio->transaccion(function () use ($referencia, $token): void {
-            $pago = $this->repositorio->pago($referencia, true);
-            if ($pago === null || $pago['order_id'] === null) return;
-            // Consultar DESPUÉS de bloquear evita aplicar dos snapshots en orden inverso.
-            $order = $this->cliente->solicitar('GET', '/v1/orders/' . $pago['order_id'], null,
-                $token);
-            $this->verificarOrder($pago, $order, $pago['order_id']);
-            $version = isset($order['version']) && is_int($order['version']) ? $order['version'] : 0;
-            if ($version > 0 && $version < (int) $pago['version_mp']) return;
-            $estado = $order['status'] ?? '';
-            $detalle = $order['status_detail'] ?? '';
-            if (!is_string($estado) || !is_string($detalle) || strlen($estado) > 40 || strlen($detalle) > 80) {
-                throw new RuntimeException('Estado de pago inválido.');
-            }
-            $anterior = MercadoPagoSeguridad::centavos($pago['acreditado']);
-            $acreditado = $anterior;
-            if ($estado === 'processed' && in_array($detalle, ['accredited', 'partially_refunded'], true)) {
-                $total = MercadoPagoSeguridad::centavos($order['total_paid_amount'] ?? null);
-                if ($total !== MercadoPagoSeguridad::centavos($pago['monto'])) throw new RuntimeException('El importe pagado no coincide.');
-                $reembolsado = 0;
-                if ($detalle === 'partially_refunded') {
-                    $devoluciones = $order['transactions']['refunds'] ?? [];
-                    if (!is_array($devoluciones) || $devoluciones === []) throw new RuntimeException('No se pudo verificar el reembolso parcial.');
-                    foreach ($devoluciones as $devolucion) $reembolsado += MercadoPagoSeguridad::centavos($devolucion['amount'] ?? null);
-                    if ($reembolsado <= 0 || $reembolsado >= $total) throw new RuntimeException('Reembolso parcial inválido.');
+        $this->conAutorizacion((int) $actual['id_creador'], $token, function () use ($referencia, $paymentId, $token): void {
+            if ($paymentId !== null) {
+                if (!preg_match('/^[0-9]{1,32}$/D', $paymentId)) throw new InvalidArgumentException('Identificador de pago inválido.');
+                $ids = [$paymentId];
+            } else {
+                // El retorno y la consulta manual buscan por nuestra referencia, nunca por status del navegador.
+                $busqueda = $this->cliente->solicitar('GET', '/v1/payments/search?external_reference=' . $referencia . '&limit=100', null, $token);
+                if (!is_array($busqueda['results'] ?? null) || ($busqueda['paging']['total'] ?? 0) > 100) {
+                    throw new RuntimeException('No se pudo consultar la lista completa de pagos. Reintentá la consulta.');
                 }
-                $acreditado = $total - $reembolsado;
-                // Un snapshot antiguo no puede restaurar importes reembolsados.
-                if (in_array($pago['estado'], ['refunded', 'charged_back'], true)
-                    || ($pago['detalle'] === 'partially_refunded' && $acreditado > $anterior)) return;
-            } elseif (in_array($estado, ['refunded', 'charged_back'], true)) {
-                $acreditado = 0;
-            } elseif ($anterior > 0 || in_array($pago['estado'], ['refunded', 'charged_back'], true)) {
-                return; // No degradar un pago acreditado a un estado previo.
+                $ids = array_map(static fn ($p) => (string) ($p['id'] ?? ''), $busqueda['results']);
             }
-            $this->repositorio->acreditar($pago, $acreditado, $estado, $detalle, max($version, (int) $pago['version_mp']));
-        }));
+            foreach (array_unique($ids) as $id) {
+                if (!preg_match('/^[0-9]{1,32}$/D', $id)) throw new RuntimeException('Identificador de pago inválido.');
+                $this->repositorio->transaccion(function () use ($referencia, $id, $token): void {
+                    $pago = $this->repositorio->pago($referencia, true);
+                    // El bloqueo serializa consultas y notificaciones del mismo aporte.
+                    $remoto = $this->cliente->solicitar('GET', '/v1/payments/' . $id, null, $token);
+                    $this->aplicarPago($pago, $remoto, $id);
+                });
+            }
+        });
+    }
+
+    private function aplicarPago(array $pago, array $remoto, string $id): void
+    {
+        if ((string) ($remoto['id'] ?? '') !== $id || ($remoto['external_reference'] ?? null) !== $pago['referencia']
+            || (string) ($remoto['collector_id'] ?? '') !== $pago['mp_receptor'] || ($remoto['currency_id'] ?? null) !== 'ARS'
+            || self::centavosApi($remoto['transaction_amount'] ?? null) !== MercadoPagoSeguridad::centavos($pago['monto'])
+            || (bool) $pago['produccion'] !== $this->config['produccion']) {
+            throw new RuntimeException('El pago no coincide con el aporte registrado. No se acreditó.');
+        }
+        $fecha = $remoto['date_last_updated'] ?? null;
+        $version = is_string($fecha) ? strtotime($fecha) : false;
+        if ($version === false) throw new RuntimeException('La fecha del pago no es válida.');
+        // Milisegundos evitan perder cambios dentro del mismo segundo.
+        $version = $version * 1000 + (int) (new DateTimeImmutable($fecha))->format('v');
+        $estado = $remoto['status'] ?? null;
+        $detalle = $remoto['status_detail'] ?? null;
+        if (!in_array($estado, ['approved', 'pending', 'in_process', 'authorized', 'in_mediation', 'rejected', 'cancelled', 'refunded', 'charged_back'], true)
+            || !is_string($detalle) || strlen($detalle) > 80) throw new RuntimeException('Estado de pago inválido.');
+        $acreditado = 0;
+        if (in_array($estado, ['approved', 'in_mediation'], true)) {
+            $total = MercadoPagoSeguridad::centavos($pago['monto']);
+            $reembolso = self::centavosApi($remoto['transaction_amount_refunded'] ?? null);
+            if ($reembolso > $total) throw new RuntimeException('El reembolso no coincide con el aporte.');
+            $acreditado = $total - $reembolso;
+            if ($reembolso > 0 && $reembolso < $total) $detalle = 'partially_refunded';
+        }
+        $this->repositorio->acreditarTransaccion($pago, $id, $acreditado, $estado, $detalle, $version);
+    }
+
+    /** Procesamiento de la cola fuera de la petición HTTP. user_id solo selecciona el token de consulta. */
+    public function procesarNotificacion(array $evento): void
+    {
+        $cuenta = $this->repositorio->cuentaPorMp($evento['mp_usuario']);
+        if ($cuenta === null) throw new RuntimeException('El receptor todavía no tiene una cuenta vinculada.');
+        $token = $this->token((int) $cuenta['id_usuario'], $evento['mp_usuario']);
+        $remoto = $this->cliente->solicitar('GET', '/v1/payments/' . $evento['payment_id'], null, $token);
+        $ref = $remoto['external_reference'] ?? null;
+        $pago = is_string($ref) ? $this->repositorio->pago($ref) : null;
+        if ($pago === null || $pago['mp_receptor'] !== $evento['mp_usuario']) throw new RuntimeException('No se encontró el aporte del receptor.');
+        $this->sincronizar($ref, $evento['payment_id']);
     }
 }

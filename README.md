@@ -20,7 +20,7 @@ Si recién te sumás al equipo, empezá por abrir la aplicación en tu máquina 
 
 ## Integración de Mercado Pago
 
-La vinculación OAuth, los pagos con Checkout Pro Orders y el historial están preparados para configurar y probar. Requieren la migración `database/migrations/20261031_mercadopago.sql`, configuración privada y una URL HTTPS para OAuth y webhooks. Seguí [la guía de Mercado Pago](MERCADOPAGO.md). No hay credenciales incluidas ni se habilitan cobros al descargar el proyecto.
+La vinculación OAuth, los pagos con Checkout Pro Preferences y el historial están preparados para configurar y probar. Requieren la migración `database/migrations/20261031_mercadopago.sql`, configuración privada y una URL HTTPS para OAuth y webhooks. Seguí [la guía de Mercado Pago](MERCADOPAGO.md). No hay credenciales incluidas ni se habilitan cobros al descargar el proyecto.
 
 ## Estado del proyecto
 
