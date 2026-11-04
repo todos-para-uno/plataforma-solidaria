@@ -2,7 +2,7 @@
 require_once __DIR__ . "/RegistroDb.php";
 class Donacion extends RegistroDb
 {
-    private int $id_usuario;
+    private ?int $id_usuario;
     private int $id_camp;
     private ?int $id_categoria_insumos;
     private ?int $id_sub_categoria_insumos;
@@ -10,7 +10,7 @@ class Donacion extends RegistroDb
     private ?string $fecha_hora;
 
     public function __construct(
-        int $id_usuario,
+        ?int $id_usuario,
         int $id_camp,
         float $cantidad,
         ?int $id_categoria_insumos = null,
@@ -28,7 +28,7 @@ class Donacion extends RegistroDb
         $this->fecha_hora = $fecha_hora;
     }
 
-    public function getIdUsuario(): int {
+    public function getIdUsuario(): ?int {
         return $this->id_usuario;
     }
     public function getIdCamp(): int {

@@ -93,7 +93,7 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
                         <span class="perfil-etiqueta">Estado de confianza</span>
                         <p class="perfil-valor"><span class="insignia <?= escapar($claseInsignia) ?>"><?= escapar($confianza['nombre']) ?></span> <?= escapar($confianza['descripcion']) ?></p>
                         <p>Donaciones realizadas: <?= (int) $confianza['realizadas'] ?> · Recibidas: <?= (int) $confianza['recibidas'] ?></p>
-                        <p class="campo-ayuda">Con documento cargado: Celeste sin donaciones; Azul con 1 o 2; Violeta con 3 o más. Se suman las donaciones realizadas y recibidas.</p>
+                        <p class="campo-ayuda">Con documento cargado: Celeste sin donaciones computables; Azul con 1 o 2; Violeta con 3 o más. Se suman las donaciones realizadas con tu cuenta y las recibidas de otros usuarios registrados. Las entregas recibidas sin cuenta no cuentan para el nivel.</p>
                     </div>
                     <?php endif; ?>
                     <!-- Correo electrónico -->

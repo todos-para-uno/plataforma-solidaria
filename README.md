@@ -417,11 +417,11 @@ La organización de esta guía toma como referencia la [documentación de Luanti
 
 ## Donaciones de insumos: punto de entrega y recepción
 
-Se conserva la estructura actual de la base: no requiere migraciones.
+Para una base existente, importá [`database/migrations/20261104_donaciones_sin_cuenta.sql`](database/migrations/20261104_donaciones_sin_cuenta.sql). Permite `NULL` en `donacion.id_usuario`, conservando los datos y la clave foránea; se puede repetir. Las instalaciones nuevas ya incluyen este cambio en `database/schema.sql`.
 
 - En **Mis campañas**, el creador de una campaña activa de insumos puede abrir **Definir punto de entrega**, elegir provincia/localidad y marcar un único lugar en el mapa. La dirección o referencia admite horarios de recepción. La ubicación se guarda en `ubicaciones` y queda asociada mediante `camp.id_ubicacion`; editarla reutiliza ese registro.
 - En el detalle público se muestran el mapa y la referencia. Todos los insumos pedidos se entregan en ese mismo lugar.
-- Desde **Mis campañas → Ver insumos recibidos y registrar entrega**, el creador ingresa el correo de un donante registrado, el objetivo y la cantidad efectivamente recibida. La confirmación agrega un registro a `donacion` y suma la cantidad a `objetivos.parcial` dentro de una transacción.
+- Desde **Mis campañas → Ver insumos recibidos y registrar entrega**, el creador ingresa el correo del donante, el objetivo y la cantidad efectivamente recibida. Se reutiliza `UsuariosRepository::findByMail()`: si el correo coincide con una cuenta, la entrega se asocia a ese usuario; si no, se guarda con `id_usuario = NULL` y se muestra como **Donante sin cuenta**. No se crea una cuenta ni se conserva el correo para asociarlo a futuros registros. La confirmación agrega un registro a `donacion` y suma la cantidad a `objetivos.parcial` dentro de una transacción.
 - El formulario tiene CSRF y una clave de sesión de un solo uso para evitar que reenviarlo duplique la recepción. Una nueva recepción intencional debe abrirse como formulario nuevo.
 - El historial de recepciones solo es visible para el creador. El progreso actualizado es público. Las cantidades usan la unidad del objetivo y admiten hasta dos decimales; se conservan también entregas que superen la meta.
 - No se registran promesas de donación ni una doble confirmación: el creador es quien confirma la entrega. La estructura actual exige un donante con cuenta; no se crean usuarios ficticios para entregas anónimas. No se cambia automáticamente el estado de la campaña ni el nivel de confianza.
@@ -437,7 +437,7 @@ php tests/run_tests.php controladores RecepcionInsumosController
 
 ### Historial del donante
 
-**Mis donaciones** consulta `donacion` para el usuario autenticado y muestra las campañas, insumos, cantidades y fechas reales. Una recepción registrada por el creador aparece en la cuenta del donante identificado por su correo. Cada entrega tiene su propia tarjeta. Las campañas activas tienen un botón para abrir su detalle; las suspendidas o finalizadas conservan el registro sin enlazar a un detalle público inaccesible. No se cambió la estructura de la base.
+**Mis donaciones** consulta `donacion` para el usuario autenticado y muestra las campañas, insumos, cantidades y fechas reales. Una recepción registrada por el creador aparece en la cuenta del donante si su correo coincidía con una cuenta al registrarla. Las entregas sin cuenta suman al progreso de la campaña y figuran en el historial del creador, pero no aportan a su nivel de confianza ni se atribuyen a otro usuario. Para el nivel del creador solo cuentan las donaciones recibidas de otros usuarios registrados. Cada entrega tiene su propia tarjeta. Las campañas activas tienen un botón para abrir su detalle; las suspendidas o finalizadas conservan el registro sin enlazar a un detalle público inaccesible.
 
 ```bash
 php tests/run_tests.php controladores MisDonacionesController
@@ -449,7 +449,7 @@ php tests/run_tests.php controladores MisDonacionesController
 Se reutiliza `validaciones` para los nombres y las descripciones, y `usuarios.id_validacion` para el nivel actual. No requiere cambios de estructura ni modificar esos textos.
 
 - Sin DNI o Pasaporte cargado, el usuario permanece **Blanco**, aunque tenga donaciones.
-- Con documento y sin donaciones: **Celeste**.
+- Con documento y sin donaciones computables: **Celeste**. Cuentan las realizadas con la cuenta y las recibidas de otros usuarios registrados; las entregas recibidas sin cuenta no aportan al nivel. La descripción del perfil es «Usuario con documento y sin donaciones de usuarios registrados». Para actualizarla en una base existente, importá [`database/migrations/20261104_descripcion_celeste.sql`](database/migrations/20261104_descripcion_celeste.sql).
 - Con documento y 1 o 2 donaciones: **Azul**.
 - Con documento y 3 o más donaciones: **Violeta**.
 
