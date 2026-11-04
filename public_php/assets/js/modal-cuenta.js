@@ -5,6 +5,50 @@
 // =========================================================
 
 (function () {
+  // La previsualización mejora ambos formularios; el guardado no depende de JavaScript.
+  document.querySelectorAll('[data-perfil-formulario]').forEach(function (formularioPerfil) {
+    var input = formularioPerfil.querySelector('[data-avatar-input]');
+    var estado = formularioPerfil.querySelector('[data-avatar-estado]');
+    var inicial = formularioPerfil.querySelector('[data-avatar-vista]').cloneNode(true);
+    var quitar = formularioPerfil.querySelector('[name="eliminar_avatar"]');
+    var url = null;
+    function restaurar() {
+      if (url) URL.revokeObjectURL(url);
+      url = null;
+      formularioPerfil.querySelector('[data-avatar-vista]').replaceWith(inicial.cloneNode(true));
+    }
+    function rechazar(mensaje) {
+      restaurar();
+      input.value = '';
+      estado.textContent = mensaje;
+    }
+    formularioPerfil.addEventListener('reset', function () { restaurar(); estado.textContent = ''; });
+    window.addEventListener('pagehide', function () { if (url) URL.revokeObjectURL(url); });
+    if (quitar) quitar.addEventListener('change', function () {
+      if (quitar.checked) { input.value = ''; restaurar(); estado.textContent = 'La foto se quitará al guardar.'; }
+      else estado.textContent = '';
+    });
+    input.addEventListener('change', function () {
+      var archivo = input.files[0];
+      if (!archivo) { restaurar(); estado.textContent = ''; return; }
+      if (archivo.size > Number(input.dataset.maximoBytes)) {
+        rechazar('La imagen supera el tamaño máximo indicado. Elegí una más liviana.'); return;
+      }
+      if (!/\.(jpe?g|webp)$/i.test(archivo.name) || (archivo.type && !['image/jpeg', 'image/webp'].includes(archivo.type))) {
+        rechazar('Elegí una imagen JPG, JPEG o WEBP.'); return;
+      }
+      restaurar();
+      if (quitar) quitar.checked = false;
+      var img = document.createElement('img');
+      img.className = 'avatar'; img.alt = ''; img.width = 72; img.height = 72;
+      img.setAttribute('data-avatar-vista', '');
+      img.onerror = function () { rechazar('No pudimos previsualizar la imagen. Elegí otra foto.'); };
+      url = URL.createObjectURL(archivo); img.src = url;
+      formularioPerfil.querySelector('[data-avatar-vista]').replaceWith(img);
+      estado.textContent = 'Foto seleccionada. Se guardará recortada desde el centro a 250 × 250 píxeles.';
+    });
+  });
+
   var modal = document.getElementById('modal-cuenta');
   if (!modal || typeof modal.showModal !== 'function') return;
   var devolverFoco = null;
@@ -69,21 +113,9 @@
   // ---------- Editar perfil ----------
   var lectura = modal.querySelector('[data-perfil-lectura]');
   var formulario = modal.querySelector('[data-perfil-formulario]');
-  // Esta vista permite previsualizar. No enviar a una ruta hasta integrar el guardado.
-  formulario.addEventListener('submit', function (evento) { evento.preventDefault(); });
-  var vistaInicial = formulario.querySelector('[data-avatar-vista]').cloneNode(true);
-  var urlAvatar = null;
-
-  function liberarAvatar() {
-    if (urlAvatar) URL.revokeObjectURL(urlAvatar);
-    urlAvatar = null;
-  }
-
   function mostrarLecturaPerfil() {
     if (!formulario) return;
     formulario.reset();
-    liberarAvatar();
-    formulario.querySelector('[data-avatar-vista]').replaceWith(vistaInicial.cloneNode(true));
     formulario.hidden = true;
     lectura.hidden = false;
   }
@@ -96,32 +128,4 @@
 
   modal.querySelector('[data-perfil-cancelar]').addEventListener('click', mostrarLecturaPerfil);
 
-  // Vista previa de la imagen elegida + control de tamaño (10 MB)
-  var inputAvatar = modal.querySelector('[data-avatar-input]');
-  inputAvatar.addEventListener('change', function () {
-    var archivo = inputAvatar.files[0];
-    if (!archivo) return;
-
-    if (archivo.size > 10 * 1024 * 1024) {
-      alert('La imagen supera los 10 MB. Elegí una más liviana.');
-      inputAvatar.value = '';
-      return;
-    }
-
-    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(archivo.type)) {
-      alert('Elegí una imagen JPG, PNG, GIF o WEBP.');
-      inputAvatar.value = '';
-      return;
-    }
-
-    var vista = formulario.querySelector('[data-avatar-vista]');
-    var img = document.createElement('img');
-    img.className = 'avatar';
-    img.alt = '';
-    img.setAttribute('data-avatar-vista', '');
-    liberarAvatar();
-    urlAvatar = URL.createObjectURL(archivo);
-    img.src = urlAvatar;
-    vista.replaceWith(img);
-  });
 })();

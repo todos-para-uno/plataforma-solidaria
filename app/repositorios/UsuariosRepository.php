@@ -12,6 +12,8 @@ final class UsuariosRepository extends CrudRepository
             primaryKey: 'id',
             fields: [
                 'nombre',
+                'apellido',
+                'avatar',
                 'mail',
                 'telefono',
                 'tipo_documento',
@@ -39,6 +41,8 @@ final class UsuariosRepository extends CrudRepository
 
         return $this->save([
             'nombre' => $usuario->getNombre(),
+            'apellido' => $usuario->getApellido(),
+            'avatar' => $usuario->getAvatar(),
             'mail' => $usuario->getEmail(),
             'telefono' => $usuario->getTelefono(),
             'tipo_documento' => $usuario->getTipoDocumento()?->value,

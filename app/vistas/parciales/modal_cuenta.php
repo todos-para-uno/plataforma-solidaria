@@ -4,8 +4,8 @@
  * Ubicación sugerida: app/vistas/parciales/modal_cuenta.php
  *
  * Solo presentación. Espera (opcional) un array $usuario con:
- *   nombre, apellido, mail, avatar (URL)
- * Las acciones de guardado quedan deshabilitadas hasta integrar sus controladores.
+ *   nombre, apellido, mail, avatar (ruta interna opcional)
+ * El formulario compartido guarda el perfil de la sesión con CSRF.
  *
  * Uso:
  *   <button type="button" data-abrir-cuenta>Mi cuenta</button>
@@ -42,7 +42,7 @@ $nombre   = htmlspecialchars($cuentaNombre, ENT_QUOTES, 'UTF-8');
 $apellido = htmlspecialchars((string) dato_cuenta($usuarioCuenta, 'apellido'), ENT_QUOTES, 'UTF-8');
 // El modelo Usuario expone el correo con getEmail(); en array viene como 'mail'.
 $mail     = htmlspecialchars((string) (dato_cuenta($usuarioCuenta, 'mail') ?: dato_cuenta($usuarioCuenta, 'email')), ENT_QUOTES, 'UTF-8');
-$avatar   = htmlspecialchars((string) dato_cuenta($usuarioCuenta, 'avatar'), ENT_QUOTES, 'UTF-8');
+$avatar = dato_cuenta($usuarioCuenta, 'avatar') ? escapar($rutas['imagen_perfil']) : '';
 $inicial  = htmlspecialchars(mb_strtoupper(mb_substr($cuentaNombre !== '' ? $cuentaNombre : '?', 0, 1)), ENT_QUOTES, 'UTF-8');
 ?>
 <dialog class="modal-cuenta" id="modal-cuenta" aria-labelledby="modal-cuenta-titulo">
@@ -97,44 +97,14 @@ $inicial  = htmlspecialchars(mb_strtoupper(mb_substr($cuentaNombre !== '' ? $cue
               <button type="button" class="boton boton-secundario boton-chico" data-perfil-editar>Actualizar perfil</button>
             </div>
 
-            <!-- Vista de edición (oculta hasta tocar "Actualizar perfil") -->
-            <form class="tarjeta tarjeta-edicion" data-perfil-formulario hidden
-                  aria-describedby="cuenta-edicion-pendiente">
-              <h4>Actualizar perfil</h4>
-              <p class="alerta alerta-aviso" id="cuenta-edicion-pendiente">La edición está en preparación. Podés previsualizar los cambios; el guardado todavía no está disponible.</p>
-
-              <div class="imagen-perfil">
-                <?php if ($avatar): ?>
-                  <img class="avatar" src="<?= $avatar ?>" alt="" data-avatar-vista>
-                <?php else: ?>
-                  <span class="avatar avatar--inicial" aria-hidden="true" data-avatar-vista><?= $inicial ?></span>
-                <?php endif; ?>
-                <div>
-                  <div class="campo">
-                    <label for="cuenta-avatar">Cargar imagen</label>
-                    <input id="cuenta-avatar" type="file" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp" data-avatar-input>
-                  </div>
-                  <button type="button" disabled class="boton boton-secundario boton-chico">Eliminar imagen</button>
-                  <p class="campo-ayuda">JPG, PNG, GIF o WEBP de menos de 10 MB.</p>
-                </div>
-              </div>
-
-              <div class="campos-dobles">
-                <div class="campo">
-                  <label for="cuenta-nombre">Nombre</label>
-                  <input type="text" id="cuenta-nombre" name="nombre" value="<?= $nombre ?>" required>
-                </div>
-                <div class="campo">
-                  <label for="cuenta-apellido">Apellido</label>
-                  <input type="text" id="cuenta-apellido" name="apellido" value="<?= $apellido ?>">
-                </div>
-              </div>
-
-              <div class="cuenta-acciones">
-                <button type="button" class="boton boton-secundario boton-chico" data-perfil-cancelar>Cancelar</button>
-                <button type="submit" class="boton boton-chico" disabled>Guardar</button>
-              </div>
-            </form>
+            <?php
+            $cuentaApellido = (string) dato_cuenta($usuarioCuenta, 'apellido');
+            $tieneAvatar = (bool) dato_cuenta($usuarioCuenta, 'avatar');
+            $inicialPerfil = mb_strtoupper(mb_substr($cuentaNombre !== '' ? $cuentaNombre : '?', 0, 1));
+            $idFormularioPerfil = 'cuenta';
+            $formularioOculto = true;
+            require __DIR__ . '/formulario_perfil.php';
+            ?>
           </div>
         </div>
 

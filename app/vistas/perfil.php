@@ -53,6 +53,15 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
                     <p>No se pudieron cargar los datos del usuario. Intentá nuevamente más tarde.</p>
                 </div>
             <?php else: ?>
+                <?php if ($perfilGuardado ?? false): ?>
+                    <div class="alerta alerta-exito" role="status"><p>Tu perfil se guardó correctamente.</p></div>
+                <?php endif; ?>
+                <?php if ($erroresPerfil ?? []): ?>
+                    <div class="alerta alerta-error" role="alert">
+                        <p>No pudimos guardar tu perfil:</p>
+                        <ul><?php foreach ($erroresPerfil as $errorPerfil): ?><li><?= escapar($errorPerfil) ?></li><?php endforeach; ?></ul>
+                    </div>
+                <?php endif; ?>
                 <?php if ($documentoGuardado): ?>
                     <div class="alerta alerta-exito" role="status">
                         <p>Tu documento se guardó correctamente.</p>
@@ -82,7 +91,7 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
                     
                     <!-- Nombre y nivel de validación en una sola línea -->
                     <div class="perfil-encabezado-linea">
-                        <h2><?= escapar($usuario['nombre']) ?></h2>
+                        <h2><?= escapar(trim($usuario['nombre'] . ' ' . ($usuario['apellido'] ?? ''))) ?></h2>
                         <span class="insignia <?= escapar($claseInsignia) ?>">
                             Nivel <?= escapar($usuario['validacion_nombre']) ?>
                         </span>
@@ -127,6 +136,16 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
                     </div>
 
                 </div>
+
+                <?php
+                (static function (array $usuario, array $rutas, string $csrfToken, array $datosPerfil): void {
+                    $cuentaNombre = $usuario['nombre'];
+                    $cuentaApellido = $usuario['apellido'] ?? '';
+                    $tieneAvatar = !empty($usuario['avatar']);
+                    $inicialPerfil = mb_strtoupper(mb_substr($cuentaNombre, 0, 1));
+                    require __DIR__ . '/parciales/formulario_perfil.php';
+                })($usuario, $rutas, $csrfToken, $datosPerfil ?? []);
+                ?>
 
                 <!-- Formulario para ingresar el documento (aparece abajo solo si no lo tiene) -->
                 <?php if (!$tieneDocumento): ?>
