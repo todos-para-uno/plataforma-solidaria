@@ -341,6 +341,8 @@ Referencias: [configuración SMTP de DonWeb](https://soporte.donweb.com/es/artic
 
 ### Comprobar el ingreso y la salida
 
+La sesión vence tras **10 minutos sin solicitudes a la aplicación**. Al volver a navegar o enviar un formulario, se pide ingresar nuevamente y la acción vencida no se procesa. El plazo se controla en el servidor; las solicitudes AJAX también cuentan como actividad. Las cabeceras de seguridad y las pruebas se describen en [Cabeceras y sesión inactiva](docs/seguridad/cabeceras-y-sesion.md).
+
 1. Creá una cuenta de prueba y abrí **Ingresar** desde el menú.
 2. Enviá su correo y contraseña. Deberías volver al inicio y ver el nombre del usuario en el menú.
 3. Navegá al buscador o a contacto. El menú debe conservar al usuario; sus datos se consultan en la base usando el ID guardado en la sesión.
