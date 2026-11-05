@@ -5,6 +5,7 @@ enum EstadoCamp: string
     case Activa = 'activa';
     case Finalizada = 'finalizada';
     case Suspendida = 'suspendida';
+    case Cerrada = 'cerrada';
 }
 
 class Camp extends RegistroDb

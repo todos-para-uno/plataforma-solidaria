@@ -139,7 +139,7 @@ abstract class ImagenesSubidas
         $guardadas = [];
         try {
             foreach ($archivos as $archivo) {
-                $tipoSalida = static::TIPO_SALIDA ?? $archivo['tipo'];
+                $tipoSalida = $this->tipoSalida($archivo['tipo']);
                 $extension = static::TIPOS_PERMITIDOS[$tipoSalida];
                 $nombreFinal = bin2hex(random_bytes(16)) . '.' . $extension;
                 $destino = rtrim($this->directorioDestino, '/\\') . DIRECTORY_SEPARATOR . $nombreFinal;
@@ -174,13 +174,31 @@ abstract class ImagenesSubidas
     public function eliminar(array $rutas): void
     {
         $prefijo = trim($this->prefijoRuta, '/') . '/';
+        $directorio = $this->directorio();
+
         foreach ($rutas as $ruta) {
             if (!is_string($ruta) || !str_starts_with($ruta, $prefijo)) {
                 continue;
             }
+
             $archivo = basename($ruta);
-            if ($ruta === $prefijo . $archivo && preg_match('/^[a-f0-9]{32}\.(png|jpg|webp)$/D', $archivo)) {
-                @unlink(rtrim($this->directorioDestino, '/\\') . DIRECTORY_SEPARATOR . $archivo);
+
+            if (
+                $ruta !== $prefijo . $archivo
+                || !preg_match('/^[a-f0-9]{32}\.(png|jpg|webp)$/D', $archivo)
+            ) {
+                continue;
+            }
+
+            $destino = $directorio . DIRECTORY_SEPARATOR . $archivo;
+
+            if (is_link($destino)) {
+                error_log('Se rechazó eliminar un enlace simbólico: ' . $archivo);
+                continue;
+            }
+
+            if (is_file($destino) && !@unlink($destino)) {
+                error_log('No se pudo eliminar imagen: ' . $archivo);
             }
         }
     }
@@ -288,13 +306,19 @@ abstract class ImagenesSubidas
         return $tipoReal;
     }
 
+    /** Formato de salida elegible por el servicio especializado. */
+    protected function tipoSalida(string $tipoEntrada): string
+    {
+        return static::TIPO_SALIDA ?? $tipoEntrada;
+    }
+
     /** Recodificación obligatoria. Nunca se copia el original, incluso si falta GD o EXIF. */
     private function recodificar(string $origen, string $tipo, mixed $salida): bool
     {
         if (!($this->esSubida)($origen)) return false;
         $lectores = ['image/png' => 'imagecreatefrompng', 'image/jpeg' => 'imagecreatefromjpeg', 'image/webp' => 'imagecreatefromwebp'];
         $escritores = ['image/png' => 'imagepng', 'image/jpeg' => 'imagejpeg', 'image/webp' => 'imagewebp'];
-        $tipoSalida = static::TIPO_SALIDA ?? $tipo;
+        $tipoSalida = $this->tipoSalida($tipo);
         if (!isset($lectores[$tipo], $escritores[$tipoSalida])
             || !function_exists($lectores[$tipo]) || !function_exists($escritores[$tipoSalida])
             || ($tipo === 'image/jpeg' && !function_exists('exif_read_data'))) return false;

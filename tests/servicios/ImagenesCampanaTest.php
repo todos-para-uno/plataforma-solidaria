@@ -11,6 +11,13 @@ function imagenesCampanaTest(): void
         return;
     }
 
+    $soportaWebp = function_exists('imagecreatefromwebp')
+        && function_exists('imagewebp');
+
+    if (!$soportaWebp) {
+        echo "OMITIDA: GD no dispone de soporte completo para WebP (lectura y escritura).\n";
+    }
+
     $temporal = sys_get_temp_dir() . '/imagenes-campana-' . bin2hex(random_bytes(6));
     $destino = $temporal . '/destino';
     mkdir($temporal, 0700, true);
@@ -55,14 +62,37 @@ function imagenesCampanaTest(): void
 
         $png = $crear('a.png', 'png');
         $jpg = $crear('b.jpg', 'jpg');
-        $webp = $crear('c.webp', 'webp');
+        $webp = $soportaWebp ? $crear('c.webp', 'webp') : null;
         $jpeg = $crear('d.jpeg', 'jpg');
-        $validas = $servicio->validar($campo([
-            ['foto.png', $png, null], ['foto.JPG', $jpg, null], ['foto.webp', $webp, null], ['foto.jpeg', $jpeg, null],
-        ]));
-        TestUtils::comprobar($validas['errores'] === [] && count($validas['archivos']) === 4, 'Acepta 4 imágenes PNG, JPG, JPEG y WEBP.');
+
+        $imagenesValidas = [
+            ['foto.png', $png, null],
+            ['foto.JPG', $jpg, null],
+        ];
+
+        $tiposEsperados = [
+            'image/png',
+            'image/jpeg',
+        ];
+
+        if ($soportaWebp) {
+            $imagenesValidas[] = ['foto.webp', $webp, null];
+            $tiposEsperados[] = 'image/webp';
+        }
+
+        $imagenesValidas[] = ['foto.jpeg', $jpeg, null];
+        $tiposEsperados[] = 'image/jpeg';
+
+        $validas = $servicio->validar($campo($imagenesValidas));
+
         TestUtils::comprobar(
-            array_column($validas['archivos'], 'tipo') === ['image/png', 'image/jpeg', 'image/webp', 'image/jpeg'],
+            $validas['errores'] === []
+                && count($validas['archivos']) === count($imagenesValidas),
+            'Acepta los formatos de imagen disponibles en GD.'
+        );
+
+        TestUtils::comprobar(
+            array_column($validas['archivos'], 'tipo') === $tiposEsperados,
             'El tipo se toma del contenido real.'
         );
 
@@ -115,18 +145,40 @@ function imagenesCampanaTest(): void
         );
 
         $rutas = $servicio->guardar($validas['archivos']);
-        TestUtils::comprobar(count($rutas) === 4, 'Guarda las 4 imágenes.');
+
+        $cantidadEsperada = count($imagenesValidas);
+
+        TestUtils::comprobar(
+            count($rutas) === $cantidadEsperada,
+            'Guarda todas las imágenes de formatos disponibles.'
+        );
+
+        $extensionesEsperadas = array_map(
+            static fn (string $tipo): string => ImagenesCampana::TIPOS_PERMITIDOS[$tipo],
+            $tiposEsperados
+        );
+
         $todasBien = true;
+
         foreach ($rutas as $indice => $ruta) {
-            $esperada = ['png', 'jpg', 'webp', 'jpg'][$indice];
+            $esperada = $extensionesEsperadas[$indice];
             $archivo = $destino . '/' . basename($ruta);
+
             $todasBien = $todasBien
                 && preg_match('#^subidas/campanas/[a-f0-9]{32}\.' . $esperada . '$#', $ruta) === 1
                 && is_file($archivo)
                 && getimagesize($archivo) !== false;
         }
-        TestUtils::comprobar($todasBien, 'Usa nombres aleatorios con la extensión del tipo real.');
-        TestUtils::comprobar(count(array_unique($rutas)) === 4, 'Cada imagen recibe un nombre distinto.');
+
+        TestUtils::comprobar(
+            $todasBien,
+            'Usa nombres aleatorios con la extensión del tipo real.'
+        );
+
+        TestUtils::comprobar(
+            count(array_unique($rutas)) === $cantidadEsperada,
+            'Cada imagen recibe un nombre distinto.'
+        );
 
         $servicio->eliminar(['../config/conexion.php', 'subidas/campanas/../../index.php']);
         TestUtils::comprobar(is_file(__DIR__ . '/../../config/conexion.php'), 'eliminar() ignora rutas fuera de la carpeta de imágenes.');

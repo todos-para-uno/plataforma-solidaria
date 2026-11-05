@@ -78,6 +78,30 @@
   // Se dispara al cerrar por botón, por clic afuera o con la tecla Esc
   modal.addEventListener('close', function () {
     document.body.classList.remove('modal-abierto');
+
+    // Cerrar y restablecer el formulario de baja de cuenta.
+    modal.querySelectorAll('details[data-baja-cuenta]').forEach(function (panel) {
+      panel.open = false;
+
+      const formulario = panel.querySelector('form');
+      if (formulario) {
+        formulario.reset();
+
+        const clave = formulario.querySelector('input[type="password"]');
+        if (clave) clave.value = '';
+
+        const advertencia = formulario.querySelector('[data-advertencia-eliminacion]');
+        const confirmacion = formulario.querySelector('[data-confirmar-eliminacion]');
+
+        if (advertencia) advertencia.hidden = true;
+        if (confirmacion) {
+          confirmacion.checked = false;
+          confirmacion.disabled = true;
+          confirmacion.required = false;
+        }
+      }
+    });
+
     mostrarLecturaPerfil();
     if (devolverFoco) devolverFoco.focus();
   });

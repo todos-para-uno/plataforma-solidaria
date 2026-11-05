@@ -26,6 +26,14 @@ final class UsuariosRepository extends CrudRepository
         );
     }
 
+    public function estadoCuenta(int $id): ?string
+    {
+        $consulta = $this->pdo->prepare('SELECT estado_cuenta FROM usuarios WHERE id = ?');
+        $consulta->execute([$id]);
+        $estado = $consulta->fetchColumn();
+        return $estado === false ? null : (string) $estado;
+    }
+
     /**
      * Inserta un usuario nuevo a partir de una entidad.
      *

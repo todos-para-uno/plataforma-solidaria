@@ -34,6 +34,7 @@ CREATE TABLE usuarios (
     pass VARCHAR(255) NOT NULL,
     verificado BOOLEAN DEFAULT FALSE,
     admin BOOLEAN DEFAULT FALSE,
+    estado_cuenta ENUM('activa', 'desactivada', 'eliminada') NOT NULL DEFAULT 'activa',
     id_validacion INT NOT NULL,
     FOREIGN KEY (id_validacion) REFERENCES validaciones(id));
 
@@ -101,7 +102,8 @@ CREATE TABLE camp (
     -- Ruta relativa a assets/imagenes/imagenes-camp, por ejemplo: alimentos/alimentos-01.webp.
     imagen VARCHAR(255) NULL,
     cbu VARCHAR(22),
-    estado ENUM('activa', 'finalizada', 'suspendida') NOT NULL DEFAULT 'activa',
+    estado ENUM('activa', 'finalizada', 'suspendida', 'cerrada') NOT NULL DEFAULT 'activa',
+    motivo_cierre VARCHAR(80) NULL,
     id_ubicacion INT NULL UNIQUE,
     FOREIGN KEY (owner_id) REFERENCES usuarios(id),
     FOREIGN KEY (categoria) REFERENCES cat_camp(id),

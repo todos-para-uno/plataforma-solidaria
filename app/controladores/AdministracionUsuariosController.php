@@ -110,6 +110,9 @@ final class AdministracionUsuariosController
             }
             // Reutilizar la política de contraseñas de la entidad.
             $usuario = $this->usuarios->findById($id);
+            if ($usuario->verificarPassword($password)) {
+                throw new InvalidArgumentException('La nueva contraseña debe ser diferente de la actual.');
+            }
             $usuario->setPassword($password);
             $this->usuarios->actualizarHashPassword($id, $usuario->getPassword());
             if ($desbloquear) $this->estados->limpiar($id);

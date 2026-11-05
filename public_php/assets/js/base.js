@@ -70,4 +70,53 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // 3. Restablecer los formularios de baja al cerrar sus paneles.
+    document.querySelectorAll('details[data-baja-cuenta]').forEach(function (panel) {
+        const resumen = panel.querySelector('summary');
+        const formulario = panel.querySelector('form');
+
+        if (!resumen || !formulario) return;
+
+        function actualizarPanel() {
+            resumen.textContent = panel.open
+                ? 'Cancelar solicitud de baja'
+                : 'Solicitar baja de cuenta';
+
+            if (!panel.open) {
+                formulario.reset();
+
+                // No conservar la contraseña al cerrar el panel.
+                const clave = formulario.querySelector('input[type="password"]');
+                if (clave) clave.value = '';
+            }
+        }
+        const eliminarDatos = formulario.querySelector('[data-eliminar-datos]');
+        const advertencia = formulario.querySelector('[data-advertencia-eliminacion]');
+        const confirmarEliminacion = formulario.querySelector('[data-confirmar-eliminacion]');
+
+        if (eliminarDatos && advertencia && confirmarEliminacion) {
+            function actualizarConfirmacion() {
+                const irreversible = eliminarDatos.checked;
+
+                advertencia.hidden = !irreversible;
+                confirmarEliminacion.disabled = !irreversible;
+                confirmarEliminacion.required = irreversible;
+
+                if (!irreversible) {
+                    confirmarEliminacion.checked = false;
+                }
+            }
+
+            eliminarDatos.addEventListener('change', actualizarConfirmacion);
+            formulario.addEventListener('reset', function () {
+                // Después del reset, sincronizar la advertencia.
+                queueMicrotask(actualizarConfirmacion);
+            });
+
+            actualizarConfirmacion();
+        }
+        panel.addEventListener('toggle', actualizarPanel);
+        actualizarPanel();
+    });
 });

@@ -137,6 +137,47 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
 
                 </div>
 
+                <div class="tarjeta" style="margin-top:2rem;padding:1.5rem">
+                    <h2>Dar de baja mi cuenta</h2>
+                    <p>Podés desactivar tu cuenta y reactivarla cuando vuelvas a ingresar.</p>
+                    <details data-baja-cuenta>
+                        <summary class="boton" style="cursor:pointer">Solicitar baja de cuenta</summary>
+                        <form action="<?= escapar($rutaBase) ?>/index.php?ruta=baja_cuenta" method="post" style="margin-top:1rem">
+                            <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
+                            <p>La cuenta se desactivará inmediatamente.</p>
+                            <label>
+                                <input type="checkbox" name="eliminar_datos" value="1" data-eliminar-datos>
+                                Eliminar además mis datos personales (irreversible).
+                                Las campañas abiertas se cerrarán y se conservará el historial de donaciones.
+                            </label>
+
+                            <div data-advertencia-eliminacion hidden style="margin-top:1rem">
+                                <p>
+                                    <strong>Atención: esta acción es irreversible.</strong>
+                                    Tus datos personales serán eliminados o anonimizados
+                                    y no podrás recuperar esta cuenta.
+                                    Tus campañas abiertas se cerrarán y se conservará
+                                    el historial de donaciones.
+                                </p>
+
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="confirmar_eliminacion"
+                                        value="1"
+                                        data-confirmar-eliminacion
+                                        disabled
+                                    >
+                                    Entiendo que esta eliminación es irreversible
+                                    y que no podré recuperar mi cuenta.
+                                </label>
+                            </div>
+                            <div class="campo"><label for="clave_baja">Confirmá tu contraseña</label><input id="clave_baja" type="password" name="pass" required autocomplete="current-password"></div>
+                            <button class="boton" type="submit">Confirmar baja</button>
+                        </form>
+                    </details>
+                </div>
+
                 <?php
                 (static function (array $usuario, array $rutas, string $csrfToken, array $datosPerfil): void {
                     $cuentaNombre = $usuario['nombre'];

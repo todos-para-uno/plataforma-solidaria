@@ -65,13 +65,15 @@ final class PerfilController
         $archivo = $this->imagenes->archivo($cuenta?->getAvatar());
         if (!$archivo) { http_response_code(404); return; }
         $datos = @getimagesize($archivo);
-        if (!$datos || $datos[0] !== 250 || $datos[1] !== 250 || ($datos['mime'] ?? '') !== 'image/webp') {
+        if (!$datos || $datos[0] !== 250 || $datos[1] !== 250 || !in_array(($datos['mime'] ?? ''), ['image/webp', 'image/jpeg'], true)) {
             http_response_code(404); return;
         }
         $lectura = @fopen($archivo, 'rb');
         if ($lectura === false) { http_response_code(404); return; }
-        header('Content-Type: image/webp');
-        header('Content-Disposition: inline; filename="avatar.webp"');
+        $tipo = $datos['mime'];
+        $extension = $tipo === 'image/webp' ? 'webp' : 'jpg';
+        header('Content-Type: ' . $tipo);
+        header('Content-Disposition: inline; filename="avatar.' . $extension . '"');
         header('Content-Length: ' . fstat($lectura)['size']);
         try { fpassthru($lectura); }
         finally { fclose($lectura); }

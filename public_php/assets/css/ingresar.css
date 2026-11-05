@@ -25,3 +25,14 @@ main {
 @media (prefers-reduced-motion: reduce) {
     .ingresar-interior > .tarjeta:hover { transform: none; }
 }
+/* Separación accesible de decisiones en la reactivación de cuenta. */
+.formulario-reactivacion .acciones-reactivacion {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 24px;
+}
+.formulario-reactivacion .acciones-reactivacion .boton {
+    width: 100%;
+    min-height: 44px;
+}
