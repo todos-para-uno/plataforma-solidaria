@@ -13,8 +13,17 @@ final class BajaCuentaController
         if (!is_string($clave) || !$usuario->verificarPassword($clave)) {
             http_response_code(422); echo 'Contraseña incorrecta. Volvé a tu perfil e intentá nuevamente.'; return;
         }
-        $eliminar = ($_POST['eliminar_datos'] ?? '') === '1';
-        try { (new BajaCuenta($this->pdo))->desactivar($usuario->getId(), $eliminar); }
+        $eliminar = ($_POST['eliminar_datos'] ?? null) === '1';
+
+        if ($eliminar && ($_POST['confirmar_eliminacion'] ?? null) !== '1') {
+            http_response_code(422);
+            echo 'Debés confirmar expresamente que comprendés que la eliminación de tus datos es irreversible.';
+            return;
+        }
+
+        try {
+            (new BajaCuenta($this->pdo))->desactivar($usuario->getId(), $eliminar);
+        }
         catch (Throwable $e) { error_log('Baja de cuenta: ' . $e->getMessage()); http_response_code(503); echo 'No se pudo procesar la baja. Intentá nuevamente.'; return; }
         $_SESSION = [];
         session_regenerate_id(true);

@@ -139,6 +139,18 @@ $pruebas = [
             'archivo' => 'controladores/AdministracionControllerTest.php',
             'funcion' => 'administracionControllerTest',
         ],
+        'BajaCuenta' => [
+            'archivo' => 'controladores/BajaCuentaControllerTest.php',
+            'funcion' => 'bajaCuentaControllerTest',
+        ],
+        'BajaCuentaDesactivacion' => [
+            'archivo' => 'controladores/BajaCuentaControllerTest.php',
+            'funcion' => 'bajaCuentaControllerDesactivacionTest',
+        ],
+        'BajaCuentaEliminacion' => [
+            'archivo' => 'controladores/BajaCuentaControllerTest.php',
+            'funcion' => 'bajaCuentaControllerEliminacionTest',
+        ],
     ],
 ];
 
