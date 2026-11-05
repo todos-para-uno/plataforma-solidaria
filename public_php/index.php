@@ -15,6 +15,8 @@ $vistas = [
 $rutasConControlador = [
     'crear_campana',
     'perfil',
+    'baja_cuenta',
+    'reactivar',
     'actualizar_documento',
     'actualizar_perfil',
     'imagen_perfil',
@@ -46,8 +48,8 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento', 'actualizar_perfil'], true);
-$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'crear_campana', 'punto_entrega', 'recepcion_insumos'], true);
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento', 'actualizar_perfil', 'baja_cuenta'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'crear_campana', 'punto_entrega', 'recepcion_insumos', 'reactivar'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -72,7 +74,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 $csrfToken = Csrf::generar();
 $usuarioActual = null;
 
-if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], true)) {
+if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir', 'reactivar'], true)) {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/repositorios/UsuariosRepository.php';
     require_once __DIR__ . '/../app/repositorios/BaneoRepository.php';
@@ -85,6 +87,12 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
             : null;
         if ($usuario === null) {
             unset($_SESSION['usuario_id']);
+        } elseif ($usuarios->estadoCuenta($usuario->getId()) !== 'activa') {
+            $_SESSION = [];
+            session_regenerate_id(true);
+            Csrf::generar();
+            header('Location: ' . $rutaBase . '/index.php?ruta=ingresar', true, 303);
+            return;
         } elseif ($baneos->estaBaneado($usuario->getId())) {
             // Revocar la identidad antes de ejecutar cualquier acción de la petición.
             $_SESSION = [];
@@ -121,6 +129,20 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
         }
         return;
     }
+}
+
+if ($ruta === 'reactivar') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/ReactivarCuentaController.php';
+    (new ReactivarCuentaController(conectarBd()))->atender($rutaBase, $rutaAssets);
+    return;
+}
+
+if ($ruta === 'baja_cuenta') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/BajaCuentaController.php';
+    (new BajaCuentaController(conectarBd()))->procesar($usuario ?? null, $rutaBase);
+    return;
 }
 
 if ($ruta === 'admin_mensajes') {
