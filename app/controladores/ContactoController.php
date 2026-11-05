@@ -2,18 +2,23 @@
 require_once __DIR__ . '/../repositorios/ContactoRepository.php';
 require_once __DIR__ . '/../modelos/Usuarios.php';
 require_once __DIR__ . '/../seguridad/Csrf.php';
+require_once __DIR__ . '/../servicios/CorreoServicio.php';
+require_once __DIR__ . '/../../config/correo.php';
 
 class ContactoController
 {
     private Closure $enviarCorreo;
+    private array $configCorreo;
 
     public function __construct(
         private ContactoRepository $contactos,
-        ?Closure $enviarCorreo = null
+        ?Closure $enviarCorreo = null,
+        ?array $configCorreo = null
     ) {
-        // La función se puede sustituir en las pruebas para no enviar correos reales.
-        $this->enviarCorreo = $enviarCorreo ?? static fn ($destino, $asunto, $mensaje, $cabeceras): bool =>
-            @mail($destino, $asunto, $mensaje, $cabeceras);
+        $this->configCorreo = $configCorreo ?? configuracionCorreo();
+        $servicio = new CorreoServicio($this->configCorreo);
+        // Las pruebas sustituyen el transporte para no enviar correos reales.
+        $this->enviarCorreo = $enviarCorreo ?? $servicio->enviar(...);
     }
 
     public function mostrarFormulario(string $rutaBase, string $rutaAssets, ?Usuario $usuario = null): void
@@ -81,15 +86,15 @@ class ContactoController
         // Guardar primero: una falla del correo no debe perder la consulta.
         $cuerpo = "Nombre: $nombre\nCorreo: $mail\n\n$contenido";
         $cabeceras = [
-            'From' => 'no-responder@todosparauno.test',
+            'From' => $this->configCorreo['remitente'],
             'Reply-To' => $mail,
             'MIME-Version' => '1.0',
             'Content-Type' => 'text/plain; charset=UTF-8',
         ];
         try {
             $enviadoPorCorreo = ($this->enviarCorreo)(
-                'contacto@todosparauno.test',
-                mb_encode_mimeheader('Contacto: ' . Contacto::ASUNTOS[$asunto], 'UTF-8'),
+                $this->configCorreo['destino'],
+                'Contacto: ' . Contacto::ASUNTOS[$asunto],
                 $cuerpo,
                 $cabeceras
             );

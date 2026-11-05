@@ -3,6 +3,9 @@
 // antes de ejecutar las pruebas de controladores.
 ob_start();
 $pruebas = [
+    'seguridad' => [
+        'SesionInactiva' => ['archivo' => 'seguridad/SesionInactivaTest.php', 'funcion' => 'sesionInactivaTest'],
+    ],
     'modelos' => [
         'Baneo' => [
             'archivo' => 'modelos/BaneoTest.php',
@@ -46,6 +49,7 @@ $pruebas = [
         ],
     ],
     'servicios' => [
+        'CorreoServicio' => ['archivo' => 'servicios/CorreoServicioTest.php', 'funcion' => 'correoServicioTest'],
         'ImagenPerfil' => ['archivo' => 'servicios/ImagenPerfilTest.php', 'funcion' => 'imagenPerfilTest'],
         'ImagenesCampana' => ['archivo' => 'servicios/ImagenesCampanaTest.php', 'funcion' => 'imagenesCampanaTest'],
     ],
