@@ -2,3 +2,4 @@
 /config/correo.local.php
 /config/mercadopago.local.php
 /.respaldos-locales/
+/config/conexion.local.php

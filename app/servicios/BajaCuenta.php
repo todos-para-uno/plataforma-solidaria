@@ -1,14 +1,20 @@
 <?php
 require_once __DIR__ . '/ImagenPerfil.php';
+require_once __DIR__ . '/ImagenesCampana.php';
 
 /** Operaciones de cuenta. Nunca borra claves foráneas ni historial de donaciones. */
 final class BajaCuenta
 {
-    public function __construct(private PDO $pdo, private ?ImagenPerfil $imagenes = null)
-    {
+    public function __construct(
+        private PDO $pdo,
+        private ?ImagenPerfil $imagenes = null,
+        private ?ImagenesCampana $imagenesCampana = null
+    ) {
         $this->imagenes ??= new ImagenPerfil();
+        $this->imagenesCampana ??= new ImagenesCampana(
+            __DIR__ . '/../../public_php/subidas/campanas'
+        );
     }
-
     public function desactivar(int $id, bool $eliminarDatos): void
     {
         $avatar = null;
@@ -63,13 +69,7 @@ final class BajaCuenta
         // El sistema de archivos no participa de la transacción SQL.
         if ($eliminarDatos) {
             if ($avatar !== null) $this->imagenes->eliminar([$avatar]);
-            $directorio = realpath(__DIR__ . '/../../public_php/subidas/campanas');
-            if ($directorio !== false) foreach ($archivosCampana as $ruta) {
-                if (is_string($ruta) && preg_match('#^subidas/campanas/[a-f0-9]{32}\.webp$#D', $ruta)) {
-                    $archivo = $directorio . '/' . basename($ruta);
-                    if (is_file($archivo) && !is_link($archivo) && !@unlink($archivo)) error_log('No se pudo eliminar imagen de campaña: ' . basename($ruta));
-                }
-            }
+            $this->imagenesCampana->eliminar($archivosCampana);
         }
     }
 

@@ -174,13 +174,31 @@ abstract class ImagenesSubidas
     public function eliminar(array $rutas): void
     {
         $prefijo = trim($this->prefijoRuta, '/') . '/';
+        $directorio = $this->directorio();
+
         foreach ($rutas as $ruta) {
             if (!is_string($ruta) || !str_starts_with($ruta, $prefijo)) {
                 continue;
             }
+
             $archivo = basename($ruta);
-            if ($ruta === $prefijo . $archivo && preg_match('/^[a-f0-9]{32}\.(png|jpg|webp)$/D', $archivo)) {
-                @unlink(rtrim($this->directorioDestino, '/\\') . DIRECTORY_SEPARATOR . $archivo);
+
+            if (
+                $ruta !== $prefijo . $archivo
+                || !preg_match('/^[a-f0-9]{32}\.(png|jpg|webp)$/D', $archivo)
+            ) {
+                continue;
+            }
+
+            $destino = $directorio . DIRECTORY_SEPARATOR . $archivo;
+
+            if (is_link($destino)) {
+                error_log('Se rechazó eliminar un enlace simbólico: ' . $archivo);
+                continue;
+            }
+
+            if (is_file($destino) && !@unlink($destino)) {
+                error_log('No se pudo eliminar imagen: ' . $archivo);
             }
         }
     }

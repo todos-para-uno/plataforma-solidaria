@@ -52,6 +52,7 @@ $pruebas = [
         'CorreoServicio' => ['archivo' => 'servicios/CorreoServicioTest.php', 'funcion' => 'correoServicioTest'],
         'ImagenPerfil' => ['archivo' => 'servicios/ImagenPerfilTest.php', 'funcion' => 'imagenPerfilTest'],
         'ImagenesCampana' => ['archivo' => 'servicios/ImagenesCampanaTest.php', 'funcion' => 'imagenesCampanaTest'],
+        'BajaCuenta' => ['archivo' => 'servicios/BajaCuentaTest.php','funcion' => 'bajaCuentaTest',],
     ],
     'repositorios' => [
         'EstadoAutenticacionRepository' => [
