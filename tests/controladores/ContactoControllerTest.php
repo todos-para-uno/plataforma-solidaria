@@ -15,11 +15,12 @@ function contactoControllerTest(PDO $pdo): void
     $servidorOriginal = $_SERVER;
     $codigoOriginal = http_response_code();
     $repositorio = new ContactoRepository($pdo);
+    $configCorreo = ['habilitado' => false, 'remitente' => 'avisos@example.test', 'destino' => 'equipo@example.test'];
     $avisos = [];
     $controlador = new ContactoController($repositorio, static function ($destino, $asunto, $cuerpo, $cabeceras) use (&$avisos): bool {
         $avisos[] = compact('destino', 'asunto', 'cuerpo', 'cabeceras');
         return true;
-    });
+    }, $configCorreo);
     $capturar = static function (Closure $accion): string {
         http_response_code(200);
         ob_start();
@@ -91,10 +92,11 @@ function contactoControllerTest(PDO $pdo): void
         );
         TestUtils::comprobar(
             count($avisos) === 1
-                && $avisos[0]['destino'] === 'contacto@todosparauno.test'
+                && $avisos[0]['destino'] === 'equipo@example.test'
+                && $avisos[0]['cabeceras']['From'] === 'avisos@example.test'
                 && $avisos[0]['cabeceras']['Reply-To'] === $mail
                 && str_contains($avisos[0]['cuerpo'], 'Necesito información.'),
-            'El correo usa un destino simulado y la dirección validada como Reply-To.'
+            'El correo usa remitente y destino configurados, y la dirección validada como Reply-To.'
         );
         $html = $capturar(static fn () => $controlador->mostrarFormulario('.', './assets'));
         TestUtils::comprobar(str_contains($html, 'Recibimos tu consulta.'), 'Después del envío muestra la confirmación.');
@@ -119,12 +121,21 @@ function contactoControllerTest(PDO $pdo): void
         $filas = $filasDePrueba();
         TestUtils::comprobar((int) $filas[1]['id_usuario'] === $idUsuario, 'Asocia la consulta al usuario autenticado.');
 
-        $sinCorreo = new ContactoController($repositorio, static fn (): bool => false);
+        $sinCorreo = new ContactoController($repositorio, static fn (): bool => false, $configCorreo);
         $capturar(static fn () => $sinCorreo->procesarContacto('.', './assets', $usuario));
         $filas = $filasDePrueba();
         TestUtils::comprobar(
             http_response_code() === 303 && count($filas) === 3 && !(bool) $filas[2]['correo_enviado'],
             'Si falla el correo, conserva la consulta y confirma su recepción.'
+        );
+        $conExcepcion = new ContactoController($repositorio, static function (): bool {
+            throw new RuntimeException('Error SMTP simulado sin conexión de red.');
+        }, $configCorreo);
+        $capturar(static fn () => $conExcepcion->procesarContacto('.', './assets', $usuario));
+        $filas = $filasDePrueba();
+        TestUtils::comprobar(
+            http_response_code() === 303 && count($filas) === 4 && !(bool) $filas[3]['correo_enviado'],
+            'Una excepción SMTP tampoco pierde la consulta ni marca el correo como enviado.'
         );
         $usuarios->delete($idUsuario);
         $filas = $filasDePrueba();

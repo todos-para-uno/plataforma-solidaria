@@ -30,7 +30,7 @@ Estamos en desarrollo. El objetivo es tener registro e inicio de sesión, perfil
 | Pantallas | Inicio con campañas ficticias, formulario de registro y componentes compartidos. |
 | Registro | Valida los datos en el servidor, comprueba correos duplicados y guarda el usuario con contraseña hasheada y nivel de confianza inicial. El formulario tiene protección CSRF. |
 | Ingreso y salida | Comprueba correo y contraseña, mantiene la sesión al navegar y permite cerrarla desde el menú. Ambos envíos tienen protección CSRF. |
-| Contacto | Valida consultas con CSRF, las guarda en `contactos` e intenta enviar el aviso con `mail()` a una dirección simulada. Funciona con o sin una cuenta. |
+| Contacto | Valida consultas con CSRF, las guarda en `contactos` y, si está configurado, envía el aviso por SMTP autenticado. Funciona con o sin una cuenta y conserva la consulta si falla el correo. |
 | Integración | Registro, ingreso, cierre de sesión y contacto están conectados. Las demás funcionalidades todavía no tienen un recorrido completo desde la web. |
 
 **El registro ya crea una cuenta en la base de datos.** El usuario nuevo queda sin verificar y sin permisos de administrador. Registrarse no inicia sesión automáticamente: después podés entrar desde **Ingresar**. Los enlaces que apuntan a `#` representan funcionalidades pendientes.
@@ -315,7 +315,27 @@ Para una base nueva, importá [`database/schema.sql`](database/schema.sql) desde
 
 Abrí **Contacto**, completá una consulta con datos ficticios y enviá. El servidor valida los campos y el token CSRF, guarda una fila en `contactos` y redirige al formulario con **Recibimos tu consulta**. Recargar esa página de confirmación no repite el envío. Un formulario inválido conserva los campos y no crea registros. Si hay una sesión iniciada, la consulta se asocia al usuario recuperado de esa sesión; las visitas sin cuenta también pueden escribir. Si se elimina una cuenta, sus consultas se conservan con `id_usuario = NULL`.
 
-El aviso usa la función PHP `mail()` y el destino simulado `contacto@todosparauno.test`. La dirección de quien consulta se usa como `Reply-To`, con un remitente fijo del sitio. El dominio `.test` es de demostración: no representa un buzón real. Para probar el transporte local, configurá un capturador de correo y el `sendmail_path` de PHP, o SMTP en los entornos que lo utilicen. `mail()` necesita un transporte configurado; guardar la consulta funciona aunque el aviso falle. La columna `correo_enviado` indica si el transporte aceptó el aviso, no que alguien lo recibió.
+El aviso usa **SMTP autenticado con TLS**, mediante PHPMailer 7.1.1 incluido en `lib/PHPMailer/`. No requiere Composer ni configurar `sendmail`. La dirección de quien consulta se usa como `Reply-To`; el remitente y el destinatario salen de configuración privada. Por defecto, ambos son `grupo@todospara.uno` y el envío está **deshabilitado** hasta completar las credenciales.
+
+Para habilitarlo:
+
+1. Copiá [`config/correo.ejemplo.php`](config/correo.ejemplo.php) a `config/correo.local.php` si este último no existe. Está excluido de Git y fuera de la carpeta pública; no se deben compartir ni versionar contraseñas.
+2. Completá el host SMTP, usuario y contraseña de la casilla. Para la casilla actual de DonWeb, el servidor es `c2770751.ferozo.com`, puerto `465`, seguridad `smtps` y usuario `grupo@todospara.uno`. Conservá `remitente` con esa cuenta. No es la contraseña del panel de DonWeb, sino la de la casilla.
+3. Cambiá `habilitado` a `true`. PHP necesita OpenSSL y acceso saliente al servidor SMTP. El certificado se verifica; no se admiten certificados autofirmados ni conexiones sin cifrado.
+4. Ejecutá `php utilidades/probar_correo.php --comprobar`. Valida la configuración sin abrir conexiones ni enviar mensajes.
+5. Cuando quieras realizar una entrega real, ejecutá `php utilidades/probar_correo.php --enviar`. Envía un único mensaje de prueba al destino configurado; revisá también Spam. No muestra contraseñas ni crea consultas en la base.
+6. Probá **Contacto** desde la aplicación. La consulta se guarda primero y el aviso se envía al destinatario configurado. Responder el correo debe dirigir la respuesta al visitante.
+
+También se admiten las variables de entorno `CORREO_HABILITADO`, `CORREO_SMTP_HOST`, `CORREO_SMTP_PUERTO`, `CORREO_SMTP_SEGURIDAD`, `CORREO_SMTP_USUARIO`, `CORREO_SMTP_PASSWORD`, `CORREO_REMITENTE` y `CORREO_DESTINO`. El archivo local tiene prioridad.
+
+Guardar la consulta funciona aunque el correo esté deshabilitado, falle la autenticación o el servidor rechace el envío. La columna `correo_enviado` indica que el servidor SMTP aceptó el mensaje, **no confirma su llegada a la bandeja de entrada**. No hay reintentos automáticos: las consultas siguen disponibles en Administración. Las pruebas automatizadas sustituyen la entrega para no enviar mensajes a casillas reales:
+
+```bash
+php tests/run_tests.php servicios CorreoServicio
+php tests/run_tests.php controladores ContactoController
+```
+
+Referencias: [configuración SMTP de DonWeb](https://soporte.donweb.com/es/articles/15819754-correo-profesional-buenas-practicas-configuracion-segura-de-envios-desde-formularios-y-smtp) y [PHPMailer](https://github.com/PHPMailer/PHPMailer).
 
 ### Comprobar el ingreso y la salida
 
