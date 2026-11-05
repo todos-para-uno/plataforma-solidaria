@@ -317,6 +317,8 @@ Abrí **Contacto**, completá una consulta con datos ficticios y enviá. El serv
 
 El aviso usa **SMTP autenticado con TLS**, mediante PHPMailer 7.1.1 incluido en `lib/PHPMailer/`. No requiere Composer ni configurar `sendmail`. La dirección de quien consulta se usa como `Reply-To`; el remitente y el destinatario salen de configuración privada. Por defecto, ambos son `grupo@todospara.uno` y el envío está **deshabilitado** hasta completar las credenciales.
 
+**Para probar el proyecto en otra computadora no hace falta configurar correo ni compartir contraseñas.** Prepará la base, usá el formulario Contacto e ingresá con una cuenta administradora: la consulta aparece en **Administración → Mensajes**, guardada en la base de esa instalación. Este guardado ocurre siempre, esté habilitado SMTP o no; el correo es un aviso adicional. Las consultas realizadas en otra computadora no se sincronizan automáticamente con la base del equipo.
+
 Para habilitarlo:
 
 1. Copiá [`config/correo.ejemplo.php`](config/correo.ejemplo.php) a `config/correo.local.php` si este último no existe. Está excluido de Git y fuera de la carpeta pública; no se deben compartir ni versionar contraseñas.
