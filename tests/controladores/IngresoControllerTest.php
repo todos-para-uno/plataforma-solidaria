@@ -162,6 +162,8 @@ function ingresoControllerTest(PDO $pdo): void
         TestUtils::comprobar(session_id() !== $sesionAnterior, 'El ingreso renueva el identificador de sesión');
         TestUtils::comprobar(!Csrf::validar($token), 'El ingreso renueva el token CSRF');
         TestUtils::comprobar(!isset($_SESSION['pass']), 'La sesión no guarda la contraseña');
+        TestUtils::comprobar(is_int($_SESSION['ultima_actividad'] ?? null)
+            && time() - $_SESSION['ultima_actividad'] < 5, 'El ingreso inicia el reloj de inactividad en el servidor.');
 
         // Ejercitar el punto de entrada real con la misma conexión y transacción.
         $abrirRuta = static function (string $ruta): string {
@@ -223,6 +225,30 @@ function ingresoControllerTest(PDO $pdo): void
                 && $baneos->findById($idBaneo)->getFechaFin() === null,
             'Un baneo levantado conserva su vencimiento y no revoca la sesión al navegar.'
         );
+
+        // La caducidad se comprueba en la entrada real antes de cualquier escritura.
+        $sesionActiva = $_SESSION;
+        $nombreAntes = $usuarios->findById($id)->getNombre();
+        $_SESSION['ultima_actividad'] = time() - 600;
+        $_GET = ['ruta' => 'actualizar_perfil'];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['nombre' => 'No debe guardarse', 'apellido' => '', 'csrf_token' => Csrf::generar()];
+        ob_start();
+        (static function (): void { require __DIR__ . '/../../public_php/index.php'; })();
+        ob_end_clean();
+        TestUtils::comprobar(http_response_code() === 303 && !isset($_SESSION['usuario_id'])
+            && $usuarios->findById($id)->getNombre() === $nombreAntes,
+            'Un POST tras diez minutos de inactividad no modifica el perfil y obliga a ingresar nuevamente.');
+        $htmlVencimiento = $abrirRuta('ingresar');
+        TestUtils::comprobar(str_contains($htmlVencimiento, 'Tu sesión venció después de 10 minutos de inactividad.')
+            && !isset($_SESSION['sesion_vencida']), 'El ingreso explica el vencimiento y consume el aviso.');
+        $_SESSION = $sesionActiva;
+        $_SESSION['ultima_actividad'] = time() - 600;
+        $respuestaApi = $abrirRuta('admin_usuarios');
+        $datosApi = json_decode($respuestaApi, true);
+        TestUtils::comprobar(http_response_code() === 401 && !isset($_SESSION['usuario_id'])
+            && str_contains($datosApi['error'] ?? '', '10 minutos'), 'Una API con sesión vencida devuelve JSON 401, sin ejecutar la acción.');
+        $_SESSION = $sesionActiva;
 
         $_POST = ['csrf_token' => $token];
         ob_start();

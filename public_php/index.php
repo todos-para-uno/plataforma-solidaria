@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../app/seguridad/CabecerasSeguridad.php';
+CabecerasSeguridad::enviar();
+
 // Las peticiones de la aplicación entran por este archivo.
 // El parámetro ?ruta=... elige la pantalla o acción, sin configurar reglas de Apache.
 $ruta = $_GET['ruta'] ?? 'inicio';
@@ -61,6 +64,7 @@ $rutaBase = '.';
 $rutaAssets = './assets';
 
 require_once __DIR__ . '/../app/seguridad/Csrf.php';
+require_once __DIR__ . '/../app/seguridad/SesionInactiva.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start([
         'use_strict_mode' => true,
@@ -68,6 +72,20 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         'cookie_samesite' => 'Lax',
         'cookie_secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
     ]);
+}
+// Antes de consultar identidad o ejecutar controladores: un POST vencido nunca se procesa.
+if (SesionInactiva::comprobar()) {
+    header('Cache-Control: no-store');
+    $rutasJson = ['admin_mensajes', 'admin_usuarios', 'admin_actividad', 'admin_password', 'admin_desbloquear', 'banear', 'finalizar_baneo'];
+    $solicitaJson = str_contains(strtolower($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json');
+    if ($solicitaJson || in_array($ruta, $rutasJson, true)) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['error' => 'Tu sesión venció después de 10 minutos de inactividad. Volvé a ingresar.'], JSON_UNESCAPED_UNICODE);
+    } else {
+        header('Location: ' . $rutaBase . '/index.php?ruta=ingresar', true, 303);
+    }
+    return;
 }
 $csrfToken = Csrf::generar();
 $usuarioActual = null;

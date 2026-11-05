@@ -18,6 +18,8 @@ class IngresoController
         $errores = [];
         $mail = '';
         $csrfToken = Csrf::generar();
+        $sesionVencida = ($_SESSION['sesion_vencida'] ?? false) === true;
+        unset($_SESSION['sesion_vencida']);
 
         require __DIR__ . '/../vistas/ingresar.php';
     }
@@ -64,7 +66,7 @@ class IngresoController
                     $this->estadoAutenticacion?->limpiar($usuario->getId());
                     session_regenerate_id(true);
                     // Conservar solo la identidad; los datos se consultan en cada petición.
-                    $_SESSION = ['usuario_id' => $usuario->getId(), 'mostrar_bienvenida' => true];
+                    $_SESSION = ['usuario_id' => $usuario->getId(), 'mostrar_bienvenida' => true, 'ultima_actividad' => time()];
                     Csrf::generar();
                     header('Location: ' . $rutaBase . '/index.php', true, 303);
                     return;
