@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/ImagenesSubidas.php';
 
-/** Una foto por cuenta. Solo conserva un WebP de 250 × 250 fuera de public_php. */
+/** Una foto por cuenta. Conserva una foto recodificada de 250 × 250 fuera de public_php. */
 final class ImagenPerfil extends ImagenesSubidas
 {
     public const MAXIMO_IMAGENES = 1;
@@ -14,6 +14,14 @@ final class ImagenPerfil extends ImagenesSubidas
     protected const TIPO_SALIDA = 'image/webp';
     protected const PERMISOS_ARCHIVO = 0600;
     protected const PERMISOS_CARPETA = 0700;
+
+    /** Usa WebP cuando GD lo soporta; de lo contrario, JPEG. */
+    protected function tipoSalida(string $tipoEntrada): string
+    {
+        return function_exists('imagewebp') && !empty(gd_info()['WebP Support'])
+            ? 'image/webp'
+            : 'image/jpeg';
+    }
 
     public function __construct(?string $directorio = null, ?Closure $esSubida = null)
     {
@@ -33,7 +41,7 @@ final class ImagenPerfil extends ImagenesSubidas
     /** Ruta interna generada por el servidor; nunca acepta URLs ni rutas del navegador. */
     public static function rutaValida(?string $ruta): bool
     {
-        return $ruta !== null && preg_match('#^usuarios/[a-f0-9]{32}\.webp$#D', $ruta) === 1;
+        return $ruta !== null && preg_match('#^usuarios/[a-f0-9]{32}\.(?:webp|jpg)$#D', $ruta) === 1;
     }
 
     public function archivo(?string $ruta): ?string
