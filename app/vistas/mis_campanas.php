@@ -71,7 +71,7 @@ require __DIR__ . '/parciales/cabecera.php';
                     $objetivo = (float) $campana['objetivo'];
                     $porcentaje = porcentajeProgreso($recaudado, $objetivo);
                     ?>
-                    <article class="tarjeta campana">
+                    <article class="tarjeta campana mis-campana-tarjeta">
                         <div class="campana-cuerpo">
                             <div class="campana-datos">
                                 <span class="insignia"><?= escapar($campana['nombre_categoria']) ?></span>
@@ -83,7 +83,13 @@ require __DIR__ . '/parciales/cabecera.php';
                                 <span class="insignia"><?= escapar(ucfirst($campana['estado'])) ?></span>
                             </div>
 
-                            <h3><?= escapar($campana['nombre']) ?></h3>
+                            <h3>
+                                <?php if ($campana['estado'] === 'activa'): ?>
+                                <a class="mis-campana-detalle" href="<?= escapar($rutaBase) ?>/index.php?ruta=campana&amp;id=<?= (int) $campana['id'] ?>"><?= escapar($campana['nombre']) ?></a>
+                                <?php else: ?>
+                                <?= escapar($campana['nombre']) ?>
+                                <?php endif; ?>
+                            </h3>
                             <?php if (!$campana['monetaria']): ?>
                             <div class="mis-campanas-acciones">
                                 <a class="boton" href="<?= escapar($rutaBase) ?>/index.php?ruta=recepcion_insumos&amp;id=<?= (int) $campana['id'] ?>">Ver insumos recibidos<?= $campana['estado'] === 'activa' ? ' y registrar entrega' : '' ?></a>

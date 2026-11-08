@@ -1,0 +1,41 @@
+.compartir-campana {
+    margin-block: var(--e-4);
+    padding: var(--e-4);
+    border: 1px solid var(--linea);
+    border-radius: var(--radio-control);
+    background: var(--papel);
+    min-width: 0;
+}
+.compartir-campana h2 { font-size: var(--t-medio); margin: 0 0 var(--e-3); }
+.compartir-barra { display: flex; flex-wrap: wrap; gap: var(--e-3); align-items: end; }
+.compartir-enlace input {
+    width: 100%; min-width: 0; padding: var(--e-2); min-height: 44px; font: inherit;
+    border: 1px solid var(--linea); border-radius: var(--radio-control); background: var(--papel); color: var(--azul);
+}
+.compartir-acciones { display: flex; gap: var(--e-2); }
+.compartir-icono {
+    padding: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border: 1px solid currentColor; border-radius: 50%; background: var(--papel);
+}
+.compartir-icono svg { width: 23px; height: 23px; fill: currentColor; }
+.compartir-whatsapp { color: #15753d; }
+.compartir-telegram { color: #086e9c; }
+.compartir-instagram { color: #ad285e; }
+.compartir-instagram svg { fill: none; stroke: currentColor; stroke-width: 1.8; }
+.compartir-instagram .instagram-punto { fill: currentColor; stroke: none; }
+.compartir-icono:hover { background: var(--sol-suave); }
+.compartir-icono:focus-visible { outline: 3px solid var(--azul); outline-offset: 3px; }
+.compartir-mas { flex: 0 1 auto; }
+.compartir-mas[open] { flex-basis: 100%; }
+.compartir-mas summary { width: fit-content; cursor: pointer; min-height: 44px; }
+.compartir-panel { margin-top: var(--e-3); }
+.compartir-enlace { display: flex; flex-wrap: wrap; gap: var(--e-2); margin-block: var(--e-2); }
+.compartir-enlace input { flex: 1 1 12rem; }
+.compartir-campana .boton { margin-top: 0; }
+.compartir-campana [hidden] { display: none; }
+.compartir-estado { margin: var(--e-2) 0 0; overflow-wrap: anywhere; }
+.compartir-estado:empty { display: none; }
+.compartir-historia { display: inline-flex; align-items: center; gap: var(--e-2); }
+.compartir-historia svg { width: 22px; height: 22px; color: #ad285e; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.compartir-historia .instagram-punto { fill: currentColor; stroke: none; }

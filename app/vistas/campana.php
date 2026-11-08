@@ -7,7 +7,7 @@
 $tituloPagina = $campana->getNombre() . ' — todospara.uno';
 $paginaActual = 'explorar';
 $usuarioActual = $usuarioActual ?? null;
-$estilosPagina = ['campana.css'];
+$estilosPagina = ['campana.css', 'compartir_campana.css'];
 $coloresNivel = [1 => 'blanco', 2 => 'celeste', 3 => 'azul', 4 => 'violeta'];
 $colorNivel = $coloresNivel[$validacion?->getNivel() ?? 1] ?? 'blanco';
 require __DIR__ . '/parciales/cabecera.php';
@@ -121,7 +121,18 @@ $pctMonetaria = ($campana->getMonetaria() && $objetivoMonetario > 0)
                 </div>
             </article>
 
+            <?php if ((int) ($_SESSION['usuario_id'] ?? 0) === $campana->getOwnerId()): ?>
+            <?php
+            $idCampanaCompartir = $campana->getId();
+            $nombreCampanaCompartir = $campana->getNombre();
+            $descripcionCampanaCompartir = $campana->getDescripcion() ?? '';
+            require __DIR__ . '/parciales/compartir_campana.php';
+            ?>
+            <?php endif; ?>
+
         </div>
     </section>
 
+<script src="<?= escapar($rutaAssets) ?>/js/historia-campana.js" defer></script>
+<script src="<?= escapar($rutaAssets) ?>/js/compartir-campana.js" defer></script>
 <?php require __DIR__ . '/parciales/pie.php'; ?>
