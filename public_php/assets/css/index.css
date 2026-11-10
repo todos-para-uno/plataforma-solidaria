@@ -2,8 +2,8 @@
 .portada {
     background-image: linear-gradient(90deg,
         rgba(247, 245, 240, 0.97) 0%,
-        rgba(247, 245, 240, 0.93) 32%,
-        rgba(247, 245, 240, 0.76) 48%,
+        rgba(247, 245, 240, 0.90) 32%,
+        rgba(247, 245, 240, 0.55) 48%,
         rgba(247, 245, 240, 0.12) 75%,
         rgba(247, 245, 240, 0.03) 100%), url('../imagenes/sol.webp');
     background-size: cover;
@@ -29,49 +29,106 @@
 .portada-acciones { margin-top: var(--e-8); }
 .seccion-encabezado { max-width: 70ch; }
 
-.seccion-ayudar { background: var(--verde-suave); }
-.seccion-ayudar .pasos li {
-    padding: var(--e-6);
-    background: var(--papel);
-    border: 1px solid var(--sol-suave);
-    border-top: 4px solid var(--paso-acento, var(--verde));
-    border-radius: var(--radio-tarjeta);
-}
+
 .paso-numero {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-grid;
+    place-items: center;
     width: 56px;
     height: 56px;
-    background: var(--paso-acento, var(--verde));
-    color: var(--paso-texto, var(--papel));
-    border-radius: var(--radio-control);
     margin-bottom: var(--e-6);
+    border: 1px solid var(--linea);
+    border-radius: 50%;
+    background: var(--aviso-fondo);
+    color: var(--terracota);
+    font-size: 1.75rem;
 }
-.seccion-crear { background: var(--azul); color: var(--papel); }
-.seccion-crear .bajada,
-.seccion-crear .pasos p { color: var(--hueso); }
-.seccion-crear .pasos li {
-    border-top-color: var(--paso-acento, var(--verde));
-    padding-top: var(--e-6);
+/* Un bloque editorial: la trama queda en el margen, lejos de la lectura. */
+.seccion-crear,
+.seccion-ayudar {
+    position: relative;
+    background: var(--aviso-fondo);
+    overflow: hidden;
 }
-p{
-    overflow-wrap: anywhere;
+.seccion-crear::before,
+.seccion-ayudar::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: max(24px, calc((100% - var(--ancho-max)) / 2 - 32px));
+    background-color: var(--sol);
+    background-image: var(--patron-solidario);
 }
+.crear-invitacion {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: var(--e-16);
+}
+.crear-invitacion-mensaje h2 { max-width: 14ch; font-size: clamp(2rem, 3.5vw, 2.75rem); }
+.crear-invitacion-mensaje > p:not(.etiqueta-seccion) { color: var(--texto-secundario); }
+.crear-invitacion-mensaje .boton { margin-top: var(--e-3); }
+.pasos-tarjetas {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--e-4);
+}
+.pasos-tarjetas li {
+    display: flex;
+    align-items: start;
+    gap: var(--e-4);
+    padding: var(--e-6);
+    background: var(--papel);
+    color: var(--azul);
+    border: 1px solid var(--linea);
+    border-radius: var(--radio-tarjeta);
+    box-shadow: var(--sombra-tarjeta);
+}
+.pasos-tarjetas li > div { min-width: 0; }
+.pasos-tarjetas h3 { margin-bottom: var(--e-2); font-size: 1.375rem; }
+.pasos-tarjetas p { color: var(--texto-secundario); font-size: .9375rem; }
+.pasos-tarjetas .paso-numero {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    background: var(--azul);
+    color: var(--sol);
+    border: 0;
+    font-size: 1.25rem;
+}
+/* La invitación a ayudar refleja la composición de crear campaña. */
+.seccion-ayudar { background: var(--azul); color: var(--papel); }
+.seccion-ayudar::before { inset: 0 0 0 auto; }
+.seccion-ayudar .crear-invitacion-mensaje > p:not(.etiqueta-seccion) { color: var(--hueso); }
+.seccion-ayudar .etiqueta-seccion { color: var(--sol); }
+.seccion-ayudar .boton { background: var(--sol); color: var(--azul); border-color: var(--sol); }
+.seccion-ayudar .boton:hover { background: var(--papel); border-color: var(--papel); }
+.seccion-ayudar .boton:focus-visible { outline-color: var(--papel); }
+.pasos-ayudar .paso-numero { background: var(--corazon-hover); font-weight: 700; }
+.ayudar-invitacion > .crear-invitacion-mensaje { order: 1; }
+.campanas-ver-todas { margin-top: var(--e-12); text-align: center; }
+.portada-marca { color: var(--verde); }
 @media (max-width: 860px) {
-    .portada {
-        background-image: linear-gradient(90deg,
-            rgba(247, 245, 240, 0.97),
-            rgba(247, 245, 240, 0.85) 65%,
-            rgba(247, 245, 240, 0.38)), url('../imagenes/sol.webp');
-        background-position: 60% 70%;
-    }
+    .portada { background-position: 60% 70%; }
     .portada-interior { min-height: 360px; }
     .portada-mensaje { max-width: 500px; }
+    .crear-invitacion { grid-template-columns: minmax(0, 1fr); gap: var(--e-8); padding-left: var(--e-6); }
+    .seccion-crear::before, .seccion-ayudar::before { width: 12px; }
+    .ayudar-invitacion { padding-left: 0; padding-right: var(--e-6); }
+    .ayudar-invitacion > .crear-invitacion-mensaje { order: 0; }
+    .ayudar-invitacion > .pasos-ayudar { order: 1; }
+}
+@media (max-width: 480px) {
+    .portada {
+        background-image: linear-gradient(90deg, rgba(248,245,238,.94), rgba(248,245,238,.78)), url('../imagenes/sol.webp');
+    }
+    .portada-interior { min-height: auto; }
+    .portada-marca { font-size: .75rem; }
 }
 
-/* Los tres pasos repiten los acentos de la marca en ambas secciones. */
-.pasos li:nth-child(1) { --paso-acento: var(--sol); --paso-texto: var(--azul); }
-.pasos li:nth-child(2) { --paso-acento: var(--terracota); }
-.pasos li:nth-child(3) { --paso-acento: var(--verde); --paso-texto: var(--papel); }
-.portada-marca { color: var(--verde); }
+/* La fotografía acompaña el listado de campañas. */
+.seccion-campanas {
+    border-block: 0;
+    background-image: linear-gradient(90deg, rgb(248 245 238 / 94%), rgb(248 245 238 / 66%)), var(--foto-solidaria);
+    background-size: cover;
+    background-position: center 70%;
+}

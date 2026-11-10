@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         agregar.disabled = lista.children.length >= 20;
         lista.querySelectorAll('[data-quitar-insumo]').forEach(boton => boton.disabled = lista.children.length <= 1);
         document.getElementById('estado-insumos').textContent = lista.children.length + ' de 20 insumos.';
+        document.dispatchEvent(new Event('crear:filas-actualizadas'));
     }
     agregar.addEventListener('click', () => {
         if (lista.children.length >= 20) return;

@@ -1,18 +1,4 @@
 /* Layout de la pantalla de crear campaña. Solo acomoda; colores y componentes vienen de base.css. */
-main {
-    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-}
-.crear-interior {
-    max-width: 640px;
-    margin-inline: auto;
-}
-.crear-interior .seccion-encabezado {
-    margin-bottom: var(--e-8);
-}
 .crear-volver {
     margin-bottom: var(--e-4);
 }
@@ -24,12 +10,11 @@ main {
     gap: var(--e-6);
 }
 
-/* Animación de zoom y sombra al pasar el cursor (hover) */
 .crear-tarjeta {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: border-color .16s ease, box-shadow .16s ease;
 }
 .crear-tarjeta:hover {
-    transform: scale(1.015);
+
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
@@ -105,12 +90,12 @@ main {
     text-align: center;
     cursor: pointer;
     transition: border-color 0.25s ease, background-color 0.25s ease,
-                box-shadow 0.25s ease, transform 0.25s ease;
+                box-shadow 0.25s ease;
 }
 .zona-carga-icono {
     color: var(--verde);
     margin-bottom: var(--e-2);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: color .16s ease;
 }
 .zona-carga-titulo {
     font-family: var(--fuente-titulos);
@@ -136,7 +121,7 @@ main {
     background: var(--verde-suave);
     box-shadow: 5px 5px 0 var(--sol-suave);
 }
-.zona-carga:hover .zona-carga-icono { transform: translateY(-4px) rotate(-4deg); }
+
 
 /* El input está oculto a la vista pero recibe el foco del teclado. */
 .campo-imagenes:has(input[type="file"]:focus-visible) .zona-carga {
@@ -156,7 +141,7 @@ main {
     border-color: var(--verde);
     background: var(--verde-suave);
     box-shadow: 0 0 0 4px var(--sol-suave), 5px 5px 0 var(--sol-suave);
-    transform: scale(1.02);
+
     animation: none;
 }
 .zona-carga.arrastrando .zona-carga-icono { animation: icono-rebote 0.7s ease-in-out infinite; }
@@ -217,13 +202,13 @@ main {
     border-radius: var(--radio-control);
     background: var(--papel);
     box-shadow: 4px 4px 0 var(--sol-suave);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition: border-color .16s ease, box-shadow .16s ease;
 }
 /* Leve inclinación alternada: fotos "pegadas" a mano. */
 .imagen-previa:nth-child(odd) figure { transform: rotate(-0.6deg); }
 .imagen-previa:nth-child(even) figure { transform: rotate(0.6deg); }
 .imagen-previa:is(:hover, :focus-within) figure {
-    transform: translateY(-4px) rotate(0deg);
+
     box-shadow: 6px 8px 0 var(--sol-suave);
 }
 
@@ -232,9 +217,9 @@ main {
     aspect-ratio: 1;
     object-fit: cover;
     background: var(--sol-suave);
-    transition: opacity 0.35s ease, transform 0.4s ease;
+    transition: opacity .16s ease;
 }
-.imagen-previa:hover img { transform: scale(1.05); }
+
 /* Destello mientras el navegador decodifica la imagen */
 .imagen-previa.cargando img {
     opacity: 0;
@@ -278,7 +263,7 @@ main {
     color: var(--azul);
     font: inherit;
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.25s ease, opacity 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 }
 .imagen-quitar {
     top: calc(-1 * var(--e-2));
@@ -298,7 +283,7 @@ main {
 .imagen-quitar:focus-visible {
     background: var(--terracota);
     color: #fff;
-    transform: rotate(90deg) scale(1.08);
+
 }
 .imagen-hacer-portada {
     left: 50%;
@@ -309,17 +294,17 @@ main {
     font-weight: 700;
     white-space: nowrap;
     opacity: 0;
-    transform: translate(-50%, 6px);
+    transform: translateX(-50%);
 }
 .imagen-previa:is(:hover, :focus-within) .imagen-hacer-portada,
 .imagen-hacer-portada:focus-visible {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateX(-50%);
 }
 .imagen-hacer-portada:hover { background: var(--sol); }
 /* En pantallas táctiles no hay hover: el botón queda siempre visible. */
 @media (hover: none) {
-    .imagen-hacer-portada { opacity: 1; transform: translate(-50%, 0); }
+    .imagen-hacer-portada { opacity: 1; transform: translateX(-50%); }
 }
 
 .imagen-previa.saliendo {
@@ -370,4 +355,44 @@ main {
 @keyframes error-sacudir {
     20%, 60% { transform: translateX(-5px); }
     40%, 80% { transform: translateX(5px); }
+}
+
+/* Editor: navegación libre y vista previa en escritorio; formulario vertical en móvil. */
+.crear-editor { display: grid; gap: var(--e-6); align-items: start; }
+.crear-editor > .crear-formulario { width: min(100%, 680px); min-width: 0; margin-inline: auto; }
+.crear-panel { min-width: 0; scroll-margin-top: var(--e-6); }
+.crear-editor-menu, .crear-editor-acciones { display: none; }
+.crear-editor-previa { width: min(100%, 680px); min-width: 0; margin-inline: auto; }
+.crear-previa-panel { padding: var(--e-4); background: var(--terracota-suave); border: 1px solid var(--linea); border-radius: var(--radio-tarjeta); }
+.crear-previa-panel > summary { min-height: 44px; padding-bottom: var(--e-3); cursor: pointer; font-weight: 700; }
+.crear-previa-panel > .campo-ayuda { margin-top: var(--e-3); }
+.crear-previa-panel .campana-cuerpo { padding: var(--e-4); overflow-wrap: anywhere; }
+.crear-previa-sin-foto { display: grid; place-items: center; }
+.crear-previa-sin-foto span { padding: var(--e-2) var(--e-3); background: var(--papel); border-radius: var(--radio-control); }
+.crear-previa-descripcion { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+.crear-previa-objetivo { padding-top: var(--e-3); border-top: 1px solid var(--linea); font-weight: 700; white-space: pre-line; }
+.crear-revision-datos { margin: var(--e-6) 0; }
+.crear-revision-datos dt { margin-top: var(--e-4); font-weight: 700; }
+.crear-revision-datos dd { margin: var(--e-1) 0 0; color: var(--texto-secundario); white-space: pre-line; overflow-wrap: anywhere; }
+[data-editor-faltantes] { padding-left: var(--e-6); }
+[data-editor-faltantes] a { display: inline-flex; align-items: center; min-height: 44px; }
+@media (min-width: 1024px) {
+    .crear-editor-listo { grid-template-columns: 152px minmax(0, 1fr) 272px; }
+    .crear-editor-listo .crear-editor-menu { display: block; padding: var(--e-4); position: sticky; top: var(--e-6); }
+    .crear-editor-menu .campo-ayuda { margin-bottom: var(--e-4); }
+    .crear-editor-menu ol { margin: 0; padding: 0; list-style: none; }
+    .crear-editor-menu li + li { margin-top: var(--e-2); }
+    .crear-editor-menu a { display: flex; flex-direction: column; gap: var(--e-1); padding: var(--e-3); border-radius: var(--radio-control); text-decoration: none; font-weight: 700; }
+    .crear-editor-menu a span { font-size: .75rem; font-weight: 400; color: var(--texto-secundario); }
+    .crear-editor-menu a:hover { background: var(--aviso-fondo); }
+    .crear-editor-menu a[aria-current] { background: var(--azul); color: var(--papel); }
+    .crear-editor-menu a[aria-current] span { color: var(--papel); }
+    .crear-editor-menu a[data-completo="true"]:not([aria-current]) { background: var(--verde-suave); }
+    .crear-editor-listo .crear-panel[data-editor-inactivo] { display: none; }
+    .crear-editor-listo .crear-editor-acciones { display: flex; justify-content: space-between; gap: var(--e-3); flex-wrap: wrap; }
+    .crear-editor-acciones [data-editor-siguiente] { margin-left: auto; }
+    .crear-editor-previa { position: sticky; top: var(--e-6); }
+    .crear-previa-panel { max-height: calc(100vh - var(--e-12)); overflow-y: auto; }
+    .crear-previa-panel > summary { list-style: none; cursor: default; }
+    .crear-previa-panel > summary::-webkit-details-marker { display: none; }
 }

@@ -12,7 +12,7 @@ require __DIR__ . '/parciales/cabecera.php';
 <section class="seccion" aria-labelledby="titulo-reactivar">
     <div class="contenedor">
         <div class="ingresar-interior">
-            <div class="seccion-encabezado">
+            <div class="seccion-encabezado encabezado-trama">
                 <h1 id="titulo-reactivar">Tu cuenta está desactivada</h1>
                 <p class="bajada">Desactivaste tu cuenta anteriormente. ¿Querés reactivarla para volver a ingresar a TodosPara.Uno?</p>
             </div>

@@ -30,7 +30,7 @@ require __DIR__ . '/parciales/cabecera.php';
 ?>
 <section class="seccion" aria-labelledby="titulo-contacto">
     <div class="contenedor">
-        <div class="seccion-encabezado">
+        <div class="seccion-encabezado encabezado-trama">
             <h1 id="titulo-contacto">Escribinos</h1>
             <p class="bajada">Si tenés una duda, un problema con una campaña o querés contarnos algo, dejanos tu mensaje.</p>
         </div>

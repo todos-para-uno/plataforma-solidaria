@@ -1,26 +1,18 @@
 /* Layout de la pantalla de contacto. Solo acomoda; colores y componentes vienen de base.css. */
-/* Layout de la pantalla de contacto. Solo acomoda; colores y componentes vienen de base.css. */
-main {
-    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
 .contacto-interior {
     display: grid;
     grid-template-columns: 1.4fr 1fr;
     gap: var(--e-12);
     align-items: start;
 }
-/* Animación de zoom y sombra al pasar el cursor (hover), igual a las tarjetas de crear campaña. */
 .contacto-formulario {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: border-color .16s ease, box-shadow .16s ease;
 }
 .contacto-formulario:hover {
-    transform: scale(1.015);
+
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
- 
+
 /* El peso del texto refuerza la lectura sobre la fotografía sin cubrirla. */
 .contacto-ayuda p {
     font-weight: 500;
@@ -30,10 +22,19 @@ main {
     font-size: var(--t-h3);
     color: var(--verde);
 }
- 
+
 @media (max-width: 860px) {
     .contacto-interior {
         grid-template-columns: 1fr;
         gap: var(--e-8);
     }
 }
+
+.contacto-ayuda {
+    padding: var(--e-8);
+    background: var(--aviso-fondo);
+    border: 1px solid var(--linea);
+    border-top: 6px solid var(--sol);
+    border-radius: var(--radio-tarjeta);
+}
+.contacto-ayuda p:last-child { margin-bottom: 0; }

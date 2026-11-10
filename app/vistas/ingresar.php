@@ -23,7 +23,7 @@ require __DIR__ . '/parciales/cabecera.php';
 <section class="seccion" aria-labelledby="titulo-ingresar">
     <div class="contenedor">
         <div class="ingresar-interior">
-            <div class="seccion-encabezado">
+            <div class="seccion-encabezado encabezado-trama">
                 <h1 id="titulo-ingresar">Ingresá a tu cuenta</h1>
                 <p class="bajada">Seguí tus campañas, tus donaciones y tus mensajes.</p>
             </div>

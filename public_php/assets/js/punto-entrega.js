@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         if (acercar) mapa.setView([y, x], 16);
+        requestAnimationFrame(() => document.dispatchEvent(new Event('crear:entrega-actualizada')));
     }
     if (valido()) marcar(Number(lat.value), Number(lng.value));
     mapa.on('click', e => {

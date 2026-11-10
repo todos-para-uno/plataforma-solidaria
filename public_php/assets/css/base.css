@@ -6,7 +6,7 @@
    Las decisiones de diseño se documentan en DESIGN.md, la referencia interna
    que usamos el equipo y los modelos de IA.
    ========================================================================== */
- 
+
 /* 1. Variables compartidas: colores, fuentes, tamaños y espacios
    ------------------------------------------------------------------------ */
 :root {
@@ -22,29 +22,30 @@
     --corazon-hover: #9c3a21;
     --sol: #f4b223;           /* resaltados, separadores y detalles de progreso */
     --sol-suave: #ecd89f;     /* sombra de las tarjetas */
- 
+    --champagne: #f5e6c8;     /* brillo discreto del separador del pie */
+
     /* Fondos y líneas */
-    --hueso: #f7f5f0;         /* fondo de la página */
+    --hueso: #f8f5ee;         /* fondo de la página */
     --papel: #fffefa;         /* fondo de tarjetas y campos */
     --grafito: #4d4b46;       /* borde "a lápiz" de tarjetas y botones */
-    --linea: #ccc7bc;         /* divisores finos */
+    --linea: #d7d1c5;         /* divisores finos */
     --texto-secundario: #454b54; /* más definido sin competir con los títulos */
- 
+
     /* Estados */
     --error: #923d29;      --error-fondo: #fff1e9;
     --aviso: #51462d;      --aviso-fondo: #f8f0db;
     --exito: var(--verde); --exito-fondo: var(--verde-suave);
- 
+
     /* Niveles de confianza del usuario (tabla validaciones) */
     --nivel-blanco: #ffffff;
     --nivel-celeste: #1f5f8b;  --nivel-celeste-fondo: #e3f0f9;
     --nivel-azul: #ffffff;     --nivel-azul-fondo: var(--azul);
     --nivel-violeta: #5a3d8a;  --nivel-violeta-fondo: #ded2f2;
- 
+
     /* Tipografía: sin descargas, funciona sin internet */
     --fuente-titulos: Georgia, "Times New Roman", serif;
-    --fuente-texto: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
- 
+    --fuente-texto: "Trebuchet MS", "Segoe UI", sans-serif;
+
     /* Tamaños compartidos para mantener la misma jerarquía entre pantallas */
     --t-chico: 0.8125rem;   /* 13px: ayudas, notas */
     --t-base: 1rem;         /* 16px: texto */
@@ -52,26 +53,30 @@
     --t-h3: 1.375rem;       /* 22px */
     --t-h2: 2rem;           /* 32px */
     --t-h1: clamp(2.25rem, 4.5vw, 3.5rem);
- 
+
     /* Espaciado (múltiplos de 4px) */
     --e-1: 0.25rem;  --e-2: 0.5rem;  --e-3: 0.75rem; --e-4: 1rem;
     --e-6: 1.5rem;   --e-8: 2rem;    --e-12: 3rem;   --e-16: 4rem;
- 
-    /* El trazo "a lápiz": bordes de distinto grosor y curvas irregulares */
-    --trazo: 1px 2px 2px 1px;
-    --radio-tarjeta: 12px 16px 11px 15px / 15px 11px 17px 12px;
-    --radio-control: 5px 7px 6px 4px;
-    --sombra-tarjeta: 7px 7px 0 var(--sol-suave);
- 
-    --ancho-max: 1080px;
+
+    /* Superficies de papel y controles consistentes */
+    --trazo: 1px;
+    --radio-tarjeta: 16px;
+    --radio-control: 8px;
+    --sombra-tarjeta: 0 4px 20px rgb(65 49 24 / 6%);
+
+    --ancho-max: 1160px;
+    --patron-solidario: url('../imagenes/trama-solidaria.svg');
+    --foto-solidaria: url('../imagenes/sol.webp');
+    --foco: #9c3a21;
+    --sombra-control: 0 0 0 3px rgb(47 107 63 / 15%);
 }
- 
+
 /* 2. Base
    ------------------------------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; }
- 
-html { -webkit-text-size-adjust: 100%; }
- 
+
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
+
 body {
     margin: 0;
     background: var(--hueso);
@@ -83,10 +88,18 @@ body {
     display: flex;
     flex-direction: column;
 }
- 
+
 /* Las secciones ya incluyen el espacio de cierre antes del pie. */
-main { flex: 1; }
- 
+main {
+    flex: 1;
+    /* La foto conserva protagonismo; tarjetas y encabezados protegen la lectura. */
+    background-color: var(--hueso);
+    background-image: linear-gradient(100deg, rgb(248 245 238 / 80%), rgb(248 245 238 / 46%) 55%, rgb(248 245 238 / 16%)), var(--foto-solidaria);
+    background-size: cover;
+    background-position: center 70%;
+    background-repeat: no-repeat;
+}
+
 h1, h2, h3 {
     font-family: var(--fuente-titulos);
     font-weight: normal;
@@ -97,51 +110,51 @@ h1, h2, h3 {
 h1 { font-size: var(--t-h1); letter-spacing: -0.02em; }
 h2 { font-size: var(--t-h2); }
 h3 { font-size: var(--t-h3); }
- 
+
 p { margin: 0 0 var(--e-4); max-width: 68ch; text-wrap: pretty; }
- 
+
 a { color: var(--azul); text-underline-offset: 4px; }
 a:hover { color: var(--terracota); }
- 
+
 img { display: block; max-width: 100%; height: auto; }
- 
-:focus-visible { outline: 3px solid var(--sol); outline-offset: 3px; }
- 
+
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
+
 [hidden] { display: none !important; }
- 
+
 .contenedor {
     width: min(var(--ancho-max), calc(100% - 2 * var(--e-8)));
     margin-inline: auto;
 }
- 
+
 .texto-secundario { color: var(--texto-secundario); }
 .bajada { font-size: var(--t-medio); color: var(--texto-secundario); }
- 
+
 .solo-lectores {
     position: absolute; width: 1px; height: 1px; overflow: hidden;
     clip: rect(0 0 0 0); white-space: nowrap;
 }
- 
+
 .saltar-contenido {
     position: absolute; left: var(--e-4); top: -6rem; z-index: 100;
     padding: var(--e-3) var(--e-4); background: var(--papel);
 }
 .saltar-contenido:focus { top: var(--e-4); }
- 
+
 /* 3. Cabecera y menú
    ------------------------------------------------------------------------ */
-.cabecera { border-top: 4px solid var(--verde); border-bottom: 1px solid var(--linea); background: var(--hueso); }
- 
+.cabecera { border-top: 4px solid var(--verde); border-bottom: 1px solid var(--linea); background: var(--papel); }
+
 .cabecera-interior {
     display: flex;
     align-items: center;
     gap: var(--e-4);
     min-height: 84px;
 }
- 
+
 .cabecera-logo { flex-shrink: 0; }
 .cabecera-logo img { width: 190px; }
- 
+
 .menu-boton {
     display: none;
     margin-left: auto;
@@ -156,14 +169,14 @@ img { display: block; max-width: 100%; height: auto; }
     font-weight: 600;
     cursor: pointer;
 }
- 
+
 .menu {
     display: flex;
     align-items: center;
     gap: var(--e-4);
     flex: 1;
 }
- 
+
 .menu-principal,
 .menu-cuenta {
     display: flex;
@@ -174,7 +187,7 @@ img { display: block; max-width: 100%; height: auto; }
     list-style: none;
 }
 .menu-cuenta { margin-left: auto; }
- 
+
 .menu a {
     display: inline-flex;
     align-items: center;
@@ -191,11 +204,11 @@ img { display: block; max-width: 100%; height: auto; }
     text-decoration: none;
 }
 .menu a { white-space: nowrap; }
- 
+
 /* Los botones dentro del menú conservan su aspecto de botón */
 .menu a.boton { padding-inline: var(--e-4); color: #fff; text-decoration: none; }
 .menu a.boton:is(:hover, :focus-visible) { background: var(--sol); color: var(--azul); }
- 
+
 /* Desplegable del usuario con sesión iniciada */
 .menu-usuario { position: relative; }
 .menu-usuario summary {
@@ -263,9 +276,9 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .menu a[aria-current="page"]:hover { background: var(--sol); color: var(--azul); }
 
- 
+
 .menu .boton { margin-left: var(--e-2); }
- 
+
 .contador {
     display: inline-grid;
     place-items: center;
@@ -278,7 +291,7 @@ img { display: block; max-width: 100%; height: auto; }
     color: var(--azul);
     font-size: var(--t-chico);
 }
- 
+
 @media (max-width: 1080px) {
     .js .menu-boton { display: inline-flex; align-items: center; }
     .cabecera-interior { flex-wrap: wrap; min-height: 72px; }
@@ -303,7 +316,7 @@ img { display: block; max-width: 100%; height: auto; }
     .menu-usuario summary { padding-inline: 0; }
     .menu-usuario ul { position: static; background: none; box-shadow: none; border: 0; border-left: 2px solid var(--linea); border-radius: 0; padding: 0 0 0 var(--e-4); }
 }
- 
+
 /* 4. Pie: azul marino, cierra la página
    ------------------------------------------------------------------------ */
 .pie {
@@ -312,7 +325,7 @@ img { display: block; max-width: 100%; height: auto; }
     color: var(--hueso);
     font-size: 0.9375rem;
 }
- 
+
 .pie-interior {
     display: grid;
     /* Tres columnas iguales: la marca y los enlaces se reparten sin dejar un hueco en el medio. */
@@ -320,10 +333,10 @@ img { display: block; max-width: 100%; height: auto; }
     gap: var(--e-8);
     padding-block: var(--e-12) var(--e-6);
 }
- 
+
 .pie-marca img { width: 220px; margin-bottom: var(--e-3); }
 .pie-marca p { margin: 0; max-width: 30ch; color: var(--hueso); }
- 
+
 .pie h2 {
     margin-bottom: var(--e-2);
     font-family: var(--fuente-texto);
@@ -331,7 +344,7 @@ img { display: block; max-width: 100%; height: auto; }
     font-weight: 700;
     color: var(--sol);
 }
- 
+
 .pie ul { margin: 0; padding: 0; list-style: none; }
 .pie li a {
     display: inline-flex; align-items: center; min-height: 36px;
@@ -345,14 +358,14 @@ img { display: block; max-width: 100%; height: auto; }
     text-decoration: none;
 }
 .pie :focus-visible { outline-color: var(--sol); }
- 
+
 .pie-creditos {
     padding-block: var(--e-4) var(--e-6);
     border-top: 1px solid rgba(247, 245, 240, 0.25);
     font-size: var(--t-chico);
 }
 .pie-creditos p { margin: 0; max-width: none; color: #c9d3e0; }
- 
+
 @media (max-width: 760px) {
     /* En el celular el pie se compacta: menos aire entre bloques y las mismas dos columnas de enlaces. */
     .pie-interior { grid-template-columns: 1fr 1fr; gap: var(--e-4); padding-block: var(--e-6) var(--e-3); }
@@ -364,7 +377,7 @@ img { display: block; max-width: 100%; height: auto; }
     .pie li a { padding-inline: var(--e-1); }
     .pie-creditos { padding-block: var(--e-3); }
 }
- 
+
 /* 4b. Secciones de página: separación vertical y fondos alternados
    ------------------------------------------------------------------------ */
 .seccion { padding-block: var(--e-16) calc(var(--e-16) + var(--e-4)); }
@@ -385,12 +398,12 @@ img { display: block; max-width: 100%; height: auto; }
     background: linear-gradient(90deg, var(--verde) 0 50%, var(--terracota) 50% 75%, var(--sol) 75%);
 }
 
- 
+
 @media (max-width: 760px) {
     .seccion { padding-block: var(--e-12); }
     .seccion-encabezado { margin-bottom: var(--e-8); }
 }
- 
+
 /* 5. Botones
    ------------------------------------------------------------------------ */
 .boton {
@@ -411,38 +424,38 @@ img { display: block; max-width: 100%; height: auto; }
     cursor: pointer;
 }
 .boton:hover { background: var(--sol); color: var(--azul); }
- 
+
 .boton-secundario { background: var(--verde-suave); color: var(--verde); border-color: var(--verde); }
 .boton-secundario:hover { background: var(--sol); color: var(--azul); border-color: var(--grafito); }
- 
+
 .boton-donar { background: var(--corazon); }
 .boton-donar:hover { background: var(--sol); color: var(--azul); }
- 
+
 .boton-chico { min-height: 40px; padding: var(--e-2) var(--e-4); }
 .boton-ancho { width: 100%; }
- 
+
 .boton:disabled, .boton[aria-disabled="true"] {
     background: #656972; color: #fff; cursor: not-allowed;
 }
- 
+
 /* 6. Formularios
    ------------------------------------------------------------------------ */
 .campo { margin-bottom: var(--e-4); }
- 
+
 .campo label {
     display: block;
     margin-bottom: 0.375rem;
     font-size: 0.875rem;
     font-weight: 700;
 }
- 
+
 .campo-ayuda {
     display: block;
     margin-top: var(--e-1);
     color: var(--texto-secundario);
     font-size: var(--t-chico);
 }
- 
+
 .campo input,
 .campo select,
 .campo textarea {
@@ -460,9 +473,9 @@ img { display: block; max-width: 100%; height: auto; }
 .campo textarea { min-height: 120px; resize: vertical; }
 .campo :is(input, select, textarea):focus-visible { border-color: var(--verde); }
 input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
- 
+
 .campo [aria-invalid="true"] { border-color: var(--error); }
- 
+
 .campo-error {
     display: block;
     margin-top: var(--e-1);
@@ -470,18 +483,18 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
     font-size: var(--t-chico);
     font-weight: 600;
 }
- 
+
 /* 7. Tarjetas
    ------------------------------------------------------------------------ */
 .tarjeta {
     padding: var(--e-8);
     background: var(--papel);
-    border: solid var(--grafito);
+    border: solid var(--linea);
     border-width: var(--trazo);
     border-radius: var(--radio-tarjeta);
     box-shadow: var(--sombra-tarjeta);
 }
- 
+
 /* 8. Mensajes del sistema
    ------------------------------------------------------------------------ */
 .alerta {
@@ -495,7 +508,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
 .alerta-aviso { border-color: var(--sol); background: var(--aviso-fondo); color: var(--aviso); }
 .alerta-error { border-color: var(--error); background: var(--error-fondo); color: var(--error); }
 .alerta-exito { border-color: var(--exito); background: var(--exito-fondo); color: var(--exito); }
- 
+
 /* 9. Insignias
    ------------------------------------------------------------------------ */
 .insignia {
@@ -511,13 +524,13 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
     font-weight: 600;
     white-space: nowrap;
 }
- 
+
 /* Niveles de confianza: Blanco, Celeste, Azul, Violeta */
 .nivel-blanco  { background: var(--nivel-blanco); color: var(--azul); border-color: var(--grafito); }
 .nivel-celeste { background: var(--nivel-celeste-fondo); color: var(--nivel-celeste); border-color: var(--nivel-celeste); }
 .nivel-azul    { background: var(--nivel-azul-fondo); color: var(--nivel-azul); border-color: var(--azul); }
 .nivel-violeta { background: var(--nivel-violeta-fondo); color: var(--nivel-violeta); border-color: var(--nivel-violeta); }
- 
+
 /* 10. Progreso de una campaña
    ------------------------------------------------------------------------ */
 .progreso {
@@ -533,10 +546,10 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
     background: var(--verde);
     border-right: 2px solid var(--sol);
 }
- 
+
 .progreso-cifras { margin: var(--e-2) 0 0; font-size: 0.9375rem; color: var(--texto-secundario); }
 .progreso-cifras strong { color: var(--verde); }
- 
+
 /* 11. Tarjeta de campaña
    ------------------------------------------------------------------------ */
 .campana {
@@ -585,13 +598,13 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
     color: #3b4149;
 }
 
- 
+
 .grilla-campanas {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
     gap: var(--e-8);
 }
- 
+
 /* 12. Dato de resumen: una cifra destacada y qué mide. Va dentro de una .tarjeta.
    ------------------------------------------------------------------------ */
 .dato {
@@ -610,20 +623,20 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
     font-size: var(--t-chico);
     color: var(--texto-secundario);
 }
- 
+
 @media (max-width: 480px) {
     .contenedor { width: calc(100% - 2 * var(--e-6)); }
     .tarjeta { padding: var(--e-6) var(--e-4); box-shadow: 5px 5px 0 var(--sol-suave); }
     .campana { padding: 0; }
 }
- 
+
 /* Confirmación de ingreso: usa el papel, los trazos y los acentos del sitio. */
 .bienvenida { margin-top: var(--e-8); margin-bottom: var(--e-8); }
 .bienvenida-tarjeta {
     position: relative;
     padding: var(--e-6) var(--e-8);
     background: var(--papel);
-    border: solid var(--grafito);
+    border: solid var(--linea);
     border-width: var(--trazo);
     border-radius: var(--radio-tarjeta);
     box-shadow: var(--sombra-tarjeta);
@@ -680,4 +693,91 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--verde); }
 
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
+}
+
+/* Identidad compartida: la trama acompaña, el contenido se lee sobre papel. */
+.portada-cuenta {
+    padding-block: var(--e-12);
+    background-color: var(--sol);
+    background-image: var(--patron-solidario);
+    border-bottom: 1px solid var(--linea);
+}
+.portada-cuenta-tarjeta {
+    background: var(--terracota-suave);
+    overflow-wrap: anywhere;
+}
+.portada-cuenta-tarjeta h1 { margin-bottom: var(--e-2); }
+.portada-cuenta-tarjeta p:last-child { margin-bottom: 0; }
+.seccion-encabezado.encabezado-trama { width: 100%; max-width: none; }
+.encabezado-trama {
+    position: relative;
+    max-width: none;
+    padding: var(--e-8) calc(var(--e-8) + 112px) var(--e-8) var(--e-8);
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: var(--radio-tarjeta);
+    overflow: hidden;
+}
+.encabezado-trama::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 96px;
+    background-color: var(--sol);
+    background-image: var(--patron-solidario);
+    border-left: 1px solid var(--linea);
+    pointer-events: none;
+}
+.etiqueta-seccion {
+    margin-bottom: var(--e-3);
+    color: var(--verde);
+    font-size: var(--t-chico);
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+.boton, .menu a, .campo :is(input, select, textarea) {
+    transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.boton:active:not(:disabled) { box-shadow: inset 0 0 0 2px currentColor; }
+.campo :is(input, select, textarea):focus-visible { box-shadow: var(--sombra-control); }
+.campo :is(input, select, textarea):disabled { background: #eeeae2; color: #62625c; cursor: not-allowed; }
+.campo [aria-invalid="true"] { background: var(--error-fondo); }
+.campo input::placeholder, .campo textarea::placeholder { color: #65665f; opacity: 1; }
+.insignia { white-space: normal; }
+.campana-cuerpo h3 { font-size: 1.5rem; }
+.campana-cuerpo p { overflow-wrap: anywhere; }
+div.campana-imagen {
+    background-color: var(--sol);
+    background-image: var(--patron-solidario);
+}
+.estado-vacio {
+    grid-column: 1 / -1;
+    padding: var(--e-12) var(--e-8);
+    background: var(--aviso-fondo);
+    border: 1px dashed var(--terracota);
+    border-radius: var(--radio-tarjeta);
+}
+.estado-vacio p { color: var(--texto-secundario); }
+.pie { position: relative; border-top: 0; padding-top: var(--e-1); }
+.pie::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: var(--e-1);
+    background: linear-gradient(90deg, var(--sol-suave), var(--champagne) 45%, var(--papel) 50%, var(--champagne) 55%, var(--sol-suave));
+    box-shadow: 0 0 8px rgb(245 230 200 / 35%);
+    pointer-events: none;
+}
+.pie li a { min-height: 44px; }
+@media (max-width: 760px) {
+    .contenedor { width: calc(100% - 2 * var(--e-4)); }
+    .tarjeta { padding: var(--e-6); }
+    .campana { padding: 0; }
+    .encabezado-trama { padding: var(--e-6) calc(var(--e-4) + 32px) var(--e-6) var(--e-4); }
+    .encabezado-trama::after { width: 24px; }
+    .grilla-campanas > *, .contacto-interior > *, .pasos > * { min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }

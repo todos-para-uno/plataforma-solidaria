@@ -1,5 +1,25 @@
 /* Distribución del panel de administración. Colores, fuentes y componentes vienen de base.css. */
 
+/* Esta hoja se carga exclusivamente en Administración. */
+main {
+    background-color: var(--sol);
+    background-image: var(--patron-solidario);
+    background-size: auto;
+    background-position: top left;
+    background-repeat: repeat;
+}
+.administracion-cabecera {
+    background-color: var(--hueso);
+    background-image:
+        linear-gradient(to top, var(--terracota-suave), rgb(255 241 233 / 90%) 15%, rgb(255 241 233 / 45%) 45%, transparent 80%),
+        linear-gradient(100deg, rgb(248 245 238 / 80%), rgb(248 245 238 / 46%) 55%, rgb(248 245 238 / 16%)),
+        var(--foto-solidaria);
+    background-size: cover;
+    background-position: center 70%;
+    background-repeat: no-repeat;
+}
+.administracion-contenido .admin-panel { margin-top: 0; }
+
 /* Estadísticas: tres columnas en escritorio y una sola en el celular. */
 .administracion-estadisticas {
     display: grid;
@@ -8,12 +28,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-}
-main {
-    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
 }
 /* Gestión de usuarios: controles y acciones accesibles también en pantallas pequeñas. */
 .admin-panel { margin-top: 2rem; padding: 1.25rem; background: var(--papel); border: 1px solid var(--linea); border-top: 3px solid var(--verde); border-radius: var(--radio-tarjeta); }
@@ -151,8 +165,8 @@ main {
 /* Detalle de usuario: consultas separadas de acciones administrativas. */
 .admin-actividad-seccion h4,.admin-gestion-cuenta h4 { margin:0 0 .8rem; color:var(--azul); font-size:1rem; }
 .admin-actividad-tarjetas { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
-.admin-actividad-tarjeta { display:flex; flex-direction:column; align-items:flex-start; gap:.6rem; min-width:0; padding:1rem; text-align:left; font:inherit; color:var(--azul); background:var(--hueso); border:1px solid var(--linea); border-radius:.55rem; cursor:pointer; transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease; }
-.admin-actividad-tarjeta:hover { border-color:var(--sol); box-shadow:0 2px 9px rgba(0,0,0,.09); transform:translateY(-2px); }
+.admin-actividad-tarjeta { display:flex; flex-direction:column; align-items:flex-start; gap:.6rem; min-width:0; padding:1rem; text-align:left; font:inherit; color:var(--azul); background:var(--hueso); border:1px solid var(--linea); border-radius:.55rem; cursor:pointer; transition:border-color .2s ease,box-shadow .2s ease; }
+.admin-actividad-tarjeta:hover { border-color:var(--sol); box-shadow:0 2px 9px rgba(0,0,0,.09);  }
 .admin-actividad-tarjeta:focus-visible { outline:2px solid var(--azul); outline-offset:3px; }
 .admin-actividad-tarjeta-titulo { font-weight:600; }
 .admin-actividad-tarjeta-cantidad { font-size:2rem; line-height:1.1; font-variant-numeric:tabular-nums; }

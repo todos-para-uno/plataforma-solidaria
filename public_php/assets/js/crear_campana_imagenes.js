@@ -101,6 +101,9 @@ document.addEventListener('DOMContentLoaded', function () {
             s.item.querySelector('.imagen-portada').hidden = !esPortada;
             s.item.querySelector('.imagen-hacer-portada').hidden = esPortada;
         });
+        document.dispatchEvent(new CustomEvent('crear:imagenes-actualizadas', {
+            detail: { cantidad: cantidad, portada: seleccion[0]?.url || '' }
+        }));
     }
 
     function crearItem(archivo, url, retraso) {

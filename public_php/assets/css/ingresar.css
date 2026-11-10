@@ -1,10 +1,4 @@
 /* Layout de la pantalla de ingreso. Solo acomoda; colores y componentes vienen de base.css. */
-main {
-    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
 .ingresar-interior {
     max-width: 480px;
     margin-inline: auto;
@@ -15,16 +9,11 @@ main {
 .ingresar-registro {
     margin-top: var(--e-6);
 }
-/* Zoom suave al pasar el cursor sobre el recuadro "Ingresá a tu cuenta". */
 .ingresar-interior > .tarjeta {
-    transition: transform 0.25s ease;
+    transition: border-color .16s ease;
 }
-.ingresar-interior > .tarjeta:hover {
-    transform: scale(1.02);
-}
-@media (prefers-reduced-motion: reduce) {
-    .ingresar-interior > .tarjeta:hover { transform: none; }
-}
+
+
 /* Separación accesible de decisiones en la reactivación de cuenta. */
 .formulario-reactivacion .acciones-reactivacion {
     display: flex;

@@ -17,13 +17,17 @@ require __DIR__ . '/parciales/cabecera.php';
 ?>
 
 
-<section class="seccion">
+<section class="portada-cuenta" aria-labelledby="titulo-mis-donaciones">
     <div class="contenedor">
-        <div class="seccion-encabezado">
-            <h1>Mis donaciones</h1>
+        <div class="tarjeta portada-cuenta-tarjeta">
+            <h1 id="titulo-mis-donaciones">Mis donaciones</h1>
             <p class="bajada">Acá podés ver el historial de todas las campañas solidarias en las que colaboraste.</p>
         </div>
+    </div>
+</section>
 
+<section class="seccion" aria-label="Historial de donaciones">
+    <div class="contenedor">
         <?php if ($error): ?>
             <div class="alerta alerta-error" role="alert"><?= escapar($error) ?></div>
         <?php elseif (empty($donaciones)): ?>

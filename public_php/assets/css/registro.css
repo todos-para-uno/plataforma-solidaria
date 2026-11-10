@@ -1,10 +1,4 @@
 /* Distribución del formulario y su confirmación de prueba. Los estilos compartidos están en base.css. */
-main {
-    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
 .registro-interior {
     max-width: 480px;
     margin-inline: auto;
@@ -15,13 +9,6 @@ main {
 .registro-ingresar {
     margin-top: var(--e-6);
 }
-/* Zoom suave al pasar el cursor sobre el recuadro "Creá tu cuenta" (igual que en ingresar.css). */
 .registro-interior > .tarjeta {
-    transition: transform 0.25s ease;
-}
-.registro-interior > .tarjeta:hover {
-    transform: scale(1.02);
-}
-@media (prefers-reduced-motion: reduce) {
-    .registro-interior > .tarjeta:hover { transform: none; }
+    transition: border-color .16s ease;
 }

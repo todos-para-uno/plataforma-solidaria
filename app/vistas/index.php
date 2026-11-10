@@ -29,18 +29,6 @@ $tituloPagina  = 'Todospara.uno — Campañas solidarias';
 $paginaActual  = 'inicio';
 $usuarioActual = $usuarioActual ?? null;
 $estilosPagina = ['inicio.css', 'index.css']; // Se cargan en este orden, después de base.css.
-/*
-$campanas = [
-    ['titulo' => 'Una mesa para compartir', 'estado' => 'Activa', 'descripcion' => 'Ayudanos a recaudar dinero para nuestro comedor!',
-     'imagen' => 'donaciones-mesa-compartir.webp', 'imagen_alt' => 'Escena ficticia de voluntarios compartiendo una comida con una vecina en un comedor comunitario.', 'ancho' => 960, 'alto' => 640],
-    ['titulo' => 'Mochilas llenas de futuro', 'estado' => 'Activa', 'descripcion' => 'Estamos buscando recolectar suficientes kits escolares 
-    para comenzar el año. Entra a nuestra pagina para saber como ayudar!',
-     'imagen' => 'donaciones-mochilas-futuro.webp', 'imagen_alt' => 'Escena ficticia de una voluntaria entregando una mochila con útiles a una niña acompañada por su mamá.', 'ancho' => 960, 'alto' => 640],
-    ['titulo' => 'Abriguemos juntos', 'estado' => 'Activa', 'descripcion' => 'Recolectando prendas para ayudar a quienes más las necesitan.',
-     'imagen' => 'donaciones-abriguemos-juntos.webp', 'imagen_alt' => 'Guantes, gorro de lana y prendas de abrigo.', 'ancho' => 751, 'alto' => 500],
-];
-$nombresNivel = ['blanco' => 'Blanco', 'celeste' => 'Celeste', 'azul' => 'Azul', 'violeta' => 'Violeta'];
-*/
 require __DIR__ . '/parciales/cabecera.php';
 ?>
 
@@ -58,39 +46,49 @@ require __DIR__ . '/parciales/cabecera.php';
 </section>
 
 <section class="seccion seccion-ayudar" aria-labelledby="titulo-pasos">
-    <div class="contenedor">
-        <div class="seccion-encabezado">
+    <div class="contenedor crear-invitacion ayudar-invitacion">
+        <div class="crear-invitacion-mensaje">
+            <p class="etiqueta-seccion">Para quienes quieren dar una mano</p>
             <h2 id="titulo-pasos">Un pequeño gesto, en tres pasos</h2>
-            <p class="bajada">Ayudar puede ser simple.</p>
+            <p>Hay muchas formas de dar una mano. Encontrá la tuya.</p>
+            <a class="boton" href="<?= escapar($rutas['explorar']) ?>">Explorar campañas</a>
         </div>
-        <ol class="pasos">
-            <li><span class="paso-numero" aria-hidden="true">1</span><h3>Elegí una campaña</h3><p>Conocé las campañas y encontrá una historia con la que quieras colaborar.</p></li>
-            <li><span class="paso-numero" aria-hidden="true">2</span><h3>Sumá tu aporte</h3><p>Podés ayudar con dinero o con insumos que otra persona necesita.</p></li>
-            <li><span class="paso-numero" aria-hidden="true">3</span><h3>Seguí el progreso</h3><p>Mirá cómo avanza la campaña y lo que se logra entre todos.</p></li>
+        <ol class="pasos pasos-tarjetas pasos-ayudar">
+            <li><span class="paso-numero" aria-hidden="true">1</span><div><h3>Elegí una campaña</h3><p>Conocé las campañas y encontrá una historia con la que quieras colaborar.</p></div></li>
+            <li><span class="paso-numero" aria-hidden="true">2</span><div><h3>Sumá tu aporte</h3><p>Podés ayudar con dinero o con insumos que otra persona necesita.</p></div></li>
+            <li><span class="paso-numero" aria-hidden="true">3</span><div><h3>Seguí el progreso</h3><p>Mirá cómo avanza la campaña y lo que se logra entre todos.</p></div></li>
         </ol>
     </div>
 </section>
 <section class="seccion seccion-crear" aria-labelledby="titulo-crear">
-    <div class="contenedor">
-        <div class="seccion-encabezado">
-            <h2 id="titulo-crear">Cómo crear una campaña</h2>
-            <p class="bajada">Recaudar nunca fue tan simple.</p>
+    <div class="contenedor crear-invitacion">
+        <div class="crear-invitacion-mensaje">
+            <p class="etiqueta-seccion">Para quienes necesitan una mano</p>
+            <h2 id="titulo-crear">Tu causa también puede reunirnos.</h2>
+            <p>Compartí tu historia y lo que necesitás. El primer paso para recibir ayuda es darla a conocer.</p>
+            <a class="boton" href="<?= escapar($rutaCrearCampana) ?>">Crear una campaña</a>
         </div>
-        <ol class="pasos">
-            <li><span class="paso-numero" aria-hidden="true">1</span><h3>Registrate</h3><p>Creá tu cuenta para empezar a compartir tu causa.</p></li>
-            <li><span class="paso-numero" aria-hidden="true">2</span><h3>Creá tu campaña</h3><p>Contá qué necesitás y completá los datos de tu campaña.</p></li>
-            <li><span class="paso-numero" aria-hidden="true">3</span><h3>Compartí tu campaña</h3><p>Difundí el enlace en tus redes para que más personas puedan ayudar.</p></li>
+        <ol class="pasos pasos-tarjetas">
+            <li><span class="paso-numero" aria-hidden="true">1</span><div><h3>Creá tu cuenta</h3><p>Registrate para empezar a compartir tu causa.</p></div></li>
+            <li><span class="paso-numero" aria-hidden="true">2</span><div><h3>Contá tu historia</h3><p>Explicá qué necesitás y definí los objetivos de tu campaña.</p></div></li>
+            <li><span class="paso-numero" aria-hidden="true">3</span><div><h3>Invitá a colaborar</h3><p>Compartí el enlace para que más personas puedan ayudar.</p></div></li>
         </ol>
     </div>
 </section>
-<section class="seccion seccion-papel" id="campanas" aria-labelledby="titulo-campanas">
+<section class="seccion seccion-papel seccion-campanas" id="campanas" aria-labelledby="titulo-campanas">
     <div class="contenedor">
         <div class="seccion-encabezado">
-            <h2 id="titulo-campanas">Mirá algunas de las campañas ya creadas</h2>
+            <p class="etiqueta-seccion">Historias que nos acercan</p>
+            <h2 id="titulo-campanas">Una causa, muchas manos.</h2>
+            <p class="bajada">Conocé algunas de las campañas activas de la comunidad.</p>
         </div>
         <div class="grilla-campanas">
             <?php if (empty($campanas)): ?>
-                <p class="texto-secundario">Todavía no hay campañas activas cargadas en la base de datos.</p>
+                <div class="estado-vacio">
+                    <h3>Las próximas historias empiezan acá.</h3>
+                    <p>Todavía no hay campañas activas. Si necesitás ayuda, podés compartir tu causa con la comunidad.</p>
+                    <a class="boton" href="<?= escapar($rutaCrearCampana) ?>">Crear una campaña</a>
+                </div>
             <?php else: ?>
                 <?php foreach ($campanas as $c): ?>
                     <article class="tarjeta campana">
@@ -117,9 +115,10 @@ require __DIR__ . '/parciales/cabecera.php';
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+        <?php if (!empty($campanas)): ?>
+            <div class="campanas-ver-todas"><a class="boton boton-secundario" href="<?= escapar($rutas['explorar']) ?>">Ver todas las campañas</a></div>
+        <?php endif; ?>
     </div>
 </section>
-
-
 
 <?php require __DIR__ . '/parciales/pie.php'; ?>

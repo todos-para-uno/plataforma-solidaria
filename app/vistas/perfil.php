@@ -43,7 +43,7 @@ $rutas['actualizar_documento'] ??= ($rutaBase ?? '../../public_php') . '/index.p
 
     <section class="seccion">
         <div class="contenedor">
-            <div class="seccion-encabezado">
+            <div class="seccion-encabezado encabezado-trama">
                 <h1>Mi perfil</h1>
                 <p class="bajada">Administrá la información de tu cuenta y tu nivel de confianza en la plataforma.</p>
             </div>

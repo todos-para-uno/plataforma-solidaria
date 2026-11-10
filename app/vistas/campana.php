@@ -18,7 +18,7 @@ $pctMonetaria = ($campana->getMonetaria() && $objetivoMonetario > 0)
     : 0;
 ?>
 
-    <section class="seccion">
+    <section class="seccion seccion-detalle">
         <div class="contenedor contenedor-detalle">
 
             <!-- Tarjeta principal de detalle -->
@@ -32,27 +32,31 @@ $pctMonetaria = ($campana->getMonetaria() && $objetivoMonetario > 0)
 
                 <div class="campana-cuerpo cuerpo-detalle">
 
-                    <!-- Insignias de categoría y tipo de donación -->
-                    <div class="campana-datos">
-                        <span class="insignia"><?= escapar(($categoria?->getNombre() ?? 'Sin categoría')) ?></span>
-                        <span class="insignia"><?= $campana->getMonetaria() ? 'Dinero' : 'Insumos' ?></span>
-                    </div>
+                    <div class="detalle-presentacion">
+                        <section class="tarjeta detalle-resumen" aria-labelledby="titulo-campana">
+                            <!-- Insignias de categoría y tipo de donación -->
+                            <div class="campana-datos">
+                                <span class="insignia"><?= escapar(($categoria?->getNombre() ?? 'Sin categoría')) ?></span>
+                                <span class="insignia"><?= $campana->getMonetaria() ? 'Dinero' : 'Insumos' ?></span>
+                            </div>
 
-                    <!-- Título principal -->
-                    <h1><?= escapar($campana->getNombre()) ?></h1>
+                            <!-- Título principal -->
+                            <h1 id="titulo-campana"><?= escapar($campana->getNombre()) ?></h1>
 
-                    <!-- Creador y nivel de validación -->
-                    <p class="campana-autor">
-                        Creada por <?= escapar(($creador?->getNombre() ?? 'Usuario no disponible')) ?>
-                        <span class="insignia nivel-<?= escapar($colorNivel) ?>">
-                            <?= escapar(($validacion?->getNombre() ?? 'Sin nivel de validación')) ?>
-                        </span>
-                    </p>
+                            <!-- Creador y nivel de validación -->
+                            <p class="campana-autor">
+                                Creada por <?= escapar(($creador?->getNombre() ?? 'Usuario no disponible')) ?>
+                                <span class="insignia nivel-<?= escapar($colorNivel) ?>">
+                                    <?= escapar(($validacion?->getNombre() ?? 'Sin nivel de validación')) ?>
+                                </span>
+                            </p>
 
-                    <!-- Descripción de la campaña -->
-                    <div class="detalle-seccion-bloque">
-                        <h3>Sobre esta campaña</h3>
-                        <p><?= nl2br(escapar(($campana->getDescripcion() ?? 'Esta campaña todavía no tiene una descripción.'))) ?></p>
+                            <!-- Descripción de la campaña -->
+                            <div class="detalle-seccion-bloque">
+                                <h3>Sobre esta campaña</h3>
+                                <p><?= nl2br(escapar(($campana->getDescripcion() ?? 'Esta campaña todavía no tiene una descripción.'))) ?></p>
+                            </div>
+                        </section>
                     </div>
 
                     <!-- Progreso de la campaña -->

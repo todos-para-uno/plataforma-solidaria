@@ -29,8 +29,8 @@ $colores = [
     ['variable' => 'azul', 'hex' => '#153a6b', 'uso' => 'Marca, texto, botón principal'],
     ['variable' => 'verde', 'hex' => '#2f6b3f', 'uso' => 'Categorías, progreso y botones secundarios'],
     ['variable' => 'terracota', 'hex' => '#b8472b', 'uso' => 'Donaciones y acentos cálidos'],
-    ['variable' => 'sol', 'hex' => '#f4b223', 'uso' => 'Sombras, separadores, foco y resaltado de botones'],
-    ['variable' => 'hueso', 'hex' => '#f7f5f0', 'uso' => 'Fondo de página'],
+    ['variable' => 'sol', 'hex' => '#f4b223', 'uso' => 'Trama, separadores y resaltado de botones'],
+    ['variable' => 'hueso', 'hex' => '#f8f5ee', 'uso' => 'Fondo de página'],
     ['variable' => 'papel', 'hex' => '#fffefa', 'uso' => 'Tarjetas y secciones alternadas'],
     ['variable' => 'grafito', 'hex' => '#4d4b46', 'uso' => 'Trazo de bordes'],
 ];
@@ -57,13 +57,34 @@ require __DIR__ . '/parciales/cabecera.php';
         </ul>
     </section>
  
+    <section class="guia-seccion" aria-labelledby="g-identidad">
+        <div class="seccion-encabezado encabezado-trama">
+            <p class="etiqueta-seccion">Identidad visual</p>
+            <h2 id="g-identidad">Una trama que conecta</h2>
+            <p>Usá la trama en márgenes y encabezados. El texto queda sobre papel liso. En Cómo funciona, la portada usa la foto y la trama acompaña el cuerpo.</p>
+        </div>
+        <div class="portada-cuenta">
+            <div class="contenedor">
+                <div class="tarjeta portada-cuenta-tarjeta">
+                    <h3>Encabezados de cuenta</h3>
+                    <p>Mis campañas y Mis donaciones comparten una tarjeta terracota suave sobre la trama exterior.</p>
+                </div>
+            </div>
+        </div>
+        <div class="estado-vacio">
+            <h3>Todavía no hay campañas</h3>
+            <p>Un estado vacío explica qué sucede y ofrece un siguiente paso.</p>
+            <a class="boton" href="<?= escapar($rutas['explorar']) ?>">Explorar campañas</a>
+        </div>
+    </section>
+
     <section class="guia-seccion" aria-labelledby="g-tipo">
         <h2 id="g-tipo">Tipografía</h2>
         <p class="guia-h1">Título de página (h1)</p>
         <p class="guia-h2">Título de sección (h2)</p>
         <p class="guia-h3">Título de tarjeta (h3)</p>
         <p class="bajada">Bajada: una o dos oraciones que explican la pantalla.</p>
-        <p>Texto común. Hablamos de vos, con tildes y en oraciones cortas. Los títulos van en Georgia; el resto, en la fuente del sistema.</p>
+        <p>Texto común. Hablamos de vos, con tildes y en oraciones cortas. Los títulos van en Georgia; el texto, en Trebuchet MS con Segoe UI como alternativa local.</p>
         <p class="texto-secundario"><small>Texto secundario y ayudas.</small></p>
     </section>
  

@@ -28,7 +28,7 @@ require __DIR__ . '/parciales/cabecera.php';
 <section class="seccion" aria-labelledby="titulo-registro">
     <div class="contenedor">
         <div class="registro-interior">
-            <div class="seccion-encabezado">
+            <div class="seccion-encabezado encabezado-trama">
                 <h1 id="titulo-registro">Creá tu cuenta</h1>
                 <p class="bajada">Con tu cuenta podés donar y crear campañas.</p>
             </div>

@@ -12,7 +12,7 @@ require __DIR__ . '/parciales/cabecera.php';
 ?>
 <section class="seccion" aria-labelledby="titulo-buscador">
     <div class="contenedor">
-        <div class="seccion-encabezado">
+        <div class="seccion-encabezado encabezado-trama">
             <h1 id="titulo-buscador">Buscar campañas</h1>
             <p class="bajada">Encontrá la campaña solidaria que querés apoyar con dinero o insumos.</p>
         </div>

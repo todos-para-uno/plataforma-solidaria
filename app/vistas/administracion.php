@@ -13,7 +13,7 @@ $estilosPagina = ['administracion.css'];
 
 require __DIR__ . '/parciales/cabecera.php';
 ?>
-<section class="seccion" aria-labelledby="titulo-administracion">
+<section class="seccion administracion-cabecera" aria-labelledby="titulo-administracion">
     <div class="contenedor">
         <div class="seccion-encabezado">
             <h1 id="titulo-administracion">Administración</h1>
@@ -34,7 +34,11 @@ require __DIR__ . '/parciales/cabecera.php';
                 <span class="dato-etiqueta">Campañas finalizadas</span>
             </li>
         </ul>
+    </div>
+</section>
 
+<section class="seccion administracion-contenido" aria-label="Gestión de la plataforma">
+    <div class="contenedor">
         <section class="admin-panel" id="gestion-usuarios" aria-labelledby="usuarios-titulo"
                  data-api="<?= escapar($rutaBase) ?>/index.php"
                  data-csrf="<?= escapar($csrfToken) ?>">

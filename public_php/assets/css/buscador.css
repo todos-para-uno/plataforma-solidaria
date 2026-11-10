@@ -1,6 +1,3 @@
-.seccion-encabezado {
-  max-width: 70ch;
-}
 /* Layout específico para alinear la lupa dentro del campo de búsqueda */
 .buscador-contenedor-input {
     position: relative;
@@ -18,12 +15,6 @@
     color: var(--azul);
     pointer-events: none; /* Permite hacer clic a través del SVG hacia el input */
 }
-main {
-    background-image: linear-gradient(rgba(247, 245, 240, 0.80), rgba(247, 245, 240, 0.60)), url('../imagenes/sol.webp');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
 .buscador-filtros {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
@@ -36,11 +27,10 @@ main {
     .buscador-filtros { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
 
-/* Animación de zoom y sombra al pasar el cursor (hover), igual a las tarjetas de crear campaña. */
 .buscador-formulario {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: border-color .16s ease, box-shadow .16s ease;
 }
 .buscador-formulario:hover {
-    transform: scale(1.015);
+
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }

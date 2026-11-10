@@ -13,10 +13,12 @@ $estilosPagina = ['mis_campanas.css'];
 
 require __DIR__ . '/parciales/cabecera.php';
 ?>
-<section class="seccion-papel mis-campanas-portada" aria-labelledby="titulo-saludo">
+<section class="portada-cuenta mis-campanas-portada" aria-labelledby="titulo-saludo">
     <div class="contenedor">
-        <h1 id="titulo-saludo">Hola, <?= escapar($usuarioActual['nombre']) ?></h1>
-        <p class="bajada">Acá seguís cómo avanzan las campañas que creaste.</p>
+        <div class="tarjeta portada-cuenta-tarjeta">
+            <h1 id="titulo-saludo">Hola, <?= escapar($usuarioActual['nombre']) ?></h1>
+            <p class="bajada">Acá seguís cómo avanzan las campañas que creaste.</p>
+        </div>
     </div>
 </section>
 
