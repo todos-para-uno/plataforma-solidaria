@@ -4,3 +4,5 @@
 /config/.mercadopago.local.php.*
 /config/mercadopago.local.php~
 /.respaldos-locales/
+*.har
+__pycache__/
