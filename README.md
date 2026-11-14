@@ -43,11 +43,15 @@ Estamos en desarrollo. El objetivo es tener registro e inicio de sesión, perfil
 
 Necesitás:
 
-- **PHP 8.1 o superior**, con `mbstring` para trabajar con textos con tildes.
+- **PHP 8.4 con las últimas actualizaciones de seguridad**, con `mbstring` para trabajar con textos con tildes. Si se utiliza una rama posterior, debe tener soporte y todos sus parches de seguridad aplicados.
 - **Git o GitHub Desktop** para descargar el código y compartir cambios.
 - **MariaDB y la extensión PHP `pdo_mysql`** para abrir y procesar el registro y para ejecutar las pruebas de repositorios y controladores. El inicio con datos ficticios y las pruebas de modelos se pueden probar sin MariaDB.
 
 Podés usar el servidor que trae PHP para ver la aplicación. Si ya tenés LAMP o XAMPP, también sirve. No hay dependencias de Composer ni de npm que instalar en esta versión. La integración opcional de Mercado Pago requiere además las extensiones PHP `curl` y `sodium`.
+
+**La versión de mantenimiento también importa:** no alcanza con instalar cualquier PHP 8.4. Las correcciones de seguridad del 21 de octubre de 2026 se publicaron en PHP **8.4.27**, y también en **8.5.12**, **8.3.36** y **8.2.35**. Para una instalación nueva de este proyecto se recomienda la rama 8.4 actualizada; esas versiones identifican las correcciones de ese aviso, no reemplazan la necesidad de instalar actualizaciones posteriores. Ver el [aviso oficial de PHP](https://www.php.net/archive/2026.php#2026-10-21-5) y el [anuncio de PHP 8.4.27](https://www.php.net/releases/8_4_27.php).
+
+En Debian, las correcciones también pueden incorporarse a los paquetes sin cambiar el número de versión original de PHP. Comprobá la revisión completa del paquete y los avisos de seguridad de la distribución; un número menor por sí solo no demuestra que falte el parche. Ver las [preguntas frecuentes de seguridad de Debian](https://www.debian.org/security/faq). Revisá tanto el PHP de consola (`php -v`) como el que ejecuta Apache o PHP-FPM, porque pueden utilizar instalaciones distintas.
 
 ### Descargar desde la terminal
 
