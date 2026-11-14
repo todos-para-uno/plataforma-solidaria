@@ -12,6 +12,8 @@ final class UsuariosRepository extends CrudRepository
             primaryKey: 'id',
             fields: [
                 'nombre',
+                'apellido',
+                'avatar',
                 'mail',
                 'telefono',
                 'tipo_documento',
@@ -22,6 +24,14 @@ final class UsuariosRepository extends CrudRepository
                 'id_validacion',
             ]
         );
+    }
+
+    public function estadoCuenta(int $id): ?string
+    {
+        $consulta = $this->pdo->prepare('SELECT estado_cuenta FROM usuarios WHERE id = ?');
+        $consulta->execute([$id]);
+        $estado = $consulta->fetchColumn();
+        return $estado === false ? null : (string) $estado;
     }
 
     /**
@@ -39,6 +49,8 @@ final class UsuariosRepository extends CrudRepository
 
         return $this->save([
             'nombre' => $usuario->getNombre(),
+            'apellido' => $usuario->getApellido(),
+            'avatar' => $usuario->getAvatar(),
             'mail' => $usuario->getEmail(),
             'telefono' => $usuario->getTelefono(),
             'tipo_documento' => $usuario->getTipoDocumento()?->value,
@@ -122,7 +134,10 @@ final class UsuariosRepository extends CrudRepository
         if (!in_array($limite, [10, 15, 25, 50], true) || $offset < 0) {
             throw new InvalidArgumentException('Paginación inválida.');
         }
-        $sql = "SELECT u.id, u.nombre, u.mail, u.telefono, u.admin, u.verificado,
+        $sql = "SELECT u.id, u.nombre, u.mail, u.telefono, u.admin,
+                       CASE WHEN u.tipo_documento IN ('DNI', 'Pasaporte')
+                           AND NULLIF(TRIM(u.documento), '') IS NOT NULL
+                           THEN 1 ELSE 0 END AS documento_cargado,
                        u.id_validacion, v.nombre AS validacion_nombre,
                        (SELECT b.id FROM baneados b WHERE b.id_usuario = u.id
                            AND b.fecha_unban IS NULL AND b.fecha_inicio <= CURRENT_TIMESTAMP

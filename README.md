@@ -34,7 +34,7 @@ Estamos en desarrollo. El objetivo es tener registro e inicio de sesión, perfil
 | Pantallas | Inicio con campañas ficticias, formulario de registro y componentes compartidos. |
 | Registro | Valida los datos en el servidor, comprueba correos duplicados y guarda el usuario con contraseña hasheada y nivel de confianza inicial. El formulario tiene protección CSRF. |
 | Ingreso y salida | Comprueba correo y contraseña, mantiene la sesión al navegar y permite cerrarla desde el menú. Ambos envíos tienen protección CSRF. |
-| Contacto | Valida consultas con CSRF, las guarda en `contactos` e intenta enviar el aviso con `mail()` a una dirección simulada. Funciona con o sin una cuenta. |
+| Contacto | Valida consultas con CSRF, las guarda en `contactos` y, si está configurado, envía el aviso por SMTP autenticado. Funciona con o sin una cuenta y conserva la consulta si falla el correo. |
 | Integración | Registro, ingreso, cierre de sesión y contacto están conectados. Las demás funcionalidades todavía no tienen un recorrido completo desde la web. |
 
 **El registro ya crea una cuenta en la base de datos.** El usuario nuevo queda sin verificar y sin permisos de administrador. Registrarse no inicia sesión automáticamente: después podés entrar desde **Ingresar**. Los enlaces que apuntan a `#` representan funcionalidades pendientes.
@@ -65,6 +65,32 @@ cd plataforma-solidaria
 5. Abrí esa carpeta en tu editor y abrí una terminal ahí.
 
 En los pasos que siguen, **raíz del proyecto** significa la carpeta `plataforma-solidaria`, donde está este README. Los comandos se ejecutan desde esa carpeta.
+
+### Base de demostración para la entrega
+
+En una instalación nueva, importá una sola vez [`database/schema.sql`](database/schema.sql) desde phpMyAdmin. Crea las tablas y agrega usuarios, administradores, categorías de campañas e insumos, siete campañas activas con objetivos y fotos, y donaciones de ejemplo. Los niveles Blanco, Celeste, Azul y Violeta tienen datos coherentes con las reglas de confianza. La base se llama `todosparauno`.
+
+**Con XAMPP en Windows:** colocá el proyecto en `C:\xampp\htdocs\plataforma-solidaria`, iniciá **Apache** y **MySQL** desde el panel de XAMPP, abrí `http://localhost/phpmyadmin/` y usá **Importar** para seleccionar `database/schema.sql`. Después abrí `http://localhost/plataforma-solidaria/public_php/`. Si tu carpeta de XAMPP o del proyecto tiene otro nombre, ajustá la ruta y la URL. La configuración predeterminada de la aplicación usa MariaDB en `localhost`, usuario `root` y contraseña vacía; si cambiaste esos datos en XAMPP, configurá `config/conexion.local.php` como se explica en [Preparar MariaDB](#preparar-mariadb).
+
+Todas las cuentas de demostración usan la contraseña **`Demo2026!`**:
+
+| Correo | Rol y nivel inicial |
+| --- | --- |
+| `admin.blanco@todosparauno.test` | Administrador, Blanco |
+| `admin.celeste@todosparauno.test` | Administrador, Celeste; pasaporte cargado |
+| `ana@todosparauno.test` | Usuario, Blanco; creadora de las campañas |
+| `bruno@todosparauno.test` | Usuario, Azul; DNI y una donación |
+| `carla@todosparauno.test` | Usuario, Violeta; pasaporte y tres donaciones |
+| `pepe@todosparauno.test` | Usuario, Celeste; DNI 40987654 |
+| `lola@todosparauno.test` | Usuario, Violeta; pasaporte ficticio y tres donaciones |
+
+Las direcciones `.test` y los documentos son ficticios. Las fotos ya están versionadas en `public_php/assets/imagenes/imagenes-camp/`; el SQL las referencia directamente. No hay que descomprimir otro archivo ni configurar permisos de subida para ver estas fotos. Para publicar fotos nuevas, PHP sí necesita escribir en `public_php/subidas/campanas/`; en Windows se revisan los permisos de esa carpeta si aparece un error de escritura. Los comandos `chgrp` y `chmod` de esta guía corresponden únicamente a XAMPP en Linux.
+
+El script está pensado para una base vacía. Si ya tenés datos, no vuelvas a importar el esquema completo: conservá tu base y aplicá las migraciones correspondientes.
+
+Si ya habías importado las tres campañas originales, podés agregar solo las cuatro nuevas importando [`database/migrations/20261101_demo_campanas_extra.sql`](database/migrations/20261101_demo_campanas_extra.sql) desde phpMyAdmin. La migración se puede repetir sin duplicar esas campañas. Las nuevas campañas son **Alimento para el refugio**, **Insumos para la salita**, **Equipamiento para el club** y **Fondo para emergencias**.
+
+Si importaste una versión anterior de los datos de demostración y el buscador muestra «Las campañas monetarias deben tener un CBU», importá una vez [`database/migrations/20261101_demo_cbu.sql`](database/migrations/20261101_demo_cbu.sql) en la base existente. Corrige únicamente la campaña monetaria de ejemplo de Ana; no hace falta volver a importar el esquema.
 
 ## Abrir la aplicación
 
@@ -112,7 +138,7 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | POST | `/index.php?ruta=contacto` | Valida y guarda la consulta, intenta enviar el correo y redirige al formulario con una confirmación. |
 | GET | `/index.php?ruta=resultados_buscar&buscar=texto&id_categoria_campana=1` | Busca campañas activas por texto y categoría; ambos filtros son opcionales. |
 | GET | `/index.php?ruta=campana&id=123` | Detalle público de la campaña activa identificada por su ID. Devuelve 400 si el ID es inválido y 404 si no existe o no está activa. |
-| GET | `/index.php?ruta=mis_donaciones` | Historial real del usuario autenticado, incluidos los estados de pago. Requiere la migración de Mercado Pago. |
+| GET | `/index.php?ruta=mis_donaciones` | Historial real del usuario autenticado, con insumos y enlaces a campañas activas. Incluye estados de pago cuando Mercado Pago está habilitado y sus migraciones están aplicadas. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
 
@@ -293,9 +319,33 @@ Para una base nueva, importá [`database/schema.sql`](database/schema.sql) desde
 
 Abrí **Contacto**, completá una consulta con datos ficticios y enviá. El servidor valida los campos y el token CSRF, guarda una fila en `contactos` y redirige al formulario con **Recibimos tu consulta**. Recargar esa página de confirmación no repite el envío. Un formulario inválido conserva los campos y no crea registros. Si hay una sesión iniciada, la consulta se asocia al usuario recuperado de esa sesión; las visitas sin cuenta también pueden escribir. Si se elimina una cuenta, sus consultas se conservan con `id_usuario = NULL`.
 
-El aviso usa la función PHP `mail()` y el destino simulado `contacto@todosparauno.test`. La dirección de quien consulta se usa como `Reply-To`, con un remitente fijo del sitio. El dominio `.test` es de demostración: no representa un buzón real. Para probar el transporte local, configurá un capturador de correo y el `sendmail_path` de PHP, o SMTP en los entornos que lo utilicen. `mail()` necesita un transporte configurado; guardar la consulta funciona aunque el aviso falle. La columna `correo_enviado` indica si el transporte aceptó el aviso, no que alguien lo recibió.
+El aviso usa **SMTP autenticado con TLS**, mediante PHPMailer 7.1.1 incluido en `lib/PHPMailer/`. No requiere Composer ni configurar `sendmail`. La dirección de quien consulta se usa como `Reply-To`; el remitente y el destinatario salen de configuración privada. Por defecto, ambos son `grupo@todospara.uno` y el envío está **deshabilitado** hasta completar las credenciales.
+
+**Para probar el proyecto en otra computadora no hace falta configurar correo ni compartir contraseñas.** Prepará la base, usá el formulario Contacto e ingresá con una cuenta administradora: la consulta aparece en **Administración → Mensajes**, guardada en la base de esa instalación. Este guardado ocurre siempre, esté habilitado SMTP o no; el correo es un aviso adicional. Las consultas realizadas en otra computadora no se sincronizan automáticamente con la base del equipo.
+
+Para habilitarlo:
+
+1. Copiá [`config/correo.ejemplo.php`](config/correo.ejemplo.php) a `config/correo.local.php` si este último no existe. Está excluido de Git y fuera de la carpeta pública; no se deben compartir ni versionar contraseñas.
+2. Completá el host SMTP, usuario y contraseña de la casilla. Para la casilla actual de DonWeb, el servidor es `c2770751.ferozo.com`, puerto `465`, seguridad `smtps` y usuario `grupo@todospara.uno`. Conservá `remitente` con esa cuenta. No es la contraseña del panel de DonWeb, sino la de la casilla.
+3. Cambiá `habilitado` a `true`. PHP necesita OpenSSL y acceso saliente al servidor SMTP. El certificado se verifica; no se admiten certificados autofirmados ni conexiones sin cifrado.
+4. Ejecutá `php utilidades/probar_correo.php --comprobar`. Valida la configuración sin abrir conexiones ni enviar mensajes.
+5. Cuando quieras realizar una entrega real, ejecutá `php utilidades/probar_correo.php --enviar`. Envía un único mensaje de prueba al destino configurado; revisá también Spam. No muestra contraseñas ni crea consultas en la base.
+6. Probá **Contacto** desde la aplicación. La consulta se guarda primero y el aviso se envía al destinatario configurado. Responder el correo debe dirigir la respuesta al visitante.
+
+También se admiten las variables de entorno `CORREO_HABILITADO`, `CORREO_SMTP_HOST`, `CORREO_SMTP_PUERTO`, `CORREO_SMTP_SEGURIDAD`, `CORREO_SMTP_USUARIO`, `CORREO_SMTP_PASSWORD`, `CORREO_REMITENTE` y `CORREO_DESTINO`. El archivo local tiene prioridad.
+
+Guardar la consulta funciona aunque el correo esté deshabilitado, falle la autenticación o el servidor rechace el envío. La columna `correo_enviado` indica que el servidor SMTP aceptó el mensaje, **no confirma su llegada a la bandeja de entrada**. No hay reintentos automáticos: las consultas siguen disponibles en Administración. Las pruebas automatizadas sustituyen la entrega para no enviar mensajes a casillas reales:
+
+```bash
+php tests/run_tests.php servicios CorreoServicio
+php tests/run_tests.php controladores ContactoController
+```
+
+Referencias: [configuración SMTP de DonWeb](https://soporte.donweb.com/es/articles/15819754-correo-profesional-buenas-practicas-configuracion-segura-de-envios-desde-formularios-y-smtp) y [PHPMailer](https://github.com/PHPMailer/PHPMailer).
 
 ### Comprobar el ingreso y la salida
+
+La sesión vence tras **10 minutos sin solicitudes a la aplicación**. Al volver a navegar o enviar un formulario, se pide ingresar nuevamente y la acción vencida no se procesa. El plazo se controla en el servidor; las solicitudes AJAX también cuentan como actividad. Las cabeceras de seguridad y las pruebas se describen en [Cabeceras y sesión inactiva](docs/seguridad/cabeceras-y-sesion.md).
 
 1. Creá una cuenta de prueba y abrí **Ingresar** desde el menú.
 2. Enviá su correo y contraseña. Deberías volver al inicio y ver el nombre del usuario en el menú.
@@ -387,6 +437,148 @@ Si documentás una integración pendiente, indicá qué falta y dónde se hará.
 | El formulario de ingreso devuelve **405** al enviarlo. | Comprobá que la copia servida por Apache esté actualizada y que `public_php/index.php` acepte POST para `ingresar`. |
 | El servidor no puede usar el puerto 8000. | Detené el servidor que ya lo ocupa o elegí otro puerto, por ejemplo `php -S localhost:8002 -t public_php`. Abrí ese mismo puerto en el navegador. |
 | La página abre sin estilos. | Entrá por la URL del servidor PHP y revisá que hayas usado `-t public_php` desde la raíz. Abrir el archivo con doble clic no ejecuta PHP. |
+| Al publicar una campaña aparece `Permission denied` o `Permiso denegado` en `subidas/campanas`. | El usuario que ejecuta PHP necesita escribir en esa carpeta. Seguí [Permisos de imágenes en XAMPP para Linux](#permisos-de-imágenes-en-xampp-para-linux). Git no conserva propietarios ni permisos de escritura de las carpetas. |
 | Un enlace no cambia de pantalla. | Revisá si su destino en `rutas.php` sigue siendo `#`: esa funcionalidad todavía está pendiente. |
 
 La organización de esta guía toma como referencia la [documentación de Luanti para preparar el entorno](https://docs.luanti.org/for-creators/development-setup/) y sus [guías de Git](https://docs.luanti.org/for-engine-devs/git-guidelines/): instrucciones por tarea, ejemplos concretos y cambios que se puedan revisar por separado.
+
+
+## Donaciones de insumos: punto de entrega y recepción
+
+Para una base existente, importá [`database/migrations/20261104_donaciones_sin_cuenta.sql`](database/migrations/20261104_donaciones_sin_cuenta.sql). Permite `NULL` en `donacion.id_usuario`, conservando los datos y la clave foránea; se puede repetir. Las instalaciones nuevas ya incluyen este cambio en `database/schema.sql`.
+
+- En **Mis campañas**, el creador de una campaña activa de insumos puede abrir **Definir punto de entrega**, elegir provincia/localidad y marcar un único lugar en el mapa. La dirección o referencia admite horarios de recepción. La ubicación se guarda en `ubicaciones` y queda asociada mediante `camp.id_ubicacion`; editarla reutiliza ese registro.
+- En el detalle público se muestran el mapa y la referencia. Todos los insumos pedidos se entregan en ese mismo lugar.
+- Desde **Mis campañas → Ver insumos recibidos y registrar entrega**, el creador ingresa el correo del donante, el objetivo y la cantidad efectivamente recibida. Se reutiliza `UsuariosRepository::findByMail()`: si el correo coincide con una cuenta, la entrega se asocia a ese usuario; si no, se guarda con `id_usuario = NULL` y se muestra como **Donante sin cuenta**. No se crea una cuenta ni se conserva el correo para asociarlo a futuros registros. La confirmación agrega un registro a `donacion` y suma la cantidad a `objetivos.parcial` dentro de una transacción.
+- El formulario tiene CSRF y una clave de sesión de un solo uso para evitar que reenviarlo duplique la recepción. Una nueva recepción intencional debe abrirse como formulario nuevo.
+- El historial de recepciones solo es visible para el creador. El progreso actualizado es público. Las cantidades usan la unidad del objetivo y admiten hasta dos decimales; se conservan también entregas que superen la meta.
+- No se registran promesas de donación ni una doble confirmación: el creador es quien confirma la entrega. La estructura actual exige un donante con cuenta; no se crean usuarios ficticios para entregas anónimas. No se cambia automáticamente el estado de la campaña ni el nivel de confianza.
+- La creación completa de campañas continúa como tarea separada; este recorrido funciona con las campañas ya guardadas.
+
+Pruebas con la base local, con datos de prueba revertidos al terminar:
+
+```bash
+php tests/run_tests.php controladores PuntoEntregaController
+php tests/run_tests.php controladores RecepcionInsumosController
+```
+
+
+### Historial del donante
+
+**Mis donaciones** consulta `donacion` para el usuario autenticado y muestra las campañas, insumos, cantidades y fechas reales. Una recepción registrada por el creador aparece en la cuenta del donante si su correo coincidía con una cuenta al registrarla. Las entregas sin cuenta suman al progreso de la campaña y figuran en el historial del creador, pero no aportan a su nivel de confianza ni se atribuyen a otro usuario. Para el nivel del creador solo cuentan las donaciones recibidas de otros usuarios registrados. Cada entrega tiene su propia tarjeta. Las campañas activas tienen un botón para abrir su detalle; las suspendidas o finalizadas conservan el registro sin enlazar a un detalle público inaccesible.
+
+```bash
+php tests/run_tests.php controladores MisDonacionesController
+```
+
+
+## Niveles de confianza y documento
+
+Se reutiliza `validaciones` para los nombres y las descripciones, y `usuarios.id_validacion` para el nivel actual. No requiere cambios de estructura ni modificar esos textos.
+
+- Sin DNI o Pasaporte cargado, el usuario permanece **Blanco**, aunque tenga donaciones.
+- Con documento y sin donaciones computables: **Celeste**. Cuentan las realizadas con la cuenta y las recibidas de otros usuarios registrados; las entregas recibidas sin cuenta no aportan al nivel. La descripción del perfil es «Usuario con documento y sin donaciones de usuarios registrados». Para actualizarla en una base existente, importá [`database/migrations/20261104_descripcion_celeste.sql`](database/migrations/20261104_descripcion_celeste.sql).
+- Con documento y 1 o 2 donaciones: **Azul**.
+- Con documento y 3 o más donaciones: **Violeta**.
+
+Se cuenta cada registro de `donacion` una vez para cada participante: como realizado para el donante y como recibido para el creador de la campaña. Para el nivel se suman ambos tipos de actividad; no se cuentan promesas ni cantidades de unidades como donaciones distintas. No es necesario que la campaña alcance su meta. Las donaciones anteriores se reconocen al cargar el documento.
+
+El nivel se recalcula al navegar con sesión iniciada y al guardar el documento. El perfil y el panel **Mi cuenta → Perfil** muestran el nombre y la descripción de la base. La carga del documento requiere sesión y CSRF, solo afecta al usuario autenticado y no modifica el indicador `verificado`. En el listado administrativo, **Documento cargado** muestra un tilde verde cuando el usuario ingresó DNI o pasaporte; no expone el número del documento.
+
+```bash
+php tests/run_tests.php controladores PerfilController
+```
+
+
+## Crear campañas con varios objetivos
+
+La ruta `crear_campana` admite GET y POST y requiere sesión. Se usan categorías reales de la base, CSRF y una clave de sesión de un solo uso para evitar publicaciones duplicadas.
+
+En una campaña de insumos se pueden agregar o quitar hasta 20 filas: categoría del insumo, nombre con su unidad y cantidad positiva con hasta dos decimales. Los nombres se reutilizan o agregan al catálogo de subcategorías existente. Cada fila genera un objetivo independiente, con progreso inicial cero. Todos comparten un único punto de entrega, seleccionado buscando un lugar o dirección, o haciendo clic en el mapa. Las coordenadas se guardan en campos ocultos; provincia y localidad se completan cuando coinciden con el catálogo y pueden revisarse. No se cambia la estructura de la base.
+
+Las campañas de dinero guardan su monto objetivo y CBU/CVU. Guardar la campaña, su ubicación y los objetivos es una operación atómica. Ante un error se conservan los campos y las filas para corregirlos. Se retiró el campo de fecha límite, que no tiene una columna donde persistirse en el esquema actual.
+
+```bash
+php tests/run_tests.php controladores CrearCampanaController
+```
+
+
+### Buscar el punto de entrega
+
+Crear campaña y editar su punto de entrega comparten un buscador de lugares/direcciones con Photon, basado en OpenStreetMap. La búsqueda se realiza al pulsar **Buscar en el mapa** o Enter; no hace consultas mientras se escribe. Se muestran hasta cinco resultados en Argentina. Elegir uno centra el mapa, guarda las coordenadas ocultas y completa la referencia; se pueden agregar horarios después. También se puede ajustar el marcador arrastrándolo o haciendo clic en el mapa. Revisar provincia y localidad si el proveedor no las reconoce en el catálogo.
+
+Se utiliza caché durante la visita, una sola búsqueda simultánea y un tiempo de espera de diez segundos. El servicio público admite uso moderado para proyectos, sin garantía de disponibilidad: [documentación de Photon](https://github.com/komoot/photon#demo-server). Si falla la búsqueda, se conserva el punto anterior y se puede elegir otro haciendo clic en el mapa. No se requieren claves ni cambios de estructura en la base.
+
+
+## Imágenes de campañas (integración del PR #49)
+
+Se integraron el modelo `CampanaImagen`, el repositorio, la validación/almacenamiento, la selección múltiple con vista previa y la migración aportados en [el PR #49](https://github.com/todos-para-uno/plataforma-solidaria/pull/49). Se conserva el formulario actual: múltiples insumos con cantidades, búsqueda del punto de entrega, documento y niveles de confianza, y la paleta visual.
+
+### Base existente
+
+Importar **solo** `database/migrations/20261101_campana_imagenes.sql` en la base seleccionada desde phpMyAdmin o un usuario administrador. La cuenta de la aplicación necesita permisos de lectura/escritura en la nueva tabla. La migración agrega `campana_imagenes`, se puede repetir y conserva los datos y la columna `camp.imagen`. Para una base nueva, el esquema completo ya incluye la tabla; no reimportar el esquema sobre una base con datos.
+
+Las campañas sin fotos continúan funcionando mientras se importa la migración. Publicar con fotos requiere que la tabla ya exista.
+
+### Subidas y presentación
+
+- Hasta 4 fotos opcionales PNG, JPG o WEBP, con el límite efectivo que permita PHP (máximo de aplicación: 5 MB por foto). Permite arrastrar, quitar y elegir portada.
+- Se validan los archivos en el servidor y se guardan con nombres aleatorios en `public_php/subidas/campanas/`. PHP necesita permiso para escribir allí. Las fotos no se versionan.
+- La recodificación con GD es obligatoria: si falta el soporte del formato, EXIF para JPEG o falla la conversión, se rechaza la subida y se limpian los archivos parciales. Nunca se conserva el original como alternativa. Se limita también la resolución y el presupuesto de memoria antes de decodificar. Campañas y perfiles comparten `ImagenesSubidas`.
+- Se corrigieron los nombres del PR: `campanas` es una carpeta real, y los archivos de configuración son `.gitignore` y `.htaccess`, con punto inicial. Apache usa este último para desactivar el listado y bloquear archivos ejecutables. En otros servidores debe configurarse la protección equivalente; el servidor de desarrollo de PHP no procesa `.htaccess`.
+- La campaña, sus objetivos y sus filas de imágenes se guardan en una transacción. Si falla, se revierten las filas y se limpian los archivos creados. Si hay errores del formulario, se conservan los campos de texto y se solicita volver a elegir las fotos.
+- La portada se muestra en inicio, resultados de búsqueda y Mis donaciones. El detalle muestra la portada y las fotos adicionales. No se reemplazan las imágenes ilustrativas previas.
+
+```bash
+php tests/run_tests.php servicios ImagenesCampana
+php tests/run_tests.php controladores CrearCampanaImagenes
+php tests/run_tests.php controladores
+node tests/js/PuntoEntregaTest.js
+```
+
+La prueba de integración de imágenes informa `PENDIENTE` si aún no existe la tabla. Las pruebas de archivos usan fotos temporales y las de base revierten los registros de prueba.
+
+### Permisos de imágenes en XAMPP para Linux
+
+Si el proyecto está en `/opt/lampp/htdocs/plataforma-solidaria`, Apache puede ejecutar PHP con un usuario distinto del que clonó el repositorio. Aunque `public_php/subidas/campanas/` exista, ese usuario necesita permisos para crear archivos allí.
+
+Consultá las directivas `User` y `Group` en `/opt/lampp/etc/httpd.conf` y comprobá el usuario de los procesos de Apache con `ps -eo user,comm`. Si Apache usa el usuario y grupo `daemon`, ejecutá desde la raíz del proyecto:
+
+```bash
+mkdir -p public_php/subidas/campanas
+sudo chgrp daemon public_php/subidas/campanas
+sudo chmod 2775 public_php/subidas/campanas
+sudo -u daemon test -w public_php/subidas/campanas && echo "Apache puede escribir las imágenes"
+```
+
+Si las directivas indican otros nombres, reemplazá el grupo en `chgrp` y el usuario en `sudo -u`. El modo `2775` permite escribir al dueño y al grupo, mantiene la lectura pública de las fotos y hace que los nuevos archivos hereden el grupo de la carpeta. Los directorios superiores también deben permitirle a Apache recorrer la ruta.
+
+Volvé a elegir las fotos y publicá de nuevo. Este ajuste es local a cada máquina: actualizar la rama no cambia los permisos. Limitá el cambio a la carpeta de imágenes; no hace falta usar `chmod 777` ni cambiar permisos de todo el proyecto. Durante el desarrollo, el formulario muestra el detalle técnico del error, incluida la ruta afectada, y el controlador también lo registra en PHP/Apache. Se mantienen los warnings de escritura de PHP sin suprimir; su visualización depende de `display_errors` y `error_reporting` del servidor.
+
+## Guardado del perfil y foto de usuario
+
+**Mi cuenta → Actualizar perfil** y la página **Mi perfil** permiten guardar nombre, apellido opcional y foto opcional, reemplazarla o quitarla. La página funciona sin JavaScript; la previsualización del navegador es opcional. El guardado requiere sesión, POST y CSRF, y solo modifica la cuenta autenticada: ignora identificadores, permisos, correo y rutas enviados por el navegador.
+
+Para una base existente, importar [`database/migrations/20261104_imagen_perfil.sql`](database/migrations/20261104_imagen_perfil.sql) con un administrador. Agrega `usuarios.apellido` y `usuarios.avatar`, conserva los datos y se puede repetir. Las bases nuevas ya incluyen estas columnas en `database/schema.sql`.
+
+- Se admite una foto JPG/JPEG o WebP, hasta 5 MB (o el límite menor de PHP) y 12 megapíxeles. También se comprueba que alcance la memoria disponible antes de decodificarla; algunas resoluciones pueden superar ese presupuesto.
+- Se comprueban la subida HTTP real, los errores de transferencia, el tamaño real, la extensión y el contenido con Fileinfo y `getimagesize`. No se confía en el MIME del navegador. PNG, GIF, SVG y otros formatos se rechazan para el perfil.
+- GD debe decodificar y recodificar la foto. Se corrige la orientación EXIF, se recorta desde el centro sin deformarla y se genera únicamente un WebP de **250 × 250 píxeles**, sin copiar metadatos EXIF/GPS ni datos anexos. Si falla, no se guarda el original y el perfil anterior se conserva.
+- Los avatares quedan en `data/usuarios/`, fuera de `public_php`, con nombres aleatorios y permisos privados. La base guarda solo una ruta interna relativa. PHP necesita leer y escribir esa carpeta; no usar permisos `777`. Si PHP corre con otro usuario, asignarle la carpeta como propietario y usar permisos `700` para la carpeta y `600` para las imágenes.
+- Publicar únicamente `public_php` como raíz del servidor. Si Apache publica todo el repositorio, `data/usuarios/.htaccess` bloquea el acceso directo; otros servidores requieren una regla equivalente para impedir publicar `data/`. El servidor de desarrollo de PHP no interpreta `.htaccess`.
+- La foto se entrega mediante `?ruta=imagen_perfil`: requiere sesión, sirve exclusivamente el avatar propio, no acepta rutas ni IDs externos y usa `Content-Type: image/webp`, `nosniff` y caché privada deshabilitada. Sin foto se muestran las iniciales.
+- Al reemplazar o quitar una foto, el archivo anterior se elimina después de guardar el cambio. Si falla el guardado en la base, se limpia la imagen nueva.
+
+### Bibliotecas necesarias
+
+**GD de PHP con soporte JPEG y WebP**, más las extensiones **EXIF**, **Fileinfo** y **Mbstring** (esta última ya se utiliza en la aplicación). No se necesita Composer ni ImageMagick. La instalación de GD y sus formatos está documentada en el [manual de PHP](https://www.php.net/manual/en/image.installation.php).
+
+En Debian/Ubuntu, el paquete habitual es `php-gd` (o el paquete de GD que corresponda a la versión de PHP utilizada). En XAMPP para Windows, habilitar `extension=gd`, `extension=exif` y `extension=fileinfo` en el `php.ini` que usa Apache. Reiniciar Apache o PHP-FPM después de habilitar extensiones. Comprobar que se habiliten en el PHP del servidor web; la consola puede utilizar otra configuración.
+
+Comprobación desde la consola:
+
+```bash
+php -r 'var_export(["GD" => extension_loaded("gd"), "JPEG" => function_exists("imagecreatefromjpeg"), "WebP" => function_exists("imagewebp"), "EXIF" => extension_loaded("exif"), "Fileinfo" => extension_loaded("fileinfo")]);'
+php tests/run_tests.php servicios ImagenPerfil
+php tests/run_tests.php controladores PerfilImagenController
+```

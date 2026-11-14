@@ -21,6 +21,7 @@ $estilosPagina = ['registro.css'];
 $errores = $errores ?? [];
 $nombre = $nombre ?? '';
 $mail = $mail ?? '';
+$avisoCrearCampana = $avisoCrearCampana ?? false;
 
 require __DIR__ . '/parciales/cabecera.php';
 ?>
@@ -31,6 +32,12 @@ require __DIR__ . '/parciales/cabecera.php';
                 <h1 id="titulo-registro">Creá tu cuenta</h1>
                 <p class="bajada">Con tu cuenta podés donar y crear campañas.</p>
             </div>
+
+            <?php if ($avisoCrearCampana): ?>
+                <div class="alerta alerta-aviso" role="status">
+                    <p>Para crear una campaña, primero creá tu cuenta. Si ya tenés una, <a href="<?= escapar($rutas['ingresar']) ?>">ingresá</a>.</p>
+                </div>
+            <?php endif; ?>
 
             <?php if (!empty($errores)): ?>
                 <div class="alerta alerta-error" role="alert">

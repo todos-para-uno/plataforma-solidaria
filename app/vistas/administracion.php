@@ -66,7 +66,29 @@ require __DIR__ . '/parciales/cabecera.php';
                 </nav>
             </div>
             <div id="panel-mensajes" role="tabpanel" aria-labelledby="tab-mensajes" hidden>
-                <p>La gestión de mensajes se incorporará en el siguiente incremento.</p>
+                <div class="admin-controles">
+                    <label>Buscar por remitente, correo o asunto
+                        <input type="search" id="admin-mensajes-busqueda" maxlength="150" autocomplete="off" placeholder="Buscar mensajes">
+                    </label>
+                    <label>Ordenar por
+                        <select id="admin-mensajes-orden">
+                            <option value="recientes">Más recientes</option>
+                            <option value="nombre_asc">Nombre A–Z</option>
+                            <option value="nombre_desc">Nombre Z–A</option>
+                            <option value="correo_asc">Correo A–Z</option>
+                            <option value="correo_desc">Correo Z–A</option>
+                        </select>
+                    </label>
+                </div>
+                <p id="admin-mensajes-estado" role="status" aria-live="polite">Cargando mensajes…</p>
+                <div id="admin-mensajes-lista" class="admin-mensajes-lista" aria-label="Mensajes agrupados por remitente"></div>
+                <nav class="admin-paginacion" aria-label="Páginas de remitentes">
+                    <span id="admin-mensajes-pagina">Página 1 de 1</span>
+                    <div class="admin-paginacion-botones">
+                        <button type="button" id="admin-mensajes-anterior">Anterior</button>
+                        <button type="button" id="admin-mensajes-siguiente">Siguiente</button>
+                    </div>
+                </nav>
             </div>
         </section>
         <dialog id="admin-dialogo" aria-labelledby="admin-dialogo-titulo">
@@ -109,6 +131,7 @@ require __DIR__ . '/parciales/cabecera.php';
             <div class="admin-dialogo-acciones"><button type="button" id="admin-actividad-cerrar">Cerrar</button></div>
         </dialog>
         <script src="<?= escapar($rutaAssets) ?>/js/administracion.js" defer></script>
+        <script src="<?= escapar($rutaAssets) ?>/js/administracion_mensajes.js" defer></script>
     </div>
 </section>
 

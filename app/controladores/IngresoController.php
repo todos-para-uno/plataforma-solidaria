@@ -18,6 +18,8 @@ class IngresoController
         $errores = [];
         $mail = '';
         $csrfToken = Csrf::generar();
+        $sesionVencida = ($_SESSION['sesion_vencida'] ?? false) === true;
+        unset($_SESSION['sesion_vencida']);
 
         require __DIR__ . '/../vistas/ingresar.php';
     }
@@ -60,11 +62,21 @@ class IngresoController
                 } elseif ($this->baneos->estaBaneado($usuario->getId())) {
                     http_response_code(403);
                     $errores[] = 'Tu cuenta se encuentra baneada.';
+                } elseif ($this->usuarios->estadoCuenta($usuario->getId()) === 'eliminada') {
+                    http_response_code(422);
+                    $errores[] = 'El correo o la contraseña son incorrectos.';
+                } elseif ($this->usuarios->estadoCuenta($usuario->getId()) === 'desactivada') {
+                    $this->estadoAutenticacion?->limpiar($usuario->getId());
+                    session_regenerate_id(true);
+                    $_SESSION = ['reactivar_usuario_id' => $usuario->getId()];
+                    Csrf::generar();
+                    header('Location: ' . $rutaBase . '/index.php?ruta=reactivar', true, 303);
+                    return;
                 } else {
                     $this->estadoAutenticacion?->limpiar($usuario->getId());
                     session_regenerate_id(true);
                     // Conservar solo la identidad; los datos se consultan en cada petición.
-                    $_SESSION = ['usuario_id' => $usuario->getId()];
+                    $_SESSION = ['usuario_id' => $usuario->getId(), 'mostrar_bienvenida' => true, 'ultima_actividad' => time()];
                     Csrf::generar();
                     header('Location: ' . $rutaBase . '/index.php', true, 303);
                     return;

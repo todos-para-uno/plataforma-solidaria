@@ -32,6 +32,14 @@ $rutaAssets = $rutaAssets ?? '../../public_php/assets';
 $estilosPagina = $estilosPagina ?? [];
 $cuentaParaModal = $usuario ?? $usuarioActual;
 
+// "Crear campaña" se muestra siempre. Sin sesión, primero hay que crear la cuenta.
+// pie.php usa la misma variable para que los dos enlaces lleven al mismo lugar.
+if ($usuarioActual === null) {
+    $rutaCrearCampana = $rutas['registro_para_crear'];
+} else {
+    $rutaCrearCampana = $rutas['crear_campana'];
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es-AR">
@@ -75,7 +83,8 @@ $cuentaParaModal = $usuario ?? $usuarioActual;
             <ul class="menu-cuenta">
                 <?php if ($usuarioActual === null): ?>
                     <li><a href="<?= escapar($rutas['ingresar']) ?>"<?= marcarActual('ingresar', $paginaActual) ?>>Ingresar</a></li>
-                    <li><a class="boton boton-chico" href="<?= escapar($rutas['registro']) ?>"<?= marcarActual('registro', $paginaActual) ?>>Crear cuenta</a></li>
+                    <li><a href="<?= escapar($rutas['registro']) ?>"<?= marcarActual('registro', $paginaActual) ?>>Crear cuenta</a></li>
+                    <li><a class="boton boton-chico" href="<?= escapar($rutaCrearCampana) ?>">Crear campaña</a></li>
                 <?php else: ?>
                     <li>
                         <!-- El navegador permite abrir este menú con <details>, incluso sin JavaScript. -->
@@ -98,7 +107,7 @@ $cuentaParaModal = $usuario ?? $usuarioActual;
                             </ul>
                         </details>
                     </li>
-                    <li><a class="boton boton-chico" href="<?= escapar($rutas['crear_campana']) ?>"<?= marcarActual('crear_campana', $paginaActual) ?>>Crear campaña</a></li>
+                    <li><a class="boton boton-chico" href="<?= escapar($rutaCrearCampana) ?>"<?= marcarActual('crear_campana', $paginaActual) ?>>Crear campaña</a></li>
                 <?php endif; ?>
             </ul>
         </nav>
@@ -106,3 +115,7 @@ $cuentaParaModal = $usuario ?? $usuarioActual;
 </header>
 
 <main id="contenido" tabindex="-1">
+<?php if ($usuarioActual !== null && ($_SESSION['mostrar_bienvenida'] ?? false) === true): ?>
+    <?php unset($_SESSION['mostrar_bienvenida']); ?>
+    <?php require __DIR__ . '/bienvenida.php'; ?>
+<?php endif; ?>

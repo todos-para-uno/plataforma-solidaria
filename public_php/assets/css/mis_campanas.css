@@ -50,3 +50,35 @@
 .mis-campanas-vacio p {
     margin-inline: auto;
 }
+
+/* Acciones de insumos: misma forma y tipografía de los botones del sitio. */
+.mis-campanas-acciones {
+    display: grid;
+    gap: var(--e-3);
+    margin-block: var(--e-2) var(--e-4);
+}
+.mis-campanas-acciones .boton {
+    margin-top: 0;
+    background: var(--aviso-fondo);
+    color: var(--azul);
+    font-weight: 400;
+    text-align: center;
+    text-decoration: none;
+}
+.mis-campanas-acciones .boton:is(:hover, :focus-visible) {
+    background: var(--sol-suave);
+    color: var(--azul);
+    text-decoration: none;
+}
+.mis-campanas-acciones .boton:focus-visible {
+    outline-color: var(--azul);
+}
+
+/* El enlace del título cubre la tarjeta; las acciones de insumos siguen accesibles. */
+.mis-campana-tarjeta { position: relative; }
+.mis-campana-detalle { color: inherit; text-decoration: none; }
+.mis-campana-detalle::after { content: ''; position: absolute; inset: 0; border-radius: var(--radio-control); }
+.mis-campana-detalle:hover { text-decoration: underline; }
+.mis-campana-detalle:focus-visible { outline: none; }
+.mis-campana-detalle:focus-visible::after { outline: 3px solid var(--azul); outline-offset: 3px; }
+.mis-campana-tarjeta .mis-campanas-acciones { position: relative; z-index: 1; }

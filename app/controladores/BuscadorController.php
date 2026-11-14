@@ -2,12 +2,14 @@
 require_once __DIR__ . '/../repositorios/CampRepository.php';
 require_once __DIR__ . '/../repositorios/CatCampRepository.php';
 require_once __DIR__ . '/../seguridad/Csrf.php';
+require_once __DIR__ . '/../repositorios/CampanaImagenesRepository.php';
 
 class BuscadorController
 {
     public function __construct(
         private CampRepository $campanas,
-        private CatCampRepository $categorias
+        private CatCampRepository $categorias,
+        private ?CampanaImagenesRepository $imagenes = null
     ) {}
 
     public function mostrar(
@@ -52,6 +54,7 @@ class BuscadorController
             $resultados = $this->campanas->findByEstado(EstadoCamp::Activa, $buscar, $idCategoria);
         }
 
+        $portadas = $this->imagenes?->portadas(array_map(fn($c) => $c->getId(), $resultados)) ?? [];
         $csrfToken = Csrf::generar();
         require __DIR__ . '/../vistas/' . ($mostrarResultados ? 'resultados_buscar.php' : 'buscador.php');
     }

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../app/controladores/AdministracionUsuariosController.php';
 require_once __DIR__ . '/../../app/repositorios/ValidacionesRepository.php';
+require_once __DIR__ . '/../../app/repositorios/ConfianzaRepository.php';
 require_once __DIR__ . '/../../utilidades/TestUtils.php';
 
 function administracionUsuariosControllerTest(PDO $pdo): void
@@ -51,6 +52,15 @@ function administracionUsuariosControllerTest(PDO $pdo): void
         [$http, $datos] = $solicitar('buscar', $idAdmin, ['q' => 'Usuario buscable', 'limite' => '15', 'pagina' => '1']);
         TestUtils::comprobar($http === 200 && count($datos['usuarios'] ?? []) === 1 && (int) $datos['usuarios'][0]['id'] === $idUsuario, 'API administrativa: búsqueda paginada por nombre.');
         TestUtils::comprobar(!array_key_exists('pass', $datos['usuarios'][0]), 'API administrativa: búsqueda no revela hashes.');
+        TestUtils::comprobar((int) $datos['usuarios'][0]['documento_cargado'] === 0, 'Un usuario sin documento aparece sin tilde.');
+        (new ConfianzaRepository($pdo))->guardarDocumento($idUsuario, 'DNI', '35123456');
+        [$http, $datos] = $solicitar('buscar', $idAdmin, ['q' => 'Usuario buscable', 'limite' => '15', 'pagina' => '1']);
+        TestUtils::comprobar($http === 200 && (int) $datos['usuarios'][0]['documento_cargado'] === 1
+            && !array_key_exists('documento', $datos['usuarios'][0]), 'Un DNI cargado activa el tilde sin exponer su número.');
+        (new ConfianzaRepository($pdo))->guardarDocumento($idOtroAdmin, 'Pasaporte', 'ABC12345');
+        [$http, $datos] = $solicitar('buscar', $idAdmin, ['q' => 'Segundo administrador', 'limite' => '15', 'pagina' => '1']);
+        TestUtils::comprobar($http === 200 && (int) $datos['usuarios'][0]['documento_cargado'] === 1,
+            'Un pasaporte cargado también activa el tilde.');
         [$http] = $solicitar('buscar', $idAdmin, ['limite' => '999']);
         TestUtils::comprobar($http === 422, 'API administrativa: límite inválido rechazado.');
         [$http] = $solicitar('actividad', null, ['id_usuario' => (string) $idUsuario, 'tipo' => 'resumen']);

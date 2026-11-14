@@ -58,6 +58,15 @@ function misCampanasControllerTest(PDO $pdo): void
         TestUtils::comprobar(str_contains($html, 'Usuario campañas 0'), 'El nombre se obtiene del objeto Usuario');
         TestUtils::comprobar(str_contains($html, 'Campaña de prueba propietario 0') && !str_contains($html, 'Campaña de prueba propietario 1'), 'Se muestran solo las campañas del usuario autenticado');
         TestUtils::comprobar(str_contains($html, 'name="csrf_token" value="' . Csrf::generar() . '"'), 'El menú de Mis campañas permite salir con CSRF válido');
+        TestUtils::comprobar(!str_contains($html, 'data-compartir-campana')
+            && str_contains($html, 'class="mis-campana-detalle"'),
+            'Mis campañas permite abrir el detalle desde la tarjeta sin repetir las opciones de compartir');
+        $pdo->prepare("UPDATE camp SET estado = 'finalizada' WHERE owner_id = ?")->execute([$ids[0]]);
+        ob_start();
+        $controlador->mostrar('.', './assets', $usuario);
+        $html = ob_get_clean();
+        TestUtils::comprobar(!str_contains($html, 'class="mis-campana-detalle"'),
+            'Las tarjetas de campañas finalizadas no enlazan a un detalle público no disponible');
     } finally {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();

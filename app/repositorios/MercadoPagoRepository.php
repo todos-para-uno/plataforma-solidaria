@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../servicios/MercadoPagoSeguridad.php';
+require_once __DIR__ . '/CampanaImagenesRepository.php';
 final class MercadoPagoRepository
 {
     public function __construct(private PDO $pdo) {}
@@ -186,13 +187,19 @@ final class MercadoPagoRepository
     public function historial(int $usuario): array
     {
         $q = $this->pdo->prepare('SELECT p.referencia,p.monto AS cantidad,p.acreditado,p.estado,p.detalle,p.creado AS fecha_hora,
-            c.id AS id_camp,c.nombre AS campaña_nombre,c.estado AS campana_estado,1 AS monetaria
+            c.id AS id_camp,c.nombre AS campaña_nombre,c.estado AS campana_estado,1 AS monetaria,c.imagen,NULL AS insumo
             FROM mercadopago_pagos p JOIN camp c ON c.id=p.id_camp WHERE p.id_usuario=?
-            UNION ALL SELECT NULL,d.cantidad,d.cantidad,\'processed\',\'accredited\',d.fecha_hora,c.id,c.nombre,c.estado,c.monetaria
+            UNION ALL SELECT NULL,d.cantidad,d.cantidad,\'processed\',\'accredited\',d.fecha_hora,c.id,c.nombre,c.estado,c.monetaria,c.imagen,COALESCE(s.nombre,ci.nombre,\'Insumos\')
             FROM donacion d JOIN camp c ON c.id=d.id_camp LEFT JOIN mercadopago_pagos p ON p.id_donacion=d.id
             LEFT JOIN mercadopago_transacciones t ON t.id_donacion=d.id
+            LEFT JOIN categoria_insumos ci ON ci.id=d.id_categoria_insumos
+            LEFT JOIN sub_categoria_insumos s ON s.id=d.id_sub_categoria_insumos
             WHERE d.id_usuario=? AND p.referencia IS NULL AND t.payment_id IS NULL ORDER BY fecha_hora DESC');
         $q->execute([$usuario, $usuario]);
-        return $q->fetchAll(PDO::FETCH_ASSOC);
+        $filas = $q->fetchAll(PDO::FETCH_ASSOC);
+        $portadas = (new CampanaImagenesRepository($this->pdo))->portadas(array_column($filas, 'id_camp'));
+        foreach ($filas as &$fila) $fila['imagen_subida'] = $portadas[(int) $fila['id_camp']] ?? null;
+        unset($fila);
+        return $filas;
     }
 }

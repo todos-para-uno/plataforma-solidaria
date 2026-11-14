@@ -8,6 +8,8 @@ enum TipoDocumento: string
 class Usuario extends RegistroDb
 {
     private string $nombre;
+    private ?string $apellido = null;
+    private ?string $avatar = null;
     private string $mail;
     private string $pass;
     private ?string $telefono;
@@ -93,6 +95,8 @@ class Usuario extends RegistroDb
         );
 
         $usuario->setId((int) $filaUsuario['id']);
+        $usuario->setApellido($filaUsuario['apellido'] ?? null);
+        $usuario->avatar = $filaUsuario['avatar'] ?? null;
         
         $usuario->verificado = (bool) $filaUsuario['verificado'];
         $usuario->admin = (bool) $filaUsuario['admin'];
@@ -130,7 +134,8 @@ class Usuario extends RegistroDb
     public function setNombre(string $nombre): void
     {
         $nombre = trim($nombre);
-        if ($nombre === '' || mb_strlen($nombre, 'UTF-8') > 100) {
+        if ($nombre === '' || !mb_check_encoding($nombre, 'UTF-8') || mb_strlen($nombre, 'UTF-8') > 100
+            || preg_match('/[\x00-\x1F\x7F]/u', $nombre)) {
             throw new InvalidArgumentException('El nombre debe tener entre 1 y 100 caracteres.');
         }
         $this->nombre = $nombre;
@@ -138,6 +143,26 @@ class Usuario extends RegistroDb
     public function getNombre(): string
     {
         return $this->nombre;
+    }
+
+    public function setApellido(?string $apellido): void
+    {
+        $apellido = trim($apellido ?? '');
+        if (!mb_check_encoding($apellido, 'UTF-8') || mb_strlen($apellido, 'UTF-8') > 100
+            || preg_match('/[\x00-\x1F\x7F]/u', $apellido)) {
+            throw new InvalidArgumentException('El apellido admite hasta 100 caracteres, sin caracteres de control.');
+        }
+        $this->apellido = $apellido === '' ? null : $apellido;
+    }
+
+    public function getApellido(): ?string
+    {
+        return $this->apellido;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
     }
     
     public function setEmail(string $email): void

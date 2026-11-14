@@ -3,6 +3,9 @@
 // antes de ejecutar las pruebas de controladores.
 ob_start();
 $pruebas = [
+    'seguridad' => [
+        'SesionInactiva' => ['archivo' => 'seguridad/SesionInactivaTest.php', 'funcion' => 'sesionInactivaTest'],
+    ],
     'modelos' => [
         'MercadoPagoSeguridad' => ['archivo' => 'modelos/MercadoPagoSeguridadTest.php', 'funcion' => 'mercadoPagoSeguridadTest'],
         'Baneo' => [
@@ -46,6 +49,12 @@ $pruebas = [
             'funcion' => 'ubicacionesTest',
         ],
     ],
+    'servicios' => [
+        'CorreoServicio' => ['archivo' => 'servicios/CorreoServicioTest.php', 'funcion' => 'correoServicioTest'],
+        'ImagenPerfil' => ['archivo' => 'servicios/ImagenPerfilTest.php', 'funcion' => 'imagenPerfilTest'],
+        'ImagenesCampana' => ['archivo' => 'servicios/ImagenesCampanaTest.php', 'funcion' => 'imagenesCampanaTest'],
+        'BajaCuenta' => ['archivo' => 'servicios/BajaCuentaTest.php','funcion' => 'bajaCuentaTest',],
+    ],
     'repositorios' => [
         'EstadoAutenticacionRepository' => [
             'archivo' => 'repositorios/EstadoAutenticacionRepositoryTest.php',
@@ -70,6 +79,28 @@ $pruebas = [
     ],
     'controladores' => [
         'MercadoPagoController' => ['archivo' => 'controladores/MercadoPagoControllerTest.php', 'funcion' => 'mercadoPagoControllerTest'],
+        'PerfilImagenController' => ['archivo' => 'controladores/PerfilImagenControllerTest.php', 'funcion' => 'perfilImagenControllerTest'],
+        'CrearCampanaImagenes' => ['archivo'=>'controladores/CrearCampanaImagenesTest.php','funcion'=>'crearCampanaImagenesTest'],
+        'CrearCampanaController' => [
+            'archivo' => 'controladores/CrearCampanaControllerTest.php',
+            'funcion' => 'crearCampanaControllerTest',
+        ],
+        'PerfilController' => [
+            'archivo' => 'controladores/PerfilControllerTest.php',
+            'funcion' => 'perfilControllerTest',
+        ],
+        'MisDonacionesController' => [
+            'archivo' => 'controladores/MisDonacionesControllerTest.php',
+            'funcion' => 'misDonacionesControllerTest',
+        ],
+        'RecepcionInsumosController' => [
+            'archivo' => 'controladores/RecepcionInsumosControllerTest.php',
+            'funcion' => 'recepcionInsumosControllerTest',
+        ],
+        'PuntoEntregaController' => [
+            'archivo' => 'controladores/PuntoEntregaControllerTest.php',
+            'funcion' => 'puntoEntregaControllerTest',
+        ],
         'CampanaController' => [
             'archivo' => 'controladores/CampanaControllerTest.php',
             'funcion' => 'campanaControllerTest',
@@ -109,6 +140,18 @@ $pruebas = [
         'AdministracionController' => [
             'archivo' => 'controladores/AdministracionControllerTest.php',
             'funcion' => 'administracionControllerTest',
+        ],
+        'BajaCuenta' => [
+            'archivo' => 'controladores/BajaCuentaControllerTest.php',
+            'funcion' => 'bajaCuentaControllerTest',
+        ],
+        'BajaCuentaDesactivacion' => [
+            'archivo' => 'controladores/BajaCuentaControllerTest.php',
+            'funcion' => 'bajaCuentaControllerDesactivacionTest',
+        ],
+        'BajaCuentaEliminacion' => [
+            'archivo' => 'controladores/BajaCuentaControllerTest.php',
+            'funcion' => 'bajaCuentaControllerEliminacionTest',
         ],
     ],
 ];

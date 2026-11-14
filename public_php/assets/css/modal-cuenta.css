@@ -36,9 +36,11 @@ body.modal-abierto { overflow: hidden; }
 .avatar--inicial { display: inline-grid; place-items: center; background: var(--verde-suave); color: var(--verde); font-weight: 700; }
 .tarjeta-edicion { margin-top: var(--e-4); padding: var(--e-4); }
 .imagen-perfil { display: flex; flex-wrap: wrap; gap: var(--e-4); margin-bottom: var(--e-4); }
+.imagen-perfil > .campo { min-width: 0; flex: 1 1 240px; }
+.campo .perfil-quitar-foto { display: flex; align-items: center; gap: var(--e-2); }
+.campo .perfil-quitar-foto input[type="checkbox"] { width: 18px; height: 18px; min-height: 18px; padding: 0; margin: 0; flex: 0 0 auto; }
 .campos-dobles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e-3); }
 .cuenta-acciones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--e-2); margin-top: var(--e-4); }
-.dispositivo + .dispositivo { margin-top: var(--e-4); padding-top: var(--e-4); border-top: 1px solid var(--linea); }
 @media (max-width: 760px) {
     .modal-cuenta__caja { grid-template-columns: minmax(0, 1fr); }
     .modal-cuenta__lateral { padding: var(--e-4); border-right: 0; border-bottom: 1px solid var(--linea); }

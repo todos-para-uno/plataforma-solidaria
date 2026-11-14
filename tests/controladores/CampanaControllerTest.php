@@ -9,9 +9,11 @@ function campanaControllerTest(PDO $pdo): void
         session_start();
     }
     $codigoOriginal = http_response_code();
+    $sesionOriginal = $_SESSION;
     $pdo->beginTransaction();
     try {
         $f = crearFixtureBuscador($pdo);
+        $_SESSION = [];
         $repo = new CampRepository($pdo);
         $controller = new CampanaController($repo, new CatCampRepository($pdo),
             new UsuariosRepository($pdo), new ValidacionesRepository($pdo), new ObjetivosRepository($pdo));
@@ -49,6 +51,19 @@ function campanaControllerTest(PDO $pdo): void
             && str_contains($html, 'name="csrf_token" value="' . Csrf::generar() . '"'),
             'El menú conserva la sesión y el token para cerrar sesión desde el detalle');
 
+        TestUtils::comprobar(!str_contains($html, 'data-compartir-campana'),
+            'Un visitante no ve las acciones de difusión del creador');
+        $_SESSION['usuario_id'] = $repo->findById($f['mesa'])->getOwnerId();
+        [$html] = $render((string) $f['mesa']);
+        TestUtils::comprobar(str_contains($html, 'data-compartir-campana')
+            && !str_contains($html, 'data-compartir-selector')
+            && str_contains($html, 'data-ruta="./index.php?ruta=campana&amp;id=' . $f['mesa'] . '"'),
+            'El creador puede compartir el enlace público de la campaña recién creada');
+        $_SESSION['usuario_id'] = -1;
+        [$html] = $render((string) $f['mesa']);
+        TestUtils::comprobar(!str_contains($html, 'data-compartir-campana'),
+            'Otro usuario no ve las acciones de difusión del creador');
+
         $consulta = $pdo->prepare('INSERT INTO categoria_insumos (nombre) VALUES (:nombre)');
         $consulta->execute(['nombre' => $f['prefijo'] . ' Ropa']);
         $cat = (int) $pdo->lastInsertId();
@@ -72,6 +87,7 @@ function campanaControllerTest(PDO $pdo): void
         }
     } finally {
         $pdo->rollBack();
+        $_SESSION = $sesionOriginal;
         http_response_code($codigoOriginal ?: 200);
     }
 }

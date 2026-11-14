@@ -15,3 +15,24 @@ main {
 .ingresar-registro {
     margin-top: var(--e-6);
 }
+/* Zoom suave al pasar el cursor sobre el recuadro "Ingresá a tu cuenta". */
+.ingresar-interior > .tarjeta {
+    transition: transform 0.25s ease;
+}
+.ingresar-interior > .tarjeta:hover {
+    transform: scale(1.02);
+}
+@media (prefers-reduced-motion: reduce) {
+    .ingresar-interior > .tarjeta:hover { transform: none; }
+}
+/* Separación accesible de decisiones en la reactivación de cuenta. */
+.formulario-reactivacion .acciones-reactivacion {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 24px;
+}
+.formulario-reactivacion .acciones-reactivacion .boton {
+    width: 100%;
+    min-height: 44px;
+}

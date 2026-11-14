@@ -342,6 +342,29 @@ function mercadoPagoControllerTest(PDO $pdo): void
         $assertThrows(static fn () => $servicio->sincronizar($ref), 'La consulta de un pago también detecta autorización rechazada.');
         TestUtils::comprobar((bool) $repo->cuenta($creadorId)['requiere_reautorizar'], 'Persiste la reconexión cuando falla la consulta de un pago.');
         $errorPago = null;
+
+        // Regresión de la fusión: el historial combina pagos e insumos sin perder
+        // nombres, portadas ni el estado de la campaña incorporados desde main.
+        require_once __DIR__ . '/../../app/controladores/MisDonacionesController.php';
+        $pdo->prepare('INSERT INTO categoria_insumos (nombre) VALUES (?)')->execute(['Frazadas <script>insumo</script>']);
+        $categoriaInsumo = (int) $pdo->lastInsertId();
+        (new DonacionRepository($pdo))->save(['id_usuario' => $donanteId, 'id_camp' => $f['ropa'],
+            'id_categoria_insumos' => $categoriaInsumo, 'cantidad' => '2.50']);
+        $portada = 'assets/imagenes/imagenes-camp/abrigo/abrigo-01.webp';
+        (new CampanaImagenesRepository($pdo))->guardarParaCampana($f['ropa'], [$portada]);
+        $historialCombinado = $repo->historial($donanteId);
+        $insumos = array_values(array_filter($historialCombinado, static fn ($fila) => !(bool) $fila['monetaria']));
+        TestUtils::comprobar(count($insumos) === 1 && $insumos[0]['imagen_subida'] === $portada,
+            'El historial combinado conserva la portada de los insumos sin duplicar la entrega.');
+        $historialController = new MisDonacionesController(new DonacionRepository($pdo), $repo);
+        $html = $capturar(static fn () => $historialController->mostrar($donante));
+        TestUtils::comprobar(str_contains($html, '2,5 de Frazadas &lt;script&gt;insumo&lt;/script&gt;')
+            && str_contains($html, 'Consultar el aporte') && !str_contains($html, '<script>insumo</script>'),
+            'La misma pantalla conserva cantidades de insumos, escape HTML y enlaces al estado de pago.');
+        $pdo->prepare("UPDATE camp SET estado='finalizada' WHERE id IN (?, ?)")->execute([$f['ropa'], $f['mesa']]);
+        $html = $capturar(static fn () => $historialController->mostrar($donante));
+        TestUtils::comprobar(str_contains($html, 'Campaña finalizada.') && !str_contains($html, '>Ver campaña</a>'),
+            'El historial combinado no ofrece enlaces a campañas finalizadas.');
     } finally {
         $pdo->rollBack();
         if ($temporales) {

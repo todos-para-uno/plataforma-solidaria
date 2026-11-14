@@ -42,3 +42,9 @@ function marcarActual(string $clave, ?string $paginaActual): string
     }
     return '';
 }
+
+/** Cantidades de insumos con hasta dos decimales, sin truncar entregas fraccionadas. */
+function formatearCantidad(float $cantidad): string
+{
+    return rtrim(rtrim(number_format($cantidad, 2, ',', '.'), '0'), ',');
+}

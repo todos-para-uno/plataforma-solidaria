@@ -28,6 +28,12 @@ require __DIR__ . '/parciales/cabecera.php';
                 <p class="bajada">Seguí tus campañas, tus donaciones y tus mensajes.</p>
             </div>
 
+            <?php if ($sesionVencida ?? false): ?>
+                <div class="alerta alerta-aviso" role="status">
+                    <p>Tu sesión venció después de 10 minutos de inactividad. Volvé a ingresar para continuar.</p>
+                </div>
+            <?php endif; ?>
+
             <?php if (!empty($errores)): ?>
                 <div class="alerta alerta-error" role="alert">
                     <p>No pudimos iniciar tu sesión:</p>

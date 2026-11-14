@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../app/seguridad/CabecerasSeguridad.php';
+CabecerasSeguridad::enviar();
+
 // Las peticiones de la aplicación entran por este archivo.
 // El parámetro ?ruta=... elige la pantalla o acción, sin configurar reglas de Apache.
 $ruta = $_GET['ruta'] ?? 'inicio';
@@ -6,16 +9,25 @@ $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $esLectura = in_array($metodo, ['GET', 'HEAD'], true);
 $vistas = [
     'inicio' => 'index.php',
-    'crear_campana' => 'crear_campana.php',
     'preguntas_frecuentes' => 'preguntas_frecuentes.php',
-    'perfil' => 'perfil.php'
+
     
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
-$rutasMercadoPago = ['mercadopago', 'mp_conectar', 'mp_retorno', 'mp_webhook', 'donar', 'pago_resultado', 'mp_verificar', 'mis_donaciones'];
+$rutasMercadoPago = ['mercadopago', 'mp_conectar', 'mp_retorno', 'mp_webhook', 'donar', 'pago_resultado', 'mp_verificar'];
 $rutasConControlador = [
     ...$rutasMercadoPago,
+    'crear_campana',
+    'perfil',
+    'baja_cuenta',
+    'reactivar',
+    'actualizar_documento',
+    'actualizar_perfil',
+    'imagen_perfil',
+    'mis_donaciones',
+    'recepcion_insumos',
+    'punto_entrega',
     'campana',
     'buscador',
     'resultados_buscar',
@@ -27,6 +39,7 @@ $rutasConControlador = [
     'contacto',
     'banear',
     'finalizar_baneo',
+    'admin_mensajes',
     'admin_usuarios',
     'admin_actividad',
     'admin_password',
@@ -40,8 +53,8 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'mp_conectar', 'mp_webhook', 'mp_verificar'], true);
-$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'donar'], true);
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento', 'actualizar_perfil', 'baja_cuenta', 'mp_conectar', 'mp_webhook', 'mp_verificar'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'crear_campana', 'punto_entrega', 'recepcion_insumos', 'reactivar', 'donar'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -74,6 +87,7 @@ if ($ruta === 'mp_webhook') {
 }
 
 require_once __DIR__ . '/../app/seguridad/Csrf.php';
+require_once __DIR__ . '/../app/seguridad/SesionInactiva.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start([
         'use_strict_mode' => true,
@@ -82,10 +96,24 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         'cookie_secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
     ]);
 }
+// Antes de consultar identidad o ejecutar controladores: un POST vencido nunca se procesa.
+if (SesionInactiva::comprobar()) {
+    header('Cache-Control: no-store');
+    $rutasJson = ['admin_mensajes', 'admin_usuarios', 'admin_actividad', 'admin_password', 'admin_desbloquear', 'banear', 'finalizar_baneo'];
+    $solicitaJson = str_contains(strtolower($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json');
+    if ($solicitaJson || in_array($ruta, $rutasJson, true)) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['error' => 'Tu sesión venció después de 10 minutos de inactividad. Volvé a ingresar.'], JSON_UNESCAPED_UNICODE);
+    } else {
+        header('Location: ' . $rutaBase . '/index.php?ruta=ingresar', true, 303);
+    }
+    return;
+}
 $csrfToken = Csrf::generar();
 $usuarioActual = null;
 
-if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], true)) {
+if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir', 'reactivar'], true)) {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/repositorios/UsuariosRepository.php';
     require_once __DIR__ . '/../app/repositorios/BaneoRepository.php';
@@ -98,6 +126,12 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
             : null;
         if ($usuario === null) {
             unset($_SESSION['usuario_id']);
+        } elseif ($usuarios->estadoCuenta($usuario->getId()) !== 'activa') {
+            $_SESSION = [];
+            session_regenerate_id(true);
+            Csrf::generar();
+            header('Location: ' . $rutaBase . '/index.php?ruta=ingresar', true, 303);
+            return;
         } elseif ($baneos->estaBaneado($usuario->getId())) {
             // Revocar la identidad antes de ejecutar cualquier acción de la petición.
             $_SESSION = [];
@@ -107,8 +141,13 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir'], tru
             echo 'Tu cuenta se encuentra baneada.';
             return;
         } else {
+            require_once __DIR__ . '/../app/repositorios/ConfianzaRepository.php';
+            $_SESSION['nivel_confianza'] = (new ConfianzaRepository(conectarBd()))->actualizar($usuario->getId());
+            $usuario = $usuarios->findById($usuario->getId());
             $usuarioActual = [
                 'nombre' => $usuario->getNombre(),
+                'apellido' => $usuario->getApellido(),
+                'avatar' => $usuario->getAvatar(),
                 'mail' => $usuario->getEmail(),
                 'admin' => $usuario->getAdmin(),
             ];
@@ -149,6 +188,30 @@ if (in_array($ruta, $rutasMercadoPago, true)) {
     return;
 }
 
+if ($ruta === 'reactivar') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/ReactivarCuentaController.php';
+    (new ReactivarCuentaController(conectarBd()))->atender($rutaBase, $rutaAssets);
+    return;
+}
+
+if ($ruta === 'baja_cuenta') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/BajaCuentaController.php';
+    (new BajaCuentaController(conectarBd()))->procesar($usuario ?? null, $rutaBase);
+    return;
+}
+
+if ($ruta === 'admin_mensajes') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/AdministracionMensajesController.php';
+    $pdo = conectarBd();
+    (new AdministracionMensajesController(
+        new AdministracionMensajesRepository($pdo), new UsuariosRepository($pdo)
+    ))->atender();
+    return;
+}
+
 if (in_array($ruta, ['admin_usuarios', 'admin_actividad', 'admin_password', 'admin_desbloquear'], true)) {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/AdministracionUsuariosController.php';
@@ -186,14 +249,46 @@ if ($ruta === 'contacto') {
     return;
 }
 
+if ($ruta === 'crear_campana') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/CrearCampanaController.php';
+    (new CrearCampanaController(conectarBd()))->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
+    return;
+}
+
+if ($ruta === 'mis_donaciones') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/MisDonacionesController.php';
+    require_once __DIR__ . '/../config/mercadopago.php';
+    $pdo = conectarBd();
+    $historialMp = configuracionMercadoPago()['habilitado'] ? new MercadoPagoRepository($pdo) : null;
+    (new MisDonacionesController(new DonacionRepository($pdo), $historialMp))->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
+    return;
+}
+
+if ($ruta === 'recepcion_insumos') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/RecepcionInsumosController.php';
+    (new RecepcionInsumosController(conectarBd()))->atender($usuario ?? null, $rutaBase, $rutaAssets);
+    return;
+}
+
+if ($ruta === 'punto_entrega') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/PuntoEntregaController.php';
+    (new PuntoEntregaController(conectarBd()))->atender($usuario ?? null, $rutaBase, $rutaAssets);
+    return;
+}
+
 if ($ruta === 'campana') {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/CampanaController.php';
+    require_once __DIR__ . '/../app/repositorios/PuntoEntregaRepository.php';
     $pdo = conectarBd();
     $controlador = new CampanaController(
         new CampRepository($pdo), new CatCampRepository($pdo),
         new UsuariosRepository($pdo), new ValidacionesRepository($pdo),
-        new ObjetivosRepository($pdo)
+        new ObjetivosRepository($pdo), new PuntoEntregaRepository($pdo), new CampanaImagenesRepository($pdo)
     );
     $controlador->mostrar($rutaBase, $rutaAssets, $_GET['id'] ?? null, $usuarioActual);
     return;
@@ -203,32 +298,20 @@ if (in_array($ruta, ['buscador', 'resultados_buscar'], true)) {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/BuscadorController.php';
     $pdo = conectarBd();
-    $controlador = new BuscadorController(new CampRepository($pdo), new CatCampRepository($pdo));
+    $controlador = new BuscadorController(new CampRepository($pdo), new CatCampRepository($pdo), new CampanaImagenesRepository($pdo));
     // Las búsquedas nuevas usan GET. Se conserva la lectura de formularios POST anteriores.
     $controlador->mostrar($rutaBase, $rutaAssets, $metodo === 'POST' ? $_POST : $_GET,
         $ruta === 'resultados_buscar', $usuarioActual);
     return;
 }
 
-if ($ruta === 'perfil') {
-    // perfil.php trabaja con un array; la sesión carga un objeto Usuario.
-    // Se arma el array que la vista espera. Sin sesión queda null y la vista muestra su aviso.
-    $datosPerfil = null;
-    if (isset($usuario) && $usuario instanceof Usuario) {
-        require_once __DIR__ . '/../app/repositorios/ValidacionesRepository.php';
-        $validacion = (new ValidacionesRepository(conectarBd()))->findById($usuario->getIdValidacion());
-
-        $datosPerfil = [
-            'nombre' => $usuario->getNombre(),
-            'mail' => $usuario->getEmail(),
-            'telefono' => $usuario->getTelefono(),
-            'tipo_documento' => $usuario->getTipoDocumento()?->value,
-            'documento' => $usuario->getDocumento(),
-            'validacion_nombre' => $validacion instanceof Validaciones ? $validacion->getNombre() : 'Blanco',
-        ];
-    }
-    $usuario = $datosPerfil;
-    require __DIR__ . '/../app/vistas/perfil.php';
+if (in_array($ruta, ['perfil', 'actualizar_documento', 'actualizar_perfil', 'imagen_perfil'], true)) {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../app/controladores/PerfilController.php';
+    $controlador = new PerfilController(conectarBd());
+    if ($ruta === 'actualizar_perfil') $controlador->actualizar($usuario ?? null, $rutaBase, $rutaAssets);
+    elseif ($ruta === 'imagen_perfil') $controlador->imagen($usuario ?? null);
+    else $controlador->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
     return;
 }
 
