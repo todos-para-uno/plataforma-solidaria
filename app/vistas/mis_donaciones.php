@@ -12,6 +12,7 @@ $estilosPagina = ['mis_donaciones.css'];
 // El controlador entrega exclusivamente donaciones del usuario autenticado.
 $donaciones = $donaciones ?? [];
 $error = $error ?? null;
+require_once __DIR__ . '/parciales/estados_pago.php';
 
 require __DIR__ . '/parciales/cabecera.php';
 ?>
@@ -54,7 +55,13 @@ require __DIR__ . '/parciales/cabecera.php';
                                 </span>
                             </div>
                             <h3><?= escapar($donacion['campaña_nombre']) ?></h3>
-                            <?php if ($donacion['estado'] !== 'activa'): ?><p class="texto-secundario">Campaña <?= escapar($donacion['estado']) ?>.</p><?php endif; ?>
+                            <?php if (($donacion['campana_estado'] ?? $donacion['estado']) !== 'activa'): ?><p class="texto-secundario">Campaña <?= escapar($donacion['campana_estado'] ?? $donacion['estado']) ?>.</p><?php endif; ?>
+                            <?php if (isset($donacion['detalle'])): ?>
+                                <p><?= escapar(estadoPago($donacion['estado'], $donacion['detalle'])) ?></p>
+                            <?php endif; ?>
+                            <?php if (isset($donacion['referencia'])): ?>
+                                <p><a href="<?= escapar($rutaBase . '/index.php?ruta=pago_resultado&referencia=' . $donacion['referencia']) ?>">Consultar el aporte</a></p>
+                            <?php endif; ?>
                                 
                             <p class="texto-secundario">
                                 Aporte realizado: 
@@ -70,7 +77,7 @@ require __DIR__ . '/parciales/cabecera.php';
                             <p class="resultado-desc" style="font-size: var(--t-chico); color: var(--texto-secundario); margin: 0;">
                                 Fecha: <?= escapar($donacion['fecha_hora']) ?>
                             </p>
-                            <?php if ($donacion['estado'] === 'activa'): ?>
+                            <?php if (($donacion['campana_estado'] ?? $donacion['estado']) === 'activa'): ?>
                                 <a class="boton donacion-ver-campana" href="<?= escapar($rutas['campana']) ?>&amp;id=<?= (int) $donacion['id_camp'] ?>">Ver campaña</a>
                             <?php endif; ?>
                         </div>

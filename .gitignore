@@ -1,5 +1,9 @@
 /config/conexion.local.php
 /config/correo.local.php
 /config/mercadopago.local.php
+/.mp-integrate-progress.md
+/config/.mercadopago.local.php.*
+/config/mercadopago.local.php~
 /.respaldos-locales/
-/config/conexion.local.php
+*.har
+__pycache__/

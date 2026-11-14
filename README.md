@@ -18,6 +18,10 @@ Si recién te sumás al equipo, empezá por abrir la aplicación en tu máquina 
 - [Trabajar en equipo](#trabajar-en-equipo)
 - [Resolver problemas frecuentes](#resolver-problemas-frecuentes)
 
+## Integración de Mercado Pago
+
+La vinculación OAuth, los pagos con Checkout Pro Preferences y el historial están preparados para configurar y probar. Requieren la migración `database/migrations/20261031_mercadopago.sql`, configuración privada y una URL HTTPS para OAuth y webhooks. Seguí [la guía de Mercado Pago](MERCADOPAGO.md). No hay credenciales incluidas ni se habilitan cobros al descargar el proyecto.
+
 ## Estado del proyecto
 
 Estamos en desarrollo. El objetivo es tener registro e inicio de sesión, perfiles, campañas, donaciones, mensajes y administración.
@@ -39,11 +43,15 @@ Estamos en desarrollo. El objetivo es tener registro e inicio de sesión, perfil
 
 Necesitás:
 
-- **PHP 8.1 o superior**, con `mbstring` para trabajar con textos con tildes.
+- **PHP 8.4 con las últimas actualizaciones de seguridad**, con `mbstring` para trabajar con textos con tildes. Si se utiliza una rama posterior, debe tener soporte y todos sus parches de seguridad aplicados.
 - **Git o GitHub Desktop** para descargar el código y compartir cambios.
 - **MariaDB y la extensión PHP `pdo_mysql`** para abrir y procesar el registro y para ejecutar las pruebas de repositorios y controladores. El inicio con datos ficticios y las pruebas de modelos se pueden probar sin MariaDB.
 
-Podés usar el servidor que trae PHP para ver la aplicación. Si ya tenés LAMP o XAMPP, también sirve. No hay dependencias de Composer ni de npm que instalar en esta versión.
+Podés usar el servidor que trae PHP para ver la aplicación. Si ya tenés LAMP o XAMPP, también sirve. No hay dependencias de Composer ni de npm que instalar en esta versión. La integración opcional de Mercado Pago requiere además las extensiones PHP `curl` y `sodium`.
+
+**La versión de mantenimiento también importa:** no alcanza con instalar cualquier PHP 8.4. Las correcciones de seguridad del 21 de octubre de 2026 se publicaron en PHP **8.4.27**, y también en **8.5.12**, **8.3.36** y **8.2.35**. Para una instalación nueva de este proyecto se recomienda la rama 8.4 actualizada; esas versiones identifican las correcciones de ese aviso, no reemplazan la necesidad de instalar actualizaciones posteriores. Ver el [aviso oficial de PHP](https://www.php.net/archive/2026.php#2026-10-21-5) y el [anuncio de PHP 8.4.27](https://www.php.net/releases/8_4_27.php).
+
+En Debian, las correcciones también pueden incorporarse a los paquetes sin cambiar el número de versión original de PHP. Comprobá la revisión completa del paquete y los avisos de seguridad de la distribución; un número menor por sí solo no demuestra que falte el parche. Ver las [preguntas frecuentes de seguridad de Debian](https://www.debian.org/security/faq). Revisá tanto el PHP de consola (`php -v`) como el que ejecuta Apache o PHP-FPM, porque pueden utilizar instalaciones distintas.
 
 ### Descargar desde la terminal
 
@@ -134,7 +142,7 @@ Una ruta indica qué pantalla o acción estamos pidiendo. **GET** se usa acá pa
 | POST | `/index.php?ruta=contacto` | Valida y guarda la consulta, intenta enviar el correo y redirige al formulario con una confirmación. |
 | GET | `/index.php?ruta=resultados_buscar&buscar=texto&id_categoria_campana=1` | Busca campañas activas por texto y categoría; ambos filtros son opcionales. |
 | GET | `/index.php?ruta=campana&id=123` | Detalle público de la campaña activa identificada por su ID. Devuelve 400 si el ID es inválido y 404 si no existe o no está activa. |
-| GET | `/index.php?ruta=mis_donaciones` | Historial real del usuario autenticado, con enlaces a sus campañas activas. |
+| GET | `/index.php?ruta=mis_donaciones` | Historial real del usuario autenticado, con insumos y enlaces a campañas activas. Incluye estados de pago cuando Mercado Pago está habilitado y sus migraciones están aplicadas. |
 
 [`public_php/index.php`](public_php/index.php) recibe las peticiones y elige qué ejecutar según `ruta`. Una ruta desconocida devuelve **404** y un método no admitido, **405**. Las rutas usan parámetros en la URL y no necesitan reglas de reescritura de Apache.
 
@@ -221,7 +229,7 @@ Cada tarjeta es un enlace GET al punto de entrada público, con `ruta=campana&id
 Solo se envía el identificador; `CampanaController` lo valida y vuelve a consultar la base.
 La URL no contiene rutas a archivos de `app/`, y cambiar el ID no permite consultar campañas
 suspendidas o finalizadas. El detalle muestra la campaña, su creador, categoría y objetivos reales.
-La acción de donar permanece deshabilitada hasta implementar su procesamiento.
+La acción de donar dinero abre el formulario de aporte y el flujo de Checkout Pro Orders. Requiere configurar Mercado Pago siguiendo [su guía](MERCADOPAGO.md).
 
 Pruebas específicas (requieren la base local de pruebas):
 
@@ -349,7 +357,7 @@ La sesión vence tras **10 minutos sin solicitudes a la aplicación**. Al volver
 4. Elegí **Salir** desde el menú del usuario. Deberías volver al inicio y ver las opciones **Ingresar** y **Crear cuenta**.
 5. Probá un correo inexistente o una contraseña incorrecta. Ambos casos muestran **El correo o la contraseña son incorrectos**, conservan el correo ingresado y no inician sesión.
 
-El cierre se envía mediante un formulario POST con token CSRF. No se puede cerrar la sesión abriendo un enlace GET a `?ruta=salir`. El perfil, el guardado de documentos y las acciones propias de campañas o donaciones todavía necesitan sus controladores y comprobaciones de permisos.
+El cierre se envía mediante un formulario POST con token CSRF. No se puede cerrar la sesión abriendo un enlace GET a `?ruta=salir`. El guardado de documentos y las acciones de creación o edición de campañas siguen pendientes. Las donaciones monetarias cuentan con su recorrido de Orders, pendiente de la configuración y verificación externa de Mercado Pago.
 
 Un baneo vigente impide iniciar sesión y muestra **Tu cuenta se encuentra baneada** con respuesta **403**. Si el usuario ya tenía una sesión abierta, la siguiente petición a la aplicación revoca su identidad, renueva la sesión y el token CSRF, y detiene la acción solicitada con el mismo mensaje. Los baneos vencidos, levantados manualmente o que todavía no comenzaron no bloquean el acceso; un baneo sin fecha de fin se considera permanente. Por ahora, la administración de baneos desde una pantalla sigue pendiente.
 

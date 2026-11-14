@@ -17,6 +17,11 @@ $dibujarInsumo = static function ($indice, array $fila) use ($categoriasInsumos)
 <section class="seccion"><div class="contenedor"><div class="crear-interior">
 <div class="seccion-encabezado"><h1>Crear campaña</h1><p class="bajada">Contá qué necesitás y definí un objetivo para cada insumo.</p></div>
 <?php if ($errores): ?><div class="alerta alerta-error" role="alert"><p>No pudimos publicar la campaña:</p><ul><?php foreach ($errores as $error): ?><li><?= escapar($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
+<aside class="alerta alerta-aviso">
+<p>Para recibir dinero por Mercado Pago, conectá tu cuenta. Las campañas de insumos no necesitan esta conexión.</p>
+<a class="boton boton-secundario boton-chico" href="<?= escapar($rutas['mercadopago']) ?>" target="_blank" rel="noopener">Conectar Mercado Pago (otra pestaña)</a>
+<p class="campo-ayuda">La conexión se abre aparte para conservar lo que completes en este formulario.</p>
+</aside>
 <form class="crear-formulario" action="<?= escapar($rutas['crear_campana']) ?>" method="post" enctype="multipart/form-data">
 <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>"><input type="hidden" name="clave" value="<?= escapar($clave) ?>">
 <section class="tarjeta crear-tarjeta"><h2>Información básica</h2>

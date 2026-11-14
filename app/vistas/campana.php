@@ -112,9 +112,10 @@ $pctMonetaria = ($campana->getMonetaria() && $objetivoMonetario > 0)
                     <!-- Acciones -->
                     <div class="detalle-acciones">
                         <?php if ($campana->getMonetaria()): ?>
-                        <button type="button" class="boton boton-donar boton-ancho" disabled aria-describedby="donaciones-pendientes">Donar a esta campaña</button>
+                            <a class="boton boton-donar boton-ancho" href="<?= escapar($rutas['donar'] . '&id=' . $campana->getId()) ?>">Donar a esta campaña</a>
+                        <?php else: ?>
+                            <p class="texto-secundario">Acercá los insumos al punto de entrega. El creador registrará la recepción.</p>
                         <?php endif; ?>
-                        <p id="donaciones-pendientes" class="texto-secundario"><?= $campana->getMonetaria() ? 'Las donaciones de dinero todavía no están disponibles.' : 'Acercá los insumos al punto de entrega. El creador registrará la recepción.' ?></p>
                         <a href="<?= escapar($rutas['resultados_buscar']) ?>" class="boton boton-secundario boton-ancho">Volver al buscador</a>
                     </div>
 

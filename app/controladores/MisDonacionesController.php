@@ -1,10 +1,11 @@
 <?php
 require_once __DIR__ . '/../repositorios/DonacionRepository.php';
+require_once __DIR__ . '/../repositorios/MercadoPagoRepository.php';
 require_once __DIR__ . '/../modelos/Usuarios.php';
 require_once __DIR__ . '/../seguridad/Csrf.php';
 final class MisDonacionesController
 {
-    public function __construct(private DonacionRepository $donaciones) {}
+    public function __construct(private DonacionRepository $donaciones, private ?MercadoPagoRepository $pagos = null) {}
 
     public function mostrar(?Usuario $usuario, string $rutaBase = '.', string $rutaAssets = './assets'): void
     {
@@ -18,7 +19,9 @@ final class MisDonacionesController
         $error = null;
         $donaciones = [];
         try {
-            $donaciones = $this->donaciones->historialPorUsuario($usuario->getId());
+            $donaciones = $this->pagos !== null
+                ? $this->pagos->historial($usuario->getId())
+                : $this->donaciones->historialPorUsuario($usuario->getId());
             foreach ($donaciones as &$donacion) {
                 // Solo imágenes locales dentro de assets/imagenes; sin rutas externas ni ascendentes.
                 $imagen = $donacion['imagen'] ?? '';

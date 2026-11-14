@@ -199,6 +199,82 @@ CREATE TABLE baneados (
     FOREIGN KEY (id_admin) REFERENCES usuarios(id)
 );
 
+-- Seleccionar la base existente antes de importar. No modifica ni borra datos anteriores.
+CREATE TABLE IF NOT EXISTS mercadopago_cuentas (
+    id_usuario INT PRIMARY KEY,
+    mp_usuario VARCHAR(32) NOT NULL UNIQUE,
+    access_cifrado TEXT NOT NULL,
+    refresh_cifrado TEXT NOT NULL,
+    scope TEXT NULL,
+    requiere_reautorizar BOOLEAN NOT NULL DEFAULT FALSE,
+    vence_en BIGINT NOT NULL,
+    produccion BOOLEAN NOT NULL DEFAULT FALSE,
+    actualizado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+);
+
+CREATE TABLE IF NOT EXISTS mercadopago_pagos (
+    referencia CHAR(36) PRIMARY KEY,
+    id_usuario INT NULL,
+    correo_donante VARCHAR(254) NULL,
+    invitado_hash CHAR(64) NULL,
+    id_camp INT NOT NULL,
+    id_creador INT NOT NULL,
+    mp_receptor VARCHAR(32) NOT NULL,
+    produccion BOOLEAN NOT NULL,
+    monto DECIMAL(12,2) NOT NULL,
+    acreditado DECIMAL(12,2) NOT NULL DEFAULT 0,
+    order_id VARCHAR(64) NULL UNIQUE,
+    checkout_url TEXT NULL,
+    estado VARCHAR(40) NOT NULL DEFAULT 'created',
+    detalle VARCHAR(80) NOT NULL DEFAULT 'created',
+    version_mp BIGINT NOT NULL DEFAULT 0,
+    id_donacion INT NULL UNIQUE,
+    creado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    actualizado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_camp) REFERENCES camp(id),
+    FOREIGN KEY (id_creador) REFERENCES usuarios(id),
+    FOREIGN KEY (id_donacion) REFERENCES donacion(id)
+);
+
+-- Checkout Pro Preferences, estado OAuth persistente y cola de notificaciones.
+-- Conserva las orders anteriores. Los nuevos aportes usan Checkout Pro Preferences.
+ALTER TABLE mercadopago_pagos
+    ADD COLUMN IF NOT EXISTS preference_id VARCHAR(100) NULL UNIQUE,
+    ADD COLUMN IF NOT EXISTS payment_id VARCHAR(32) NULL UNIQUE;
+
+CREATE TABLE IF NOT EXISTS mercadopago_oauth_estados (
+    state_hash CHAR(64) PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    verifier_cifrado TEXT NOT NULL,
+    volver VARCHAR(30) NOT NULL,
+    vence_en BIGINT NOT NULL,
+    consumido BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+);
+
+CREATE TABLE IF NOT EXISTS mercadopago_transacciones (
+    payment_id VARCHAR(32) PRIMARY KEY,
+    referencia CHAR(36) NOT NULL,
+    acreditado DECIMAL(12,2) NOT NULL DEFAULT 0,
+    estado VARCHAR(40) NOT NULL,
+    detalle VARCHAR(80) NOT NULL,
+    version_mp BIGINT NOT NULL,
+    id_donacion INT NULL UNIQUE,
+    FOREIGN KEY (referencia) REFERENCES mercadopago_pagos(referencia),
+    FOREIGN KEY (id_donacion) REFERENCES donacion(id)
+);
+
+CREATE TABLE IF NOT EXISTS mercadopago_notificaciones (
+    payment_id VARCHAR(32) PRIMARY KEY,
+    mp_usuario VARCHAR(32) NOT NULL,
+    pendiente BOOLEAN NOT NULL DEFAULT TRUE,
+    intentos INT NOT NULL DEFAULT 0,
+    proximo_intento BIGINT NOT NULL DEFAULT 0,
+    actualizado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Datos de demostración para una instalación nueva. Todas las cuentas usan
 -- la contraseña Demo2026! y direcciones .test, que no reciben correo real.
 -- Las fotos ya vienen en public_php/assets/imagenes/imagenes-camp/;

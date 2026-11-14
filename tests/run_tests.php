@@ -7,6 +7,7 @@ $pruebas = [
         'SesionInactiva' => ['archivo' => 'seguridad/SesionInactivaTest.php', 'funcion' => 'sesionInactivaTest'],
     ],
     'modelos' => [
+        'MercadoPagoSeguridad' => ['archivo' => 'modelos/MercadoPagoSeguridadTest.php', 'funcion' => 'mercadoPagoSeguridadTest'],
         'Baneo' => [
             'archivo' => 'modelos/BaneoTest.php',
             'funcion' => 'baneoTest',
@@ -77,6 +78,7 @@ $pruebas = [
         ],
     ],
     'controladores' => [
+        'MercadoPagoController' => ['archivo' => 'controladores/MercadoPagoControllerTest.php', 'funcion' => 'mercadoPagoControllerTest'],
         'PerfilImagenController' => ['archivo' => 'controladores/PerfilImagenControllerTest.php', 'funcion' => 'perfilImagenControllerTest'],
         'CrearCampanaImagenes' => ['archivo'=>'controladores/CrearCampanaImagenesTest.php','funcion'=>'crearCampanaImagenesTest'],
         'CrearCampanaController' => [

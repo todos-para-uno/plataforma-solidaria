@@ -15,7 +15,9 @@ $vistas = [
 ];
 
 // Estas rutas pasan por un controlador en lugar de abrir la vista directamente.
+$rutasMercadoPago = ['mercadopago', 'mp_conectar', 'mp_retorno', 'mp_webhook', 'donar', 'pago_resultado', 'mp_verificar'];
 $rutasConControlador = [
+    ...$rutasMercadoPago,
     'crear_campana',
     'perfil',
     'baja_cuenta',
@@ -51,8 +53,8 @@ if (!is_string($ruta) || (!in_array($ruta, $rutasConControlador, true) && !isset
     return;
 }
 
-$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento', 'actualizar_perfil', 'baja_cuenta'], true);
-$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'crear_campana', 'punto_entrega', 'recepcion_insumos', 'reactivar'], true);
+$soloPost = in_array($ruta, ['salir', 'banear', 'finalizar_baneo', 'admin_password', 'admin_desbloquear', 'actualizar_documento', 'actualizar_perfil', 'baja_cuenta', 'mp_conectar', 'mp_webhook', 'mp_verificar'], true);
+$aceptaPost = $soloPost || in_array($ruta, ['registro', 'ingresar', 'resultados_buscar', 'contacto', 'crear_campana', 'punto_entrega', 'recepcion_insumos', 'reactivar', 'donar'], true);
 if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metodo === 'POST'))) {
     http_response_code(405);
     header('Allow: ' . ($soloPost ? 'POST' : ($aceptaPost ? 'GET, HEAD, POST' : 'GET, HEAD')));
@@ -64,6 +66,25 @@ if (($soloPost && $metodo !== 'POST') || (!$esLectura && !($aceptaPost && $metod
 header('Content-Type: text/html; charset=UTF-8');
 $rutaBase = '.';
 $rutaAssets = './assets';
+
+// Las notificaciones externas no dependen de cookies, sesión ni CSRF de un usuario.
+if ($ruta === 'mp_webhook') {
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../config/mercadopago.php';
+    require_once __DIR__ . '/../app/controladores/MercadoPagoController.php';
+    try {
+        $configMp = configuracionMercadoPago();
+        $pdo = conectarBd();
+        $repoMp = new MercadoPagoRepository($pdo);
+        $servicioMp = new MercadoPagoServicio($repoMp, new MercadoPagoCliente(), $configMp);
+        (new MercadoPagoController($repoMp, $servicioMp, $configMp, new BaneoRepository($pdo)))->webhook();
+    } catch (Throwable $e) {
+        http_response_code(503);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo '{"recibido":false}';
+    }
+    return;
+}
 
 require_once __DIR__ . '/../app/seguridad/Csrf.php';
 require_once __DIR__ . '/../app/seguridad/SesionInactiva.php';
@@ -149,6 +170,24 @@ if (isset($_SESSION['usuario_id']) || in_array($ruta, ['ingresar', 'salir', 'rea
     }
 }
 
+if (in_array($ruta, $rutasMercadoPago, true)) {
+    if ($metodo === 'HEAD' && $ruta === 'mp_retorno') {
+        http_response_code(405);
+        header('Allow: GET');
+        return;
+    }
+    require_once __DIR__ . '/../config/conexion.php';
+    require_once __DIR__ . '/../config/mercadopago.php';
+    require_once __DIR__ . '/../app/controladores/MercadoPagoController.php';
+    $configMp = configuracionMercadoPago();
+    $pdo = conectarBd();
+    $repoMp = new MercadoPagoRepository($pdo);
+    $servicioMp = new MercadoPagoServicio($repoMp, new MercadoPagoCliente(), $configMp);
+    (new MercadoPagoController($repoMp, $servicioMp, $configMp, new BaneoRepository($pdo)))
+        ->atender($ruta, $usuario ?? null, $rutaBase, $rutaAssets);
+    return;
+}
+
 if ($ruta === 'reactivar') {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/ReactivarCuentaController.php';
@@ -220,7 +259,10 @@ if ($ruta === 'crear_campana') {
 if ($ruta === 'mis_donaciones') {
     require_once __DIR__ . '/../config/conexion.php';
     require_once __DIR__ . '/../app/controladores/MisDonacionesController.php';
-    (new MisDonacionesController(new DonacionRepository(conectarBd())))->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
+    require_once __DIR__ . '/../config/mercadopago.php';
+    $pdo = conectarBd();
+    $historialMp = configuracionMercadoPago()['habilitado'] ? new MercadoPagoRepository($pdo) : null;
+    (new MisDonacionesController(new DonacionRepository($pdo), $historialMp))->mostrar($usuario ?? null, $rutaBase, $rutaAssets);
     return;
 }
 
